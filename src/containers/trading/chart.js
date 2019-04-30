@@ -61,7 +61,6 @@ const buildTimeGrid = props => {
     grids = [ 5000, 10000, 15000 ]
   }
   if (view.minb !== null && !isNaN(view.minb)) {
-    const x0 = width * ((view.maxb) - view.minb) / (view.maxb - view.minb)
     const rules = []
     const text = []
     for (var i in grids) {
@@ -75,7 +74,7 @@ const buildTimeGrid = props => {
       text.push(<text key={i} className="gridtext" x={x+5} y={height-4}>{commonName[grids[i]]}</text>)
     }
     return <g>
-      <line className="gridrule" x1={x0} y1={0} x2={x0} y2={height}/>
+      <line className="gridrule" x1={width} y1={0} x2={width} y2={height}/>
       {rules}
       {text}
     </g>
@@ -541,10 +540,7 @@ const buildOrderBook = props => {
   if (props.orderbook) {
     const spot = props.spot
     const view = props.view
-    console.log("SPOT=" + spot)
-    console.log("VIEW=" + JSON.stringify(view))
     const sy = height - height * (spot - view.minp) / (view.maxp - view.minp)
-    console.log("sy=" + sy)
     const callquoterects = props.orderbook.calls.quotes.map((quote, id) => {
       const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalQty[props.dur]
       const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalQty[props.dur] 

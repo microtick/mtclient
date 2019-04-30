@@ -129,7 +129,6 @@ function calcMinMax(obj) {
   var maxb = obj.chart.ticks.maxb
   var minp = obj.chart.ticks.minp
   var maxp = obj.chart.ticks.maxp
-  console.log("(1) minp=" + minp + " maxp=" + maxp)
   obj.chart.spots.data.map(spot => {
     if (minp > spot) minp = spot
     if (maxp < spot) maxp = spot
@@ -148,13 +147,11 @@ function calcMinMax(obj) {
   }
   */
   if (obj.orderbook) {
-    console.log("obj.market.spot=" + obj.market.spot)
     const call = obj.market.spot + obj.orderbook.calls.maxPrem
     if (maxp < call) maxp = call
     const put = obj.market.spot - obj.orderbook.puts.maxPrem
     if (minp > put) minp = put
   }
-  console.log("(2) minp=" + minp + " maxp=" + maxp)
   obj.trade.list.map(tr => {
     if ((tr.market === globals.market) && (tr.endBlock === undefined || tr.endBlock >= minb)) {
       if (tr.type === BuyCall) {
@@ -172,7 +169,6 @@ function calcMinMax(obj) {
     }
     return null
   })
-  console.log("(3) minp=" + minp + " maxp=" + maxp)
   var height = maxp - minp
   if (height === 0) height = 1
   globals.chart.minp = minp - height * .05
@@ -309,7 +305,6 @@ export default (state = initialState, action) => {
         loading: true
       }
     case HISTORY:
-      console.log("HISTORY ACTION: " + action)
       return calcMinMax({
         ...state,
         market: {
@@ -369,9 +364,6 @@ export default (state = initialState, action) => {
         max = globals.spot
         min = globals.spot
       }
-      console.log("globals.spot=" + globals.spot)
-      console.log("min=" + min)
-      console.log("max=" + max)
       var height = max - min
       return calcMinMax({
         ...state,
@@ -849,12 +841,10 @@ async function fetchOrderBook(dispatch) {
       } else {
         quotes = orderBookInfo.puts
       }
-      console.log("quotes=" + JSON.stringify(quotes))
       for (var i=0; i<quotes.length; i++) {
         const id = parseInt(quotes[i], 10)
         if (id !== 0) {
           const data = await api.getQuote(id)
-          console.log("quote data=" + JSON.stringify(data))
           const quoteQty = parseFloat(data.quantity.amount)
           const quoteSpot = parseFloat(data.spot.amount)
           const quotePrem = parseFloat(data.premium.amount)
@@ -899,9 +889,6 @@ async function fetchOrderBook(dispatch) {
   
   const calls = await computePricing(CallAsk)
   const puts = await computePricing(PutAsk)
-  
-  console.log("calls=" + JSON.stringify(calls))
-  console.log("puts=" + JSON.stringify(puts))
   
   dispatch({
     type: ORDERBOOK,
