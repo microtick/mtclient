@@ -1,0 +1,250 @@
+p {
+  margin: 0px;
+}
+
+h3 {
+  margin: 0px;
+  width: 200px;
+}
+
+h4 {
+  margin: 0px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.sm {
+  font-size: 12px;
+}
+
+#div-active {
+  background: #3ae;
+  color: #fff;
+  padding: 10px;
+}
+
+#div-quotes {
+  background: #093;
+  color: #fff;
+  padding: 10px;
+}
+
+#div-market {
+  flex-grow: 3;
+}
+
+#div-order {
+  padding: 0px 10px 0px 10px;
+}
+
+#div-order table {
+  background: #cba;
+  border-collapse: collapse;
+}
+
+#div-order table .even {
+  background: #bbb;
+  text-align: center;
+}
+
+#div-order table .odd {
+  background: #ddd;
+  text-align: center;
+}
+
+#div-order table .durselected {
+  background: #000;
+  color: #ffc;
+  text-align: center;
+}
+
+#div-order td {
+  width: 100px;
+  padding: 2px;
+}
+
+#div-order table button {
+  width: 100%;
+}
+
+#div-order table button.durselected {
+  background: #333;
+  color: #ffc;
+  border: 0;
+  outline: none;
+}
+
+div#marketSelect {
+  width: 70%;
+  flex: 1 1 90%;
+  float: left;
+}
+
+#spot {
+  float: right;
+  background: #000;
+  color: #0c0;
+  font-size: 30px;
+  font-weight: bold;
+  flex: 1 1 100px;
+  text-align: center;
+  border: 3px solid #985;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+#spottext.actual {
+  color: #0c0;
+}
+
+#spottext.est {
+  color: #ff8;
+}
+
+#spot p:not(#spottext) {
+  font-size: 16px;
+}
+
+#div-trading {
+  background: #cba;
+  margin: 0px;
+  padding: 10px;
+}
+
+#div-history {
+  background: #cba;
+  padding: 10px;
+}
+
+.activetable {
+  width: 100%;
+  background: #ccc;
+  color: #000;
+  padding: 10px;
+  text-align: center;
+}
+
+.activetable thead {
+  font-weight: bold;
+}
+
+.activetable tfoot {
+  font-weight: bold;
+}
+
+.activetable .odd {
+  background: #fff;
+}
+
+.activetable .even {
+  background: #eee;
+}
+
+.ordertable {
+  background-color: #999;
+  width: 100%;
+  padding: 10px;
+}
+
+.green {
+  color: #0f0;
+}
+
+.red {
+  color: #f00;
+}
+
+.black {
+  color: #000;
+}
+
+.blue {
+  color: #e3f;
+}
+
+.warn {
+  color: #f00;
+}
+
+.count {
+  font-size:10px;
+  color: #aaa;
+}
+
+.cursor {
+  stroke-dasharray: 2,2;
+}
+
+.selection {
+  stroke-dasharray: 1,1;
+  stroke: #0f0 !important;
+}
+
+#instructions {
+}
+
+#instructions h4 {
+  width: 100%;
+  text-align: center;
+}
+
+#instructions .row {
+  flex-direction: row;
+}
+
+#instructions .section {
+  margin: 0px 5px 0px 5px;
+  padding: 10px;
+  background: #555;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+#instructions h5 {
+  font-size: 16px;
+  color: #ff8;
+  text-align: center;
+  margin-bottom: 0px;
+}
+
+#instructions p {
+  text-align: center;
+  color: #f00;
+}
+
+#instructions ol {
+  color: #fff;
+}
+
+#actioncontainer {
+  width: 300px;
+  height: 250px;
+  margin-top: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  background: #fff;
+  border-radius: 10px;
+}
+
+#actionpanel {
+  margin-top: 100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#action {
+  width: 150px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #000;
+  color: #fff;
+  border-radius: 4px;
+  font-weight: bold;
+}

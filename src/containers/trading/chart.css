@@ -1,0 +1,222 @@
+svg {
+  background: #333;
+}
+
+svg line {
+  stroke: #ffc;
+  pointer-events: none;
+}
+
+svg circle {
+  stroke: #ffc;
+  fill: #ffc;
+  pointer-events: none;
+}
+
+svg rect {
+  pointer-events: none;
+}
+
+svg text {
+  pointer-events: none;
+}
+
+svg .loading {
+  stroke: #fff;
+  fill: #fff;
+  font-size: 25px;
+}
+
+.gridrule {
+  stroke: #ccf;
+  stroke-dasharray: 2,2;
+  stroke-opacity: 0.4;
+}
+
+.gridrule.heavy {
+  stroke: #ccf;
+  stroke-width: 3px;
+  stroke-dasharray: 2,2;
+  stroke-opacity: 0.8;
+}
+
+.gridtext {
+  fill: #ccf;
+}
+
+.gridback {
+  background: #fff;
+}
+
+#ordercall {
+  fill: #0f0;
+}
+
+#orderput {
+  fill: #f00;
+}
+
+svg#chart line.spot {
+  stroke-width: 2.5px;
+}
+
+svg#chart circle.spot {
+  stroke-width: 1px;
+  fill: #000;
+  r: 1.5px; 
+}
+
+svg#chart line.inactive {
+  stroke: #fff;
+  stroke-opacity: 0.5;
+}
+
+svg#chart rect.inactive {
+  fill: #ddd;
+  fill-opacity: 0.1;
+  stroke: #fff;
+  stroke-opacity: 0.15;
+}
+
+svg#chart line.tradebase {
+  stroke-width: 1.5px;
+}
+
+svg#chart line.tradebase.short {
+  stroke-dasharray: 8,2;
+}
+
+svg#chart line.call {
+  stroke: #0f0;
+}
+
+svg#chart line.begin {
+  stroke-opacity: 0.4;
+}
+
+svg#chart rect.call {
+  fill: #0f0;
+  fill-opacity: 0.1;
+  stroke: #0f0;
+  stroke-opacity: 0.2;
+}
+
+svg#chart circle.call {
+  stroke: #0f0;
+  fill: #0f0;
+  r: 3;
+}
+
+svg#chart line.put {
+  stroke: #f00;
+}
+
+svg#chart rect.put {
+  fill: #f00;
+  fill-opacity: 0.1;
+  stroke: #f00;
+  stroke-opacity: 0.2;
+}
+
+svg#chart circle.put {
+  stroke: #f00;
+  fill: #f00;
+  r: 3;
+}
+
+#chartback {
+  fill-opacity: 0;
+  stroke-opacity: 0;
+  pointer-events: auto;
+}
+
+#obback {
+  pointer-events: auto;
+}
+
+#obback {
+  fill: #333;
+}
+
+#orderbook rect.quote15 {
+  fill: #e1f5fe;
+}
+
+#orderbook rect.quote14 {
+  fill: #e0f7fa;
+}
+
+#orderbook rect.quote13 {
+  fill: #e0f2f1;
+}
+
+#orderbook rect.quote12 {
+  fill: #b3e5fc;
+}
+
+#orderbook rect.quote11 {
+  fill: #b2ebf2;
+}
+
+#orderbook rect.quote10 {
+  fill: #b2dfdb;
+}
+
+#orderbook rect.quote9 {
+  fill: #81d4fa;
+}
+
+#orderbook rect.quote8 {
+  fill: #80deea;
+}
+
+#orderbook rect.quote7 {
+  fill: #80cbc4;
+}
+
+#orderbook rect.quote6 {
+  fill: #4fc3f7;
+}
+
+#orderbook rect.quote5 {
+  fill: #4dd0e1;
+}
+
+#orderbook rect.quote4 {
+  fill: #4db6ac;
+}
+
+#orderbook rect.quote3 {
+  fill: #29b6f6;
+}
+
+#orderbook rect.quote2 {
+  fill: #26c6da;
+}
+
+#orderbook rect.quote1 {
+  fill: #26a69a;
+}
+
+#orderbook rect.quote0 {
+  fill: #03a9f4;
+}
+
+#orderbook line.spot {
+  stroke: #333;
+  stroke-width: 0.5px !important;
+}
+
+line.ordertip {
+  fill: #ffc;
+}
+
+text.ordertip {
+  fill: #fff;
+  font-size: 14px;
+}
+
+#quotecursor {
+  stroke: #e3f;
+  stroke-dasharray: none;
+}

@@ -1,0 +1,284 @@
+#div-history h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#div-history h4 {
+  margin-top: 10px;
+  margin-bottom: 0px;
+}
+
+#div-history table {
+  text-align: center;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+#div-history thead {
+  font-weight: bold;
+}
+
+#div-history tbody {
+  border-bottom: 1px solid #000;
+}
+
+#div-history td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#div-history tr.even {
+  background: #fff;
+}
+
+#div-history tr.odd {
+  background: #ddd;
+}
+
+#div-history .viewnav {
+  float: right;
+}
+
+#div-history .traderow {
+  display: flex;
+}
+
+#div-history .metrics {
+  flex-grow: 1;
+}
+
+#div-history .tradesvg {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+#div-history .tradesvg h4 {
+  margin: 0px;
+}
+
+#div-history .col1 {
+  background: #0ae;
+}
+
+#div-history .col2 {
+  background: #69b;
+}
+
+#div-history .col3 {
+  background: #78909c;
+}
+  
+#div-history .col4 {
+  background: #607d8b;
+} 
+
+#div-history .col5 {
+  background: #546e7a;
+  color: #ffcc80;
+}
+
+#div-history .col6 {
+  background: #455a64;
+  color: #aed581;
+}
+
+#div-history .col7 {
+  background: #37474f;
+  color: #fff176;
+}
+
+#div-history .section-top {
+  border-top: 1px solid #000;
+}
+
+#div-history .section-bottom {
+  border-bottom: 1px solid #000;
+}
+
+#div-history .section-left {
+  border-left: 1px solid #000;
+}
+
+#div-history .section-right {
+  border-right: 1px solid #000;
+}
+
+#div-history .spacer {
+  border-top: 1px solid #000;
+  height: 2px;
+}
+
+#div-history .total {
+  border: 1px solid #000;
+}
+
+#div-history h5 {
+  margin: 20px 0px 10px 0px;
+}
+
+#div-history .highlight {
+  font-weight: bold;
+}
+
+#div-history .padright {
+  padding-right: 20px;
+}
+
+#div-history .statsblock {
+  float: left;
+  padding-right: 50px;
+  line-height: 22px;
+}
+
+#div-history .statsblock table {
+  margin: 0px;
+  border-collapse: collapse;
+}
+
+#div-history .statsblock tbody {
+  border: 0px;
+}
+
+#div-history .statsblock td {
+  padding: 0px;
+}
+
+#div-history .rowlabel {
+  text-align: left;
+}
+
+#div-history .spacer {
+  border: 0px;
+  width: 20px;
+}
+
+#div-history .rowvalue {
+  text-align: right;
+}
+
+#tradehist {
+  width: 600px;
+  height: 320px;
+}
+
+#div-history svg {
+  background: #111;
+}
+
+#div-history svg line {
+  fill: #ffc;
+  stroke: #ffc;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+#tradehist rect {
+  fill: #ddd;
+  fill-opacity: 0.2;
+  stroke: #fff;
+  stroke-opacity: 0.25;
+}
+
+#div-history svg .call {
+  stroke: #0f0;
+}
+
+#div-history svg .put {
+  stroke: #f00;
+}
+
+#div-history svg .tradebase {
+  stroke-width: 2px;
+}
+
+#div-history svg .tradex {
+  stroke-width: 1px;
+}
+
+#quotehist {
+  width: 900px;
+  height: 600px;
+}
+
+#quotehist .histrect rect {
+  fill: url(#diagonalHatch);
+  fill-opacity: 0.3;
+}
+
+#quotehist .histline line {
+  stroke: #ff4;
+  stroke-opacity: 1;
+  stroke-width: 2;
+  stroke-dasharray: 4,4;
+}
+
+#quotehist .consensus line {
+  stroke: #fff;
+  stroke-opacity: 1;
+  stroke-width: 2;
+}
+
+#quotehist pattern rect {
+  fill: #fff;
+}
+
+#quotehist pattern line {
+  stroke: #000;
+  stroke-width: 2;
+}
+
+#quotehist .consensus .call {
+  fill: #0f0;
+  fill-opacity: 0.5;
+  stroke-opacity: 0.2;
+}
+
+#quotehist .consensus .put {
+  fill: #f00;
+  fill-opacity: 0.5;
+  stroke-opacity: 0.2;
+}
+
+#quotechart {
+  display: flex;
+  flex-direction: row;
+}
+
+#quotesvg {
+  background: #555;
+  border-radius: 4px;
+  padding: 10px;
+  color: #fff;
+}
+
+#legend {
+  text-align: center;
+  padding: 10px;
+  margin: 10px;
+  background: #555;
+  color: #fff;
+  border-radius: 4px;
+}
+
+#legend td {
+  padding: 5px;
+}
+
+#legendcallprem {
+  width: 50px;
+  height: 30px;
+  background: #0f0;
+}
+
+#legendputprem {
+  width: 50px;
+  height: 30px;
+  background: #f00;
+}
+
+#legend .description {
+  text-align: left;
+}

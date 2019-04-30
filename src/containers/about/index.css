@@ -1,0 +1,26 @@
+#div-about {
+  text-align: center;
+  padding: 20px;
+}
+
+#div-about h4 {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+#div-about p {
+  font-size: 14px;
+  padding-left: 400px;
+  padding-right: 400px;
+  padding-bottom: 20px;
+  line-height: 21px;
+}
+
+#div-about .just {
+  text-align: justify;
+}
+
+#div-about .title {
+  text-transform: uppercase;
+  font-size: 14px;
+}

@@ -1,0 +1,390 @@
+body {
+}
+
+#ui {
+  position: fixed;
+  width: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+main {
+  z-index: 0;
+}
+
+.fullscreen {
+  position: absolute;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.7);
+}
+
+.password {
+  width: 40%;
+  height: 35%;
+  margin: 200px auto;
+  background: #fff;
+  border: 4px solid #888;
+  border-radius: 10px;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+.password p {
+  margin-top: 10px;
+  margin-left: 40px;
+  margin-right: 40px;
+}
+
+.password .content {
+  float: left;
+  width: 100%;
+  margin: 30px auto;
+}
+
+.password .title {
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 24px;
+}
+
+.password .form {
+  margin-top: 20px;
+}
+
+.password input {
+  width: 80%;
+}
+
+.password button {
+  margin-top: 20px;
+}
+
+.password .error {
+  color: #f00;
+}
+
+#div-chain {
+  background: #666;
+  color: #fff;
+  flex: 1;
+  padding: 10px;
+}
+
+#page-header h3 {
+  display: inline-block;
+  border-radius: 4px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding: 2px 10px 2px 10px;
+}
+
+#div-logo {
+  background: #fff;
+  flex: 0 0 200px;
+}
+
+#div-logo img {
+  padding-top: 25px;
+  padding-left: 40px;
+  padding-right: 60px;
+}
+
+#div-chain h3 {
+  background: #444;
+}
+
+#div-chain input {
+  width: 70%;
+}
+
+#div-account {
+  background: #3ae;
+  color: #fff;
+  flex: 1;
+  padding: 10px;
+}
+
+#div-account h3 {
+  background: #08b;
+}
+
+#div-account .Select {
+  margin-bottom: 10px;
+}
+
+#div-account .totalAccountValue {
+  font-weight: bold;
+  color: #fd0;
+  cursor: pointer;
+}
+
+#menu {
+  display: flex;
+  width: 100%;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  justify-content: flex-end;
+}
+
+#menu div {
+  padding: 6px 20px 6px 20px;
+  user-select: none;
+}
+
+#menu div.selected {
+  background: #cba;
+}
+
+#menu div.selected:hover {
+  background: #cba;
+}
+
+#menu div:hover {
+  background: #999;
+}
+
+main {
+}
+
+#page-footer {
+  font-size: 12px;
+  justify-content: center;
+}
+
+#dialog {
+  width: 100%;
+  height: 100%;
+  margin: 20px;
+  padding: 10px;
+  background: #987;
+  border: 10px solid #987;
+  border-radius: 8px;
+}
+
+#dialog .inner {
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  text-align: left;
+  border-radius: 4px;
+}
+
+#dialog h3 {
+  color: #fff;
+  margin-left: 10px;
+  margin-bottom: 10px;
+}
+
+#dialog table {
+  margin: 10px;
+}
+
+#dialog button {
+  padding: 10px;
+}
+
+#dialog input {
+  width: 120px;
+}
+
+#dialog td:first-child {
+  font-weight: bold;
+  font-size: 110%;
+  width: 150px;
+  text-align: right;
+}
+
+#dialog td:first-child + td {
+  width: 20px;
+}
+
+#dialog td:first-child + td + td {
+  width: 180px;
+  text-align: left;
+}
+
+#dialog .cost {
+  font-weight: bold;
+  font-size: 20px;
+  color: #06b;
+}
+
+#dialog button {
+  margin: 5px;
+}
+
+#dialog .error {
+  font-weight: bold;
+  font-size: 18px;
+  color: #fbf;
+  padding: 5px;
+}
+
+#notifications {
+  float: right;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 10px;
+}
+
+#notifications .outer {
+  width: 500px;
+  pointer-events: all;
+  border: 1px solid #888;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  box-shadow: 2px 2px 10px #666;
+}
+
+#notifications h3 {
+  margin-bottom: 10px;
+  color: #ff8;
+}
+
+#notifications div.account {
+  color: #000;
+  background: #fd0;
+}
+
+#notifications div.account h3 {
+  color: #555;
+}
+
+#notifications div.buynot {
+  color: #000;
+}
+
+#notifications div.place {
+  color: #000;
+  background: #448;
+}
+
+#notifications div.cancel {
+  color: #000;
+  background: #fd0;
+}
+
+#notifications div.cancel h3 {
+  color: #555;
+}
+
+#notifications div.settle {
+  color: #000;
+  background: #fd0;
+}
+
+#notifications div.settle h3 {
+  color: #555;
+}
+
+#notifications div.error {
+  color: #f00;
+  background: #800;
+}
+
+#notifications div.success {
+  color: #000;
+  background: #aaa;
+}
+
+#notifications div.inner {
+  border: 3px solid #fff;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+#notifications .close {
+  float: right;
+}
+
+#notifications div.call {
+  background: #8c8;
+}
+
+#notifications div.put {
+  background: #c88;
+}
+
+#notifications .info {
+  color: #fff;
+}
+
+#notifications .footnote {
+  margin-top: 10px;
+  text-align: center;
+  color: #ffc;
+  font-size: 16px;
+}
+
+#fullscreen {
+  z-index: 10;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+#modal {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  margin-top: -10%;
+  margin-left: -15%;
+  width: 40%;
+  background: #ddd;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: 2px 2px 10px #666;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px;
+}
+
+#modal.update {
+}
+
+#modal p {
+  padding-bottom: 10px;
+}
+
+#modal .header {
+  flex-grow: 1;
+}
+
+#modal .title {
+  background: #4bf;
+  color: #fff;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+#modal .content {
+  vertical-align: center;
+  text-align: center;
+}
+
+#modal input {
+  font-size: 20px;
+}
+
+#modal .buttons {
+  text-align: center;
+}
+
+#modal .button {
+  padding: 10px;
+  margin-left: 5px;
+}
