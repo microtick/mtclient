@@ -451,13 +451,6 @@ async function updateHistory(dispatch) {
   var min = Number.MAX_VALUE, max = 0
   var rawHistory = await api.history("mtm.MarketTick='" + globals.market + "'", startBlock, currentBlock.block, true)
   const currentSpot = await api.getMarketSpot(globals.market)
-  //console.log("Received " + rawHistory.length + " ticks")
-  //if (rawHistory.length > 0) {
-    //console.log("  block 0 = " + rawHistory[0].block)
-    //console.log("  last block = " + rawHistory[rawHistory.length-1].block)
-  //}
-  //console.log("length=" + rawHistory.length)
-  /*
   if (rawHistory.length > 250) {
     // interpolate
     const inter = Math.floor(rawHistory.length / 250)
@@ -466,8 +459,6 @@ async function updateHistory(dispatch) {
       return false
     })
   }
-  */
-  //console.log("length (2) =" + rawHistory.length)
   const history = rawHistory.map(hist => {
     const value = parseFloat(hist.consensus.amount)
     if (min > value) min = value
@@ -517,7 +508,6 @@ export const selectMarket = choice => {
     globals.weight = parseFloat(info.sumWeight.amount)
     globals.sumqty = parseFloat(info.sumWeight.amount)
     globals.backing = parseFloat(info.sumBacking.amount)
-    console.log("globals.spot=" + globals.spot)
     
     updateHistory(dispatch)
     
@@ -530,7 +520,6 @@ export const selectMarket = choice => {
       //if (event.returnValues.id < lastId) return
       //lastId = event.returnValues.id
       globals.spot = parseFloat(event.data.consensus.amount)
-      console.log("Market Tick: " + globals.spot)
       const info = await api.getMarketInfo(event.value)
       globals.weight = parseFloat(info.sumWeight.amount)
       globals.sumqty = parseFloat(info.sumWeight.amount)
