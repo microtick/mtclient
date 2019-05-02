@@ -42,8 +42,12 @@ const ActiveTrades = props => {
       cl = "red"
     else
       cl = "black"
-    if (tr.end > props.timestamp) {
-      var secondsRemain = Math.round10(tr.end - props.timestamp, 0)
+    console.log("props=" + props.timestamp)
+    const now = new Date(props.timestamp * 1000)
+    console.log("now=" + now)
+    console.log("end=" + tr.end)
+    if (tr.end > now) {
+      var secondsRemain = Math.round10((tr.end - now) / 1000, 0)
       const hoursRemain = parseInt(secondsRemain / 3600, 10)
       secondsRemain = (secondsRemain % 3600)
       const minutesRemain = parseInt(secondsRemain / 60, 10)
@@ -62,9 +66,9 @@ const ActiveTrades = props => {
       <td>{tr.dir === 'long' ? 'Long' : 'Short'}</td>
       <td>{tr.type === 0 ? "Call" : "Put"}</td>
       <td><button onClick={() => { props.selectMarket(tr.market); props.selectDur(tr.dur) }}>{tr.market}</button></td>
-      <td>{commonName[tr.dur]}</td>
-      <td>{new Date(tr.start*1000).toLocaleTimeString()}</td>
-      <td>{new Date(tr.end*1000).toLocaleTimeString()}</td>
+      <td>{tr.dur}</td>
+      <td>{tr.start.toLocaleTimeString()}</td>
+      <td>{tr.end.toLocaleTimeString()}</td>
       {remain}
       <td>@{Math.round10(tr.spot, props.constants.SPOT_PRECISION)}</td>
       <td>@{Math.round10(tr.strike, props.constants.SPOT_PRECISION)}</td>

@@ -25,6 +25,7 @@ const initialState = {
 export default (state = initialState, action) => {
   switch (action.type) {
     case CLOCKTICK:
+      console.log("CLOCKTICK: " + JSON.stringify(action))
       return {
         ...state,
         app: {

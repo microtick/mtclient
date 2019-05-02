@@ -615,8 +615,9 @@ const selectAccount = async () => {
   globals.accountSubscriptions = {}
   
   async function tradeMarketTick(ev) {
+    console.log("ev=" + JSON.stringify(ev, null, 2))
     const market = ev.value
-    const spot = ev.data.consensus
+    const spot = parseFloat(ev.data.consensus.amount)
     globals.trades.map(trade => {
       if (trade.market === market) {
         trade.spot = spot
@@ -635,21 +636,24 @@ const selectAccount = async () => {
   
   async function processTrade(height, data, dir) {
     const id = data.id
-    const type = data.type
+    const type = data.type ? BuyPut : BuyCall
     const market = data.market
-    const start = data.start
-    const end = data.expiration
-    const strike = data.strike
-    const backing = data.counterparties.reduce((acc, el) => {
-      acc += el.backing
+    const start = new Date(data.start)
+    const end = new Date(data.expiration)
+    const strike = parseFloat(data.strike.amount)
+    const backing = data.counterParties.reduce((acc, el) => {
+      acc += parseFloat(el.backing.amount)
       return acc
     }, 0)
-    const qty = data.quantity
-    const prem = data.premium
-    const spot = await api.getMarketSpot(market)
-    const current = (type === 0) ? 
+    const qty = parseFloat(data.quantity.amount)
+    const prem = parseFloat(data.cost.amount)
+    const data2 = await api.getMarketSpot(market)
+    const spot = parseFloat(data2.consensus.amount)
+    console.log(JSON.stringify(spot))
+    var current = (type === 0) ? 
       (spot > strike ? (spot - strike) * qty : 0) :
-      (spot < strike ? (strike - spot) * qty : 0)
+      (spot < strike ? (strike - spot) * qty : 0) 
+    if (current > backing) current = backing
     const profit = dir === 'long' ? current - prem : prem - current
     const trade = {
       id: id,
@@ -657,7 +661,7 @@ const selectAccount = async () => {
       type: type,
       active: true,
       market: market,
-      dur: data.dur,
+      dur: api.durationReverseLookup[data.duration],
       spot: spot,
       startBlock: height,
       start: start,
@@ -964,10 +968,10 @@ export const buyCall = () => {
     })
     const qty = parseFloat(globals.qty.toFixed(6))
     const market = globals.market
-    const dur = globals.dur
+    const dur = api.durationReverseLookup[globals.dur]
     const notId = createBuyNotification(dispatch, BuyCall, market, dur, qty)
     try {
-      await api.createTrade(market, dur, BuyCall, qty)
+      await api.marketTrade(market, dur, "call", qty)
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
@@ -996,10 +1000,10 @@ export const buyPut = () => {
     })
     const qty = parseFloat(globals.qty.toFixed(6))
     const market = globals.market
-    const dur = globals.dur
+    const dur = api.durationReverseLookup[globals.dur]
     const notId = createBuyNotification(dispatch, BuyPut, market, dur, qty)
     try {
-      await api.createTrade(market, dur, BuyPut, qty)
+      await api.marketTrade(market, dur, "put", qty)
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
