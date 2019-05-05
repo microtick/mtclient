@@ -615,7 +615,6 @@ const selectAccount = async () => {
   globals.accountSubscriptions = {}
   
   async function tradeMarketTick(ev) {
-    console.log("ev=" + JSON.stringify(ev, null, 2))
     const market = ev.value
     const spot = parseFloat(ev.data.consensus.amount)
     globals.trades.map(trade => {
@@ -661,7 +660,7 @@ const selectAccount = async () => {
       type: type,
       active: true,
       market: market,
-      dur: api.durationReverseLookup[data.duration],
+      dur: data.duration,
       spot: spot,
       startBlock: height,
       start: start,
