@@ -42,7 +42,8 @@ const ActiveTrades = props => {
       cl = "red"
     else
       cl = "black"
-    const now = new Date(props.timestamp * 1000)
+    //const now = new Date(props.timestamp * 1000)
+    const now = new Date()
     if (tr.end > now) {
       var secondsRemain = Math.round10((tr.end - now) / 1000, 0)
       const hoursRemain = parseInt(secondsRemain / 3600, 10)
