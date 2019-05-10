@@ -272,7 +272,6 @@ class Home extends React.Component {
           </div>
           <div className="section">
             <h5>Place Quote</h5>
-            <p>(disabled for alpha testnet)</p>
             <ol>
               <li>Select the market you are interested in above.</li>
               <li>Select the time duration you are interested in from the table above.</li>

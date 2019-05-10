@@ -22,7 +22,9 @@ const ActiveQuotes = props => {
       return a.dur - b.dur
     }).map((q, id) => {
       var deposit = <td><button onClick={() => props.depositQuoteDialog(q.id)}>Deposit</button></td>
-      if (props.timestamp >= q.canModify) {
+      const modified = q.modified.getTime() / 1000
+      const canModify = q.canModify.getTime() / 1000
+      if (props.timestamp >= canModify) {
         var actions = [
           <td key={1}><button onClick={() => props.updateSpotDialog(q.id, q.spot, q.premium)}>Spot</button></td>,
           <td key={2}><button onClick={() => props.updatePremiumDialog(q.id, q.spot, q.premium)}>Premium</button></td>,
@@ -40,7 +42,7 @@ const ActiveQuotes = props => {
         <td>⚖ {Math.round10(q.quantity, props.constants.UNIT_PRECISION)}</td>
         <td>⇕ {Math.round10(q.premium, props.constants.SPOT_PRECISION)}</td>
         <td>{Math.round10(q.backing, props.constants.TOKEN_PRECISION)} fox</td>
-        <td>{Math.round10(props.timestamp - q.modified, 0)} seconds</td>
+        <td>{Math.round10(props.timestamp - modified, 0)} seconds</td>
         {actions}
         {deposit}
       </tr>
@@ -50,8 +52,8 @@ const ActiveQuotes = props => {
       <table className="activetable">
         <thead>
           <tr>
-            <td colSpan={10}></td>
-            <td colSpan="4">Update Quote</td>
+            <td colSpan={9}></td>
+            <td colSpan={4}>Modify Quote</td>
           </tr>
           <tr>
             <td></td>

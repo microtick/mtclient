@@ -920,8 +920,21 @@ async function fetchActive(dispatch) {
   const quoteInfo = accountInfo.activeQuotes
   for (var i=0; i<quoteInfo.length; i++) {
     const quoteId = quoteInfo[i]
-    const quote = await api.getQuote(quoteId)
-    globals.quotes.push(quote)
+    const data = await api.getQuote(quoteId)
+    const weight = data.quantity
+    globals.quotes.push({
+      id: quoteId,
+      provider: data.provider,
+      market: data.market,
+      dur: data.dur,
+      spot: data.spot.amount,
+      premium: data.premium.amount,
+      backing: data.backing.amount,
+      modified: new Date(data.modified),
+      canModify: new Date(data.canModify),
+      quantity: data.quantity.amount,
+      weight: weight.amount
+    })
   }
   dispatch({
     type: QUOTELIST
@@ -1105,7 +1118,7 @@ export const placeQuote = () => {
       mouseState: 0
     })
     const market = globals.market
-    const dur = globals.dur
+    const dur = api.durationReverseLookup[globals.dur]
     const spot = globals.quote.spot
     const premium = globals.quote.premium
     const backing = globals.quote.backing
@@ -1117,13 +1130,15 @@ export const placeQuote = () => {
     console.log("  backing: " + backing + "(" + typeof backing + ")")
     const notId = createPlaceQuoteNotification(dispatch, market, dur, spot, premium, backing)
     try {
-      const tx = await api.createQuote(market, dur, spot, premium, parseFloat(backing))
+      const tx = await api.createQuote(market, dur, backing, spot, premium)
       setTimeout(() => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
       createSuccessNotification(dispatch, DIALOG_TIME2, notId)
+      console.log("tx=" + JSON.stringify(tx))
       const id = tx.data.id
       const data = await api.getQuote(id)
+      console.log("data=" + JSON.stringify(data))
       const weight = data.quantity
       globals.quotes.push({
         id: id,

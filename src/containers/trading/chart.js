@@ -351,7 +351,6 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price, m
 
 const buildBackground = props => {
   if (props.orderbook) {
-    /*
     const chMouseEnter = event => {
       if (props.dialog.showinline) return
       props.mouseState(1)
@@ -395,7 +394,6 @@ const buildBackground = props => {
       if (props.dialog.showinline) return
       props.placeQuoteDialog()
     }
-    */
     
     const obMouseEnter = event => {
       if (props.dialog.showinline) return
@@ -443,11 +441,10 @@ const buildBackground = props => {
       }
     }
     
-      //<rect id="chartback" x={0} width={width} y={0} height={height}
-        //onMouseEnter={chMouseEnter} onMouseLeave={chMouseLeave} 
-        //onMouseMove={chMouseMove} onClick={chMouseClick}/>
     return <g>
-      <rect id="chartback" x={0} width={width} y={0} height={height}/>
+      <rect id="chartback" x={0} width={width} y={0} height={height}
+        onMouseEnter={chMouseEnter} onMouseLeave={chMouseLeave} 
+        onMouseMove={chMouseMove} onClick={chMouseClick}/>
       <rect id="obback" x={chart_ob_left} y={0} width={chart_ob_width} height={height}
         onMouseEnter={obMouseEnter} onMouseLeave={obMouseLeave} 
         onMouseMove={obMouseMove} onClick={obMouseClick}/>
@@ -493,6 +490,7 @@ const buildOrderbookSpot = props => {
       </g>
     } else {
       spot = props.premiums.indicatedSpot
+      if (spot === undefined) spot = props.spot
       yspot = height - height * (spot - props.view.minp) / (props.view.maxp - props.view.minp)
       return <g id="spotpointer">
         <line x1={chart_mp_left} x2={mid} y1={sy} y2={sy}/>
