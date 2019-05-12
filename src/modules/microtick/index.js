@@ -1130,28 +1130,25 @@ export const placeQuote = () => {
     console.log("  backing: " + backing + "(" + typeof backing + ")")
     const notId = createPlaceQuoteNotification(dispatch, market, dur, spot, premium, backing)
     try {
-      const tx = await api.createQuote(market, dur, backing, spot, premium)
+      const id = await api.createQuote(market, dur, backing, spot, premium)
       setTimeout(() => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
       createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-      console.log("tx=" + JSON.stringify(tx))
-      const id = tx.data.id
       const data = await api.getQuote(id)
-      console.log("data=" + JSON.stringify(data))
       const weight = data.quantity
       globals.quotes.push({
         id: id,
         provider: data.provider,
-        market: market,
-        dur: dur,
-        spot: spot,
-        premium: data.premium,
-        backing: data.backing,
-        modified: data.modified,
-        canModify: data.canModify,
-        quantity: data.quantity,
-        weight: weight
+        market: data.market,
+        dur: data.dur,
+        spot: data.spot.amount,
+        premium: data.premium.amount,
+        backing: data.backing.amount,
+        modified: new Date(data.modified),
+        canModify: new Date(data.canModify),
+        quantity: data.quantity.amount,
+        weight: weight.amount
       })
       dispatch({
         type: QUOTELIST

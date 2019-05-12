@@ -139,67 +139,67 @@ svg#chart circle.put {
 }
 
 #orderbook rect.quote15 {
-  fill: #e1f5fe;
+  fill: #2264a3;
 }
 
 #orderbook rect.quote14 {
-  fill: #e0f7fa;
+  fill: #2f6495;
 }
 
 #orderbook rect.quote13 {
-  fill: #e0f2f1;
+  fill: #3c6386;
 }
 
 #orderbook rect.quote12 {
-  fill: #b3e5fc;
+  fill: #496378;
 }
 
 #orderbook rect.quote11 {
-  fill: #b2ebf2;
+  fill: #566269;
 }
 
 #orderbook rect.quote10 {
-  fill: #b2dfdb;
+  fill: #63625b;
 }
 
 #orderbook rect.quote9 {
-  fill: #81d4fa;
+  fill: #70614c;
 }
 
 #orderbook rect.quote8 {
-  fill: #80deea;
+  fill: #7e613e;
 }
 
 #orderbook rect.quote7 {
-  fill: #80cbc4;
+  fill: #697380;
 }
 
 #orderbook rect.quote6 {
-  fill: #4fc3f7;
+  fill: #748292;
 }
 
 #orderbook rect.quote5 {
-  fill: #4dd0e1;
+  fill: #7f91a4;
 }
 
 #orderbook rect.quote4 {
-  fill: #4db6ac;
+  fill: #8ba0b6;
 }
 
 #orderbook rect.quote3 {
-  fill: #29b6f6;
+  fill: #96afc8;
 }
 
 #orderbook rect.quote2 {
-  fill: #26c6da;
+  fill: #a1beda;
 }
 
 #orderbook rect.quote1 {
-  fill: #26a69a;
+  fill: #accdec;
 }
 
 #orderbook rect.quote0 {
-  fill: #03a9f4;
+  fill: #b8dcff;
 }
 
 #orderbook line.spot {

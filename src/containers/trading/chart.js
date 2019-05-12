@@ -544,14 +544,14 @@ const buildOrderBook = props => {
       const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalQty[props.dur] 
       const top = parseFloat(spot) + quote.premium
       const y2 = height - height * (top - view.minp) / (view.maxp - view.minp)
-      return <rect key={id} className={"quote" + id} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
+      return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
     })
     const putquoterects = props.orderbook.puts.quotes.map((quote, id) => {
       const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalQty[props.dur]
       const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalQty[props.dur]
       const bottom = parseFloat(spot) - quote.premium
       const y2 = height - height * (bottom - view.minp) / (view.maxp - view.minp)
-      return <rect key={id} className={"quote" + id} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
+      return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
     })
     return <g id="orderbook" viewBox="-10 -10 120 110">
       <g>{callquoterects}</g>
