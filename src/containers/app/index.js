@@ -31,26 +31,6 @@ import { testBalance } from '../../modules/microtick'
 
 import { menuSelected } from '../../modules/app'
 
-const commonName = {
-  300: "5 min",
-  600: "10 min",
-  900: "15 min",
-  1200: "20 min",
-  1500: "25 min",
-  1800: "30 min",
-  2700: "45 min",
-  3600: "1 hr",
-  5400: "1.5 hr",
-  7200: "2 hr",
-  10800: "3 hr",
-  14400: "4 hr",
-  21600: "6 hr",
-  28800: "8 hr",
-  43200: "12 hr",
-  64800: "18 hr",
-  86400: "1 d"
-}
-
 const App = props => {
   if (props.password.prompt) {
     const checkAccount = document.cookie.split(';').filter(item => {
@@ -116,7 +96,7 @@ const App = props => {
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
           <h3>Buying {type}</h3>
           <p>Market: <span className="info">{not.market}</span></p>
-          <p>Duration: <span className="info">{commonName[not.dur]}</span></p>
+          <p>Duration: <span className="info">{not.dur}</span></p>
           <p>Quantity: <span className="info">⚖ {not.qty}</span></p>
           <p className="footnote">Waiting on blockchain confirmation...</p>
         </div>
@@ -129,7 +109,7 @@ const App = props => {
           <h3>Placing Quote</h3>
           <p>Spot: <span className="info">@{not.spot}</span></p>
           <p>Market: <span className="info">{not.market}</span></p>
-          <p>Duration: <span className="info">{commonName[not.dur]}</span></p>
+          <p>Duration: <span className="info">{not.dur}</span></p>
           <p>Backing: <span className="info">{not.backing} fox</span></p>
           <p>Premium: <span className="info">⇕ {Math.round10(not.premium, -4)}</span></p>
           <p className="footnote">Waiting on blockchain confirmation...</p>
