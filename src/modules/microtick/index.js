@@ -181,7 +181,9 @@ function calcMinMax(obj) {
         minb: minb,
         maxb: maxb,
         minp: globals.chart.minp,
-        maxp: globals.chart.maxp
+        maxp: globals.chart.maxp,
+        now: Date.now(),
+        dur: globals.dur * 2000
       }
     }
   }
@@ -273,12 +275,14 @@ export default (state = initialState, action) => {
       var newdata = state.chart.ticks.data.reduce((res, el) => {
         res.push({
           block: el.block,
+          time: el.time,
           value: el.value
         })
         return res
       }, [])
       newdata.push({
         block: action.block,
+        time: action.time,
         value: action.spot
       })
       return calcMinMax({
@@ -347,12 +351,14 @@ export default (state = initialState, action) => {
             if (max < last.value) max = last.value
             res.push({
               block: last.block,
+              time: last.time,
               value: last.value
             })
             last = null
           }
           res.push({
             block: el.block,
+            time: el.time,
             value: el.value
           })
         } else {
@@ -465,6 +471,7 @@ async function updateHistory(dispatch) {
     if (max < value) max = value
     return {
       block: hist.block,
+      time: hist.time,
       value: value
     }
   })
@@ -474,6 +481,7 @@ async function updateHistory(dispatch) {
   }
   history.push({
     block: currentBlock.block,
+    time: Date.now(),
     value: parseFloat(currentSpot.consensus.amount)
   })
   var height = max - min
@@ -524,10 +532,11 @@ export const selectMarket = choice => {
       globals.weight = parseFloat(info.sumWeight.amount)
       globals.sumqty = parseFloat(info.sumWeight.amount)
       globals.backing = parseFloat(info.sumBacking.amount)
-      //console.log("MarketTick: " + spot)
+      //console.log("MarketTick: " + JSON.stringify(event))
       dispatch({
         type: TICK,
         block: event.block,
+        time: Date.now(),
         spot: globals.spot,
         weight: globals.weight,
         sumqty: globals.sumqty,
@@ -707,7 +716,7 @@ const selectAccount = async () => {
   
   new Promise(async () => {
     // Get past trades
-    var startBlock = globals.blockNumber - 43200 / BLOCKTIME
+    var startBlock = globals.blockNumber - (43200 * 3) / BLOCKTIME
     if (startBlock < 0) startBlock = 0
     var events = await api.history("acct." + globals.account + "='trade.long'", startBlock, globals.blockNumber)
     for (var i=0; i<events.length; i++) {

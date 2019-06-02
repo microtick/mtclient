@@ -129,9 +129,12 @@ const buildPriceOverlay = props => {
   const data = props.data
   //console.log("view=" + JSON.stringify(view))
   //console.log("data=" + JSON.stringify(data))
+  const mint = view.now - view.dur
   if (data.length > 0) {
     const points = data.map((p, i) => {
-      const x = width * (p.block - view.minb) / (view.maxb - view.minb)
+      const x = width * (p.time - mint) / view.dur
+      //const x2 = width * (p.block - view.minb) / (view.maxb - view.minb)
+      //console.log("x=" + x + " x2=" + x2)
       const y = height - height * (p.value - view.minp) / (view.maxp - view.minp)
       return <circle className="spot" key={i} cx={x} cy={y}/>
     })
@@ -142,7 +145,8 @@ const buildPriceOverlay = props => {
       lasty = height - height * (props.spot - view.minp) / (view.maxp - view.minp)
     }
     const lines = data.map((p, i) => {
-      const x = width * (p.block - view.minb) / (view.maxb - view.minb)
+      const x = width * (p.time - mint) / view.dur
+      //const x = width * (p.block - view.minb) / (view.maxb - view.minb)
       const y = height - height * (p.value - view.minp) / (view.maxp - view.minp)
       const linegr = <g key={i}>
         <line className="spot" key={0} x1={curx} x2={x} y1={lasty} y2={lasty}/>
@@ -166,6 +170,7 @@ const buildPriceOverlay = props => {
 
 const buildTradesOverlay = props => {
   const view = props.view
+  const mint = view.now - view.dur
   const t = props.trades.filter(t => {
     return t.market === props.market
   }).map((t, i) => {
@@ -173,9 +178,11 @@ const buildTradesOverlay = props => {
     const sum = t.type === 0 ? 
       parseFloat(t.strike) + parseFloat(t.premium) / parseFloat(t.qty) : 
       parseFloat(t.strike) - parseFloat(t.premium) / parseFloat(t.qty)
-    const x1 = width * (t.startBlock - view.minb) / (view.maxb - view.minb)
+    const x1 = width * (t.start.getTime() - mint) / view.dur
+    //const x1 = width * (t.startBlock - view.minb) / (view.maxb - view.minb)
     if (t.endBlock !== undefined) {
-      var x2 = width * (t.endBlock - view.minb) / (view.maxb - view.minb)
+      var x2 = width * (t.end.getTime() - mint) / view.dur
+      //var x2 = width * (t.endBlock - view.minb) / (view.maxb - view.minb)
     } else {
       x2 = width
     }
