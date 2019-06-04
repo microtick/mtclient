@@ -23,7 +23,10 @@ const Status = props => {
       }
       return false
     })
-    const total = data.quoteBacking + data.tradeBacking + long - short
+    var total = data.quoteBacking + data.tradeBacking + long - short
+    if (data.curBalance !== undefined) {
+      total += data.curBalance.amount
+    }
     content = <div>
       <div id="balances">
         <div className="rowbox">
@@ -73,7 +76,7 @@ const Status = props => {
         </div>
         <div className="rowbox">
           <h5>= Total Account Value</h5>
-          <div><div className="balance">{Math.round10(total + data.curBalance, props.constants.TOKEN_PRECISION)} fox</div></div>
+          <div><div className="balance">{Math.round10(total, props.constants.TOKEN_PRECISION)} fox</div></div>
         </div>
       </div>
       <ActiveQuotes/>

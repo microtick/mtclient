@@ -64,7 +64,7 @@ const App = props => {
             <div className="form">
               <p><input type="password" maxLength="40" id="password"/></p>
               {err}
-              <p>Forgot password? <a href="javascript:void(0)" onClick={() => props.newAccount()}>Create a new account</a></p>
+              <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
               <button className="button" onClick={() => props.enterPassword()}>Done</button>
             </div>
           </div>

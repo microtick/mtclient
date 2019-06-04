@@ -163,42 +163,73 @@ export const buttonlast = () => {
 const getAccountData = async () => {
   if (globals.page !== 'history' || globals.view !== 'account' || globals.acct === undefined) return
   
-  const event = "acct." + globals.acct
-  globals.transaction_count = await api.totalEvents(event + "=''")
+  globals.transaction_count = await api.totalEvents(globals.acct)
+  console.log("Total transactions=" + globals.transaction_count)
   globals.totalPages = Math.ceil(globals.transaction_count / globals.viewInc)
   
   //console.log("View history page=" + globals.viewPage + " inc=" + globals.viewInc)
   //console.log("account=" + globals.acct)
   //console.log("transaction count=" + globals.transaction_count)
   
-  const history = await api.pageHistory(event + "=''", globals.viewPage, globals.viewInc)
+  const history = await api.pageHistory(globals.acct, globals.viewPage, globals.viewInc)
   var hist = []
+  const acctTag = "acct." + globals.acct
   for (var i=0; i<history.length; i++) {
     const x = history[i]
-    const block = await api.getBlock(x.block)
-    const time = new Date(block.header.time).toLocaleString("en-US")
-    // Step 1 - Iterate over tags and identify events
-    const events = []
-    for (var j=0; j<x.tags.length; j++) {
-      const t = x.tags[j]
-      if (t.key === event && !events.includes(t.value)) {
-        events.push(t.value)
+    const time = new Date(x.time).toLocaleString("en-US")
+    if (x.originator === 'send') {
+      if (x.tags[acctTag] === "account.deposit") {
+        hist.push({
+          type: 'deposit',
+          time: time,
+          block: x.block,
+          //index: x.index,
+          debit: 0,
+          credit: parseInt(x.transfer[0].amount, 10),
+          commission: 0,
+          balance: parseFloat(x.balanceTo.amount)
+        })
+      }
+      if (x.tags[acctTag] === "account.withdraw") {
+        
       }
     }
-    const blockNum = parseInt(x.block, 10)
-    // Step 2 - add transactions
-    if (events.includes('create')) {
-      hist.push({
-        type: 'create',
-        time: time,
-        block: blockNum,
-        index: x.index,
-        debit: 0,
-        credit: x.balance,
-        commission: 0,
-        balance: x.balance
-      })
+    if (x.originator === 'marketTrade') {
+      if (x.tags[acctTag] === "trade.long") {
+        hist.push({
+          type: 'trade.long',
+          time: time,
+          block: x.block,
+          //index: x.index,
+          id: x.trade.id,
+          premium: parseFloat(x.trade.cost.amount),
+          ttype: x.trade.type,
+          market: x.trade.market,
+          dur: x.trade.duration,
+          debit: parseFloat(x.trade.cost.amount),
+          credit: 0,
+          commission: parseFloat(x.trade.commission.amount) + parseFloat(x.trade.settleIncentive.amount),
+          balance: parseFloat(x.trade.balance.amount)
+        })
+      }
     }
+    if (x.originator === 'settleTrade') {
+      if (x.tags[acctTag] === "settle.long") {
+        hist.push({
+          type: 'settle.long',
+          time: time,
+          block: x.block,
+          //index: x.index,
+          id: x.id,
+          settle: parseFloat(x.settle.amount),
+          debit: 0,
+          credit: parseFloat(x.settle.amount),
+          commission: parseFloat(x.commission.amount),
+          balance: parseFloat(x.balance.amount),
+        })
+      }
+    }
+    /*
     if (events.includes('quote.create')) {
       hist.push({
         type: 'quote.create',
@@ -339,6 +370,7 @@ const getAccountData = async () => {
         }
       }
     }
+      */
   }
   hist = hist.sort((x1, x2) => {
     if (x1.block > x2.block) return 1

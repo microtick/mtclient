@@ -6,26 +6,6 @@ import { selectMarket, selectDur } from '../../modules/microtick'
 import { viewTrade } from '../../modules/history'
 import { settleTradeDialog } from '../../modules/dialog'
 
-const commonName = {
-  300: "5 min",
-  600: "10 min",
-  900: "15 min",
-  1200: "20 min",
-  1500: "25 min",
-  1800: "30 min",
-  2700: "45 min",
-  3600: "1 hr",
-  5400: "1.5 hr",
-  7200: "2 hr",
-  10800: "3 hr",
-  14400: "4 hr",
-  21600: "6 hr",
-  28800: "8 hr",
-  43200: "12 hr",
-  64800: "18 hr",
-  86400: "1 d"
-}
-
 const ActiveTrades = props => {
   var totalPremium = 0
   var totalCurrent = 0

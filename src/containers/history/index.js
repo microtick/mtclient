@@ -12,21 +12,11 @@ import dashed from './dashed.png'
 import consensus from './consensus.png'
 
 const commonName = {
-  60: "1 minute",
-  120: "2 minute",
-  180: "3 minute",
-  240: "4 minute",
-  300: "5 minute",
-  600: "5 minute",
-  900: "15 minute",
-  1800: "30 minute",
-  2700: "45 minute",
-  3600: "1 hour",
-  7200: "2 hour",
-  10800: "3 hour",
-  14400: "4 hour",
-  28800: "8 hour",
-  43200: "12 hour"
+  "5minute": "5 Minutes",
+  "15minute": "15 Minutes",
+  "1hour": "1 Hour",
+  "4hour": "4 Hours",
+  "12hour": "12 Hours"
 }
 
 function buildPageAccountHistory(props) {
@@ -35,7 +25,7 @@ function buildPageAccountHistory(props) {
   var endingBalance = 0
   if (data.list.length > 0) {
     startingBalance = Math.round10(data.list[0].balance + data.list[0].commission + data.list[0].debit - data.list[0].credit, -6)
-    endingBalance = data.list[data.list.length-1].balance
+    endingBalance = Math.round10(data.list[data.list.length-1].balance, -6)
   }
   var list = data.list.map((c,n) => {
     const viewTrade = <td><button onClick={() => props.viewTrade(c.id)}>T-{c.id}</button></td>
@@ -43,6 +33,7 @@ function buildPageAccountHistory(props) {
     const viewQuote = <td><button onClick={() => props.viewQuote(c.id)}>Q-{c.id}</button></td>
     //const viewQuote = <td>Q-{c.id}</td>
     const ct = <td><span className="count">{n + (data.page-1) * data.pageInc + 1}</span></td>
+    const balance = Math.round10(c.balance, -6)
     switch (c.type) {
       case 'trade.long':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -52,10 +43,10 @@ function buildPageAccountHistory(props) {
           {viewTrade}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.dur]}</td>
-          <td>{c.debit} fox</td>
+          <td>{Math.round10(c.debit, -6)} fox</td>
           <td>---</td>
           <td>{c.commission} fox</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       case 'trade.short':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -66,9 +57,9 @@ function buildPageAccountHistory(props) {
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.dur]}</td>
           <td>---</td>
-          <td>{c.credit} fox</td>
+          <td>{Math.round10(c.credit, -6)} fox</td>
           <td>---</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       case 'settle.long':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -78,9 +69,9 @@ function buildPageAccountHistory(props) {
           {viewTrade}
           <td colSpan={2}></td>
           <td>---</td>
-          <td>{c.credit} fox</td>
+          <td>{Math.round10(c.credit, -6)} fox</td>
           <td>---</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       case 'settle.short':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -92,18 +83,18 @@ function buildPageAccountHistory(props) {
           <td>---</td>
           <td>{c.credit} fox</td>
           <td>---</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
-      case 'create':
+      case 'deposit':
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.block}</td>
-          <td>Create Account</td>
+          <td>Deposit</td>
           <td colSpan={3}></td>
           <td>---</td>
           <td>{c.credit} fox</td>
           <td>---</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       case 'quote.create':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -116,7 +107,7 @@ function buildPageAccountHistory(props) {
           <td>{c.debit} fox</td>
           <td>---</td>
           <td>{c.commission} fox</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       case 'quote.deposit':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -128,7 +119,7 @@ function buildPageAccountHistory(props) {
           <td>{c.debit} fox</td>
           <td>---</td>
           <td>{c.commission} fox</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       case 'quote.update':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -140,7 +131,7 @@ function buildPageAccountHistory(props) {
           <td>---</td>
           <td>---</td>
           <td>{c.commission} fox</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       case 'quote.cancel':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -152,7 +143,7 @@ function buildPageAccountHistory(props) {
           <td>---</td>
           <td>{c.credit} fox</td>
           <td>---</td>
-          <td>{c.balance} fox</td>
+          <td>{balance} fox</td>
         </tr>
       default:
         return <tr key={n} className={n%2?'even':'odd'}>
