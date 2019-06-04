@@ -24,7 +24,7 @@ function buildPageAccountHistory(props) {
   var startingBalance = 0
   var endingBalance = 0
   if (data.list.length > 0) {
-    startingBalance = Math.round10(data.list[0].balance + data.list[0].commission + data.list[0].debit - data.list[0].credit, -6)
+    startingBalance = Math.round10(data.list[0].balance + data.list[0].debit - data.list[0].credit, -6)
     endingBalance = Math.round10(data.list[data.list.length-1].balance, -6)
   }
   var list = data.list.map((c,n) => {
@@ -34,6 +34,7 @@ function buildPageAccountHistory(props) {
     //const viewQuote = <td>Q-{c.id}</td>
     const ct = <td><span className="count">{n + (data.page-1) * data.pageInc + 1}</span></td>
     const balance = Math.round10(c.balance, -6)
+    const amount = Math.round10(c.amount, -6)
     switch (c.type) {
       case 'trade.long':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -43,9 +44,10 @@ function buildPageAccountHistory(props) {
           {viewTrade}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.dur]}</td>
+          <td>{amount} fox</td>
+          <td>{c.commission} fox</td>
           <td>{Math.round10(c.debit, -6)} fox</td>
           <td>---</td>
-          <td>{c.commission} fox</td>
           <td>{balance} fox</td>
         </tr>
       case 'trade.short':
@@ -56,9 +58,10 @@ function buildPageAccountHistory(props) {
           {viewTrade}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.dur]}</td>
+          <td>{amount} fox</td>
+          <td>---</td>
           <td>---</td>
           <td>{Math.round10(c.credit, -6)} fox</td>
-          <td>---</td>
           <td>{balance} fox</td>
         </tr>
       case 'settle.long':
@@ -68,21 +71,23 @@ function buildPageAccountHistory(props) {
           <td>Settle Long</td>
           {viewTrade}
           <td colSpan={2}></td>
+          <td>{amount} fox</td>
+          <td>---</td>
           <td>---</td>
           <td>{Math.round10(c.credit, -6)} fox</td>
-          <td>---</td>
           <td>{balance} fox</td>
         </tr>
       case 'settle.short':
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.block}</td>
-          <td>Settle Short</td>
+          <td>Settle Refund</td>
           {viewTrade}
           <td colSpan={2}></td>
+          <td>{amount} fox</td>
           <td>---</td>
-          <td>{c.credit} fox</td>
           <td>---</td>
+          <td>{Math.round10(c.credit, -6)} fox</td>
           <td>{balance} fox</td>
         </tr>
       case 'deposit':
@@ -91,9 +96,10 @@ function buildPageAccountHistory(props) {
           <td>{c.block}</td>
           <td>Deposit</td>
           <td colSpan={3}></td>
+          <td>{amount} fox</td>
+          <td>---</td>
           <td>---</td>
           <td>{c.credit} fox</td>
-          <td>---</td>
           <td>{balance} fox</td>
         </tr>
       case 'quote.create':
@@ -104,9 +110,10 @@ function buildPageAccountHistory(props) {
           {viewQuote}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.dur]}</td>
+          <td>{amount} fox</td>
+          <td>{c.commission} fox</td>
           <td>{c.debit} fox</td>
           <td>---</td>
-          <td>{c.commission} fox</td>
           <td>{balance} fox</td>
         </tr>
       case 'quote.deposit':
@@ -116,9 +123,10 @@ function buildPageAccountHistory(props) {
           <td>Deposit Backing</td>
           {viewQuote}
           <td colSpan={2}></td>
+          <td>{amount} fox</td>
+          <td>{c.commission} fox</td>
           <td>{c.debit} fox</td>
           <td>---</td>
-          <td>{c.commission} fox</td>
           <td>{balance} fox</td>
         </tr>
       case 'quote.update':
@@ -129,8 +137,9 @@ function buildPageAccountHistory(props) {
           {viewQuote}
           <td colSpan={2}></td>
           <td>---</td>
-          <td>---</td>
           <td>{c.commission} fox</td>
+          <td>{c.debit} fox</td>
+          <td>---</td>
           <td>{balance} fox</td>
         </tr>
       case 'quote.cancel':
@@ -140,9 +149,10 @@ function buildPageAccountHistory(props) {
           <td>Cancel Quote</td>
           {viewQuote}
           <td colSpan={2}></td>
+          <td>{amount} fox</td>
+          <td>---</td>
           <td>---</td>
           <td>{c.credit} fox</td>
-          <td>---</td>
           <td>{balance} fox</td>
         </tr>
       default:
@@ -163,9 +173,10 @@ function buildPageAccountHistory(props) {
           <td>ID</td>
           <td>Market</td>
           <td>Duration</td>
+          <td>Amount</td>
+          <td>Commission</td>
           <td>Debit</td>
           <td>Credit</td>
-          <td>Commission</td>
           <td>Balance</td>
         </tr>
       </thead>
@@ -173,7 +184,7 @@ function buildPageAccountHistory(props) {
         <tr className="even">
           <td colSpan={2}></td>
           <td>Starting Balance</td>
-          <td colSpan={3}></td>
+          <td colSpan={4}></td>
           <td>---</td>
           <td>---</td>
           <td>---</td>
@@ -183,7 +194,7 @@ function buildPageAccountHistory(props) {
         <tr className={data.list.length%2?'even':'odd'}>
           <td colSpan={2}></td>
           <td>Ending Balance</td>
-          <td colSpan={3}></td>
+          <td colSpan={4}></td>
           <td>---</td>
           <td>---</td>
           <td>---</td>

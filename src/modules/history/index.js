@@ -179,13 +179,14 @@ const getAccountData = async () => {
     const time = new Date(x.time).toLocaleString("en-US")
     if (x.originator === 'send') {
       if (x.tags[acctTag] === "account.deposit") {
+        const amount = parseInt(x.transfer[0].amount, 10)
         hist.push({
           type: 'deposit',
           time: time,
           block: x.block,
-          //index: x.index,
+          amount: amount,
           debit: 0,
-          credit: parseInt(x.transfer[0].amount, 10),
+          credit: amount,
           commission: 0,
           balance: parseFloat(x.balanceTo.amount)
         })
@@ -194,183 +195,152 @@ const getAccountData = async () => {
         
       }
     }
-    if (x.originator === 'marketTrade') {
+    if (x.originator === 'marketTrade' || x.originator === 'limitTrade') {
       if (x.tags[acctTag] === "trade.long") {
+        const cost = parseFloat(x.trade.cost.amount)
+        const commission = parseFloat(x.trade.commission.amount) + parseFloat(x.trade.settleIncentive.amount)
         hist.push({
           type: 'trade.long',
           time: time,
           block: x.block,
-          //index: x.index,
           id: x.trade.id,
-          premium: parseFloat(x.trade.cost.amount),
+          amount: cost,
+          premium: cost,
           ttype: x.trade.type,
           market: x.trade.market,
           dur: x.trade.duration,
-          debit: parseFloat(x.trade.cost.amount),
+          debit: cost + commission,
           credit: 0,
-          commission: parseFloat(x.trade.commission.amount) + parseFloat(x.trade.settleIncentive.amount),
+          commission: commission,
           balance: parseFloat(x.trade.balance.amount)
+        })
+      }
+      if (x.tags[acctTag] === 'trade.short') {
+        x.trade.counterParties.map(cp => {
+          if (cp.short === globals.acct) {
+            const premium = parseFloat(cp.premium.amount)
+            hist.push({
+              type: 'trade.short',
+              time: time,
+              block: x.block,
+              amount: premium,
+              id: x.trade.id,
+              premium: premium,
+              ttype: x.trade.type,
+              market: x.trade.market,
+              dur: x.trade.duration,
+              debit: 0,
+              credit: premium,
+              commission: 0,
+              balance: parseFloat(cp.balance.amount)
+            })
+            
+          }
         })
       }
     }
     if (x.originator === 'settleTrade') {
       if (x.tags[acctTag] === "settle.long") {
+        const settle = parseFloat(x.settle.amount)
+        const commission = parseFloat(x.commission.amount)
+        var credit = settle
+        if (globals.acct === x.settler) {
+          credit += parseFloat(x.incentive.amount) - commission
+        }
         hist.push({
           type: 'settle.long',
           time: time,
           block: x.block,
-          //index: x.index,
+          amount: settle,
           id: x.id,
-          settle: parseFloat(x.settle.amount),
+          settle: settle,
           debit: 0,
-          credit: parseFloat(x.settle.amount),
-          commission: parseFloat(x.commission.amount),
+          credit: credit,
+          commission: commission,
           balance: parseFloat(x.balance.amount),
         })
       }
-    }
-    /*
-    if (events.includes('quote.create')) {
-      hist.push({
-        type: 'quote.create',
-        time: time,
-        block: blockNum,
-        index: x.index,
-        id: x.id,
-        market: x.market,
-        dur: x.dur,
-        backing: x.backing,
-        debit: x.backing,
-        credit: 0,
-        commission: x.commission,
-        balance: x.balance
-      })
-    }
-    if (events.includes('quote.deposit')) {
-      hist.push({
-        type: 'quote.deposit',
-        time: time,
-        block: blockNum,
-        index: x.index,
-        id: x.id,
-        backing: x.backing,
-        debit: x.backing,
-        credit: 0,
-        commission: x.commission,
-        balance: x.balance
-      })
-    }
-    if (events.includes('quote.cancel')) {
-      hist.push({
-        type: 'quote.cancel',
-        time: time,
-        block: blockNum,
-        index: x.index,
-        id: x.id,
-        debit: 0,
-        credit: x.refund,
-        commission: x.commission,
-        balance: x.balance
-      })
-    }
-    if (events.includes('quote.update')) {
-      hist.push({
-        type: 'quote.update',
-        time: time,
-        block: blockNum,
-        index: x.index,
-        id: x.id,
-        debit: 0,
-        credit: 0,
-        commission: x.commission,
-        balance: x.balance
-      })
-    }
-    if (events.includes('trade.long')) {
-      hist.push({
-        type: 'trade.long',
-        time: time,
-        block: blockNum,
-        index: x.index,
-        id: x.trade.id,
-        premium: x.trade.premium,
-        ttype: x.trade.type,
-        market: x.trade.market,
-        dur: x.trade.dur,
-        debit: x.trade.premium,
-        credit: 0,
-        commission: x.trade.commission,
-        balance: x.trade.startBalance
-      })
-    }
-    if (events.includes('trade.short')) {
-      for (var k=0; k<x.trade.counterparties.length; k++) {
-        const cp = x.trade.counterparties[k]
-        if (cp.short === globals.acct) {
-          hist.push({
-            type: 'trade.short',
-            time: time,
-            block: blockNum,
-            index: x.index,
-            id: x.trade.id,
-            ttype: x.trade.type,
-            market: x.trade.market,
-            dur: x.trade.dur,
-            premium: cp.premium,
-            debit: 0,
-            credit: cp.premium,
-            commission: 0,
-            balance: cp.startBalance
-          })
-        }
-      }
-    }
-    if (events.includes('settle.long')) {
-      for (k=0; k<x.trades.length; k++) {
-        const tr = x.trades[k]
-        if (tr.long === globals.acct) {
-          hist.push({
-            type: 'settle.long',
-            time: time,
-            block: blockNum,
-            index: x.index,
-            id: tr.id,
-            market: tr.market,
-            dur: tr.dur,
-            settle: tr.settle,
-            debit: 0,
-            credit: tr.settle,
-            commission: 0,
-            balance: tr.endBalance
-          })
-        }
-      }
-    }
-    if (events.includes('settle.short')) {
-      for (k=0; k<x.trades.length; k++) {
-        const tr = x.trades[k]
-        for (var l=0; l<tr.counterparties.length; l++) {
-          const cp = tr.counterparties[l]
+      if (x.tags[acctTag] === 'settle.short') {
+        x.counterparties.map(cp => {
           if (cp.short === globals.acct) {
+            const refund = parseFloat(cp.refund.amount)
             hist.push({
               type: 'settle.short',
               time: time,
-              block: blockNum,
-              index: x.index,
-              id: tr.id,
-              market: tr.market,
-              dur: tr.dur,
-              settle: cp.settle,
+              block: x.block,
+              amount: refund,
+              id: x.id,
+              settle: 0,
               debit: 0,
-              credit: cp.settle,
+              credit: refund,
               commission: 0,
-              balance: cp.endBalance
+              balance: parseFloat(cp.balance.amount),
             })
           }
-        }
+        })
       }
     }
-      */
+    if (x.originator === 'createQuote') {
+      const backing = parseFloat(x.backing.amount)
+      const commission = parseFloat(x.commission.amount)
+      hist.push({
+        type: 'quote.create',
+        time: time,
+        block: x.block,
+        amount: backing,
+        id: x.id,
+        market: x.market,
+        dur: x.dur,
+        backing: backing,
+        debit: backing + commission,
+        credit: 0,
+        commission: commission,
+        balance: parseFloat(x.balance.amount)
+      })
+    }
+    if (x.originator === 'depositQuote') {
+      const backing = parseFloat(x.backing.amount)
+      const commission = parseFloat(x.commission.amount)
+      hist.push({
+        type: 'quote.deposit',
+        time: time,
+        block: x.block,
+        amount: backing,
+        id: x.id,
+        backing: backing,
+        debit: backing + commission,
+        credit: 0,
+        commission: commission,
+        balance: parseFloat(x.balance.amount)
+      })
+    }
+    if (x.originator === 'updateQuote') {
+      const commission = parseFloat(x.commission.amount)
+      hist.push({
+        type: 'quote.update',
+        time: time,
+        block: x.block,
+        id: x.id,
+        debit: commission,
+        credit: 0,
+        commission: commission,
+        balance: parseFloat(x.balance.amount)
+      })
+    }
+    if (x.originator === 'cancelQuote') {
+      const refund = parseFloat(x.refund.amount)
+      hist.push({
+        type: 'quote.cancel',
+        time: time,
+        block: x.block,
+        amount: refund,
+        id: x.id,
+        debit: 0,
+        credit: refund,
+        commission: 0,
+        balance: parseFloat(x.balance.amount)
+      })
+    }
   }
   hist = hist.sort((x1, x2) => {
     if (x1.block > x2.block) return 1
