@@ -164,7 +164,7 @@ const getAccountData = async () => {
   if (globals.page !== 'history' || globals.view !== 'account' || globals.acct === undefined) return
   
   globals.transaction_count = await api.totalEvents(globals.acct)
-  console.log("Total transactions=" + globals.transaction_count)
+  //console.log("Total transactions=" + globals.transaction_count)
   globals.totalPages = Math.ceil(globals.transaction_count / globals.viewInc)
   
   //console.log("View history page=" + globals.viewPage + " inc=" + globals.viewInc)
@@ -174,8 +174,7 @@ const getAccountData = async () => {
   const history = await api.pageHistory(globals.acct, globals.viewPage, globals.viewInc)
   var hist = []
   const acctTag = "acct." + globals.acct
-  for (var i=0; i<history.length; i++) {
-    const x = history[i]
+  history.map((x, i) => {
     const time = new Date(x.time).toLocaleString("en-US")
     if (x.originator === 'send') {
       if (x.tags[acctTag] === "account.deposit") {
@@ -234,8 +233,8 @@ const getAccountData = async () => {
               commission: 0,
               balance: parseFloat(cp.balance.amount)
             })
-            
           }
+          return false
         })
       }
     }
@@ -277,6 +276,7 @@ const getAccountData = async () => {
               balance: parseFloat(cp.balance.amount),
             })
           }
+          return false
         })
       }
     }
@@ -341,7 +341,8 @@ const getAccountData = async () => {
         balance: parseFloat(x.balance.amount)
       })
     }
-  }
+    return false
+  })
   hist = hist.sort((x1, x2) => {
     if (x1.block > x2.block) return 1
     if (x1.block < x2.block) return -1
