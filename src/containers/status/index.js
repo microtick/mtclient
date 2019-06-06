@@ -25,7 +25,7 @@ const Status = props => {
     })
     var total = data.quoteBacking + data.tradeBacking + long - short
     if (data.curBalance !== undefined) {
-      total += data.curBalance.amount
+      total += parseFloat(data.curBalance.amount)
     }
     content = <div>
       <div id="balances">

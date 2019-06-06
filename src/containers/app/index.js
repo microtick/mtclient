@@ -15,7 +15,6 @@ import { bindActionCreators } from 'redux'
 import Trading from '../trading'
 import Status from '../status'
 import History from '../history'
-import Leaderboard from '../leaderboard'
 import About from '../about'
 
 import { connect } from 'react-redux'
@@ -276,9 +275,6 @@ const App = props => {
     case 'history':
       page = <History/>
       break
-    case 'leaderboard':
-      page = <Leaderboard/>
-      break
     case 'about':
       page = <About/>
       break
@@ -288,7 +284,6 @@ const App = props => {
       <div className={props.menu.selected === 'trading' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('trading')}>Trading</div>
       <div className={props.menu.selected === 'status' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('status')}>Status</div>
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>
-      <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
       <div className={props.menu.selected === 'about' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('about')}>About</div>
     </div>
     /*

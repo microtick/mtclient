@@ -455,7 +455,7 @@ async function updateHistory(dispatch) {
   var startBlock = currentBlock.block - globals.chart.size / BLOCKTIME
   if (startBlock < 0) startBlock = 0
   var min = Number.MAX_VALUE, max = 0
-  var rawHistory = await api.history("mtm.MarketTick='" + globals.market + "'", startBlock, currentBlock.block, true)
+  var rawHistory = await api.history("mtm.MarketTick='" + globals.market + "'", startBlock, currentBlock.block)
   const currentSpot = await api.getMarketSpot(globals.market)
   if (rawHistory.length > 250) {
     // interpolate

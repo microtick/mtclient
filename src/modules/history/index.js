@@ -384,6 +384,7 @@ const getTradeData = async id => {
     if (trade.history.maxp < trade.strike) trade.history.maxp = trade.strike
   }
   */
+  //console.log("data=" + JSON.stringify(data, null, 2))
   store.dispatch({
     type: HISTTRADE,
     id: id,
@@ -392,31 +393,29 @@ const getTradeData = async id => {
 }
 
 async function getTradeInfo(id) {
-  const latestBlock = await api.blockNumber()
-  const hist = await api.history("trade." + id + "=''", 0, latestBlock.block)
+  const info = await api.blockInfo()
+  const key = "trade." + id
+  const hist = await api.history(key + " CONTAINS 'event'", 0, info.block, [key])
   const data = hist.reduce((acc, x) => {
-    x.tags.map(t => {
-      if (t.key === "trade." + id) {
-        if (t.value === 'start') {
-          acc.startBlock = x.block
-          acc.start = x.consensus
-          acc.trade = x.trade
-          acc.state = "active"
-        }
-        if (t.value === 'settle') {
-          acc.endBlock = x.block
-          acc.state = "settled"
-          acc.trade = x.trades.reduce((acc2, y) => {
-            if (y.id === id) {
-              acc2 = y 
-              acc.end = x.final[y.market]
-            }
-            return acc2
-          }, 0)
+    if (x.tags[key] === "event.create") {
+      acc.startBlock = x.block
+      acc.start = x.time
+      acc.trade = x.trade
+      acc.state = "active"
+    }
+    if (x.tags[key] === 'event.settle') {
+      acc.endBlock = x.block
+      acc.end = x.time
+      acc.state = "settled"
+      acc.trade.final = x.final
+      acc.trade.settle = x.settle
+      if (acc.trade.counterParties.length === x.counterparties.length) {
+        for (var i=0; i<acc.trade.counterParties.length; i++) {
+          acc.trade.counterParties[i].settle = x.counterparties[i].settle
+          acc.trade.counterParties[i].refund = x.counterparties[i].refund
         }
       }
-      return false
-    })
+    }
     return acc
   }, {})
   return data
@@ -424,24 +423,27 @@ async function getTradeInfo(id) {
 
 const getMarketHistory = async (market, fromBlock, toBlock) => {
   if (toBlock === undefined) {
-    const latestBlock = await api.blockNumber()
-    toBlock = latestBlock.block
+    const info = await api.blockInfo()
+    toBlock = info.block
   }
   //console.log("fromBlock=" + fromBlock)
   //console.log("toBlock=" + toBlock)
   //console.log("market=" + market)
   //const history = await api.history("mtm.MarketTick='" + market + "'", fromBlock, toBlock, true)
-  const history = await api.historyHack(market, fromBlock, toBlock)
+  const history = await api.history("mtm.MarketTick='" + market + "'", fromBlock, toBlock)
   var minp = Number.MAX_VALUE
   var maxp = 0
-  const data = history.map(h => {
-    if (minp > h.spot) minp = h.spot
-    if (maxp < h.spot) maxp = h.spot
-    return {
+  const data = history.reduce((acc, h) => {
+    const spot = parseFloat(h.consensus.amount)
+    if (minp > spot) minp = spot
+    if (maxp < spot) maxp = spot
+    acc.push({
       block: h.block,
-      spot: h.spot
-    }
-  })
+      time: h.time,
+      spot: spot
+    })
+    return acc
+  }, [])
   return {
     data: data,
     minp: minp,

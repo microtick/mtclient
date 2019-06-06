@@ -19,6 +19,14 @@ const commonName = {
   "12hour": "12 Hours"
 }
 
+const durValue = {
+  "5minute": 300,
+  "15minute": 900,
+  "1hour": 3600,
+  "4hour": 14400,
+  "12hour": 43200,
+}
+
 function buildPageAccountHistory(props) {
   const data = props.history.data
   var startingBalance = 0
@@ -233,30 +241,30 @@ function buildPageTradeHistory(props) {
     
     // Calculate trade parameters
     
-    const strike = data.trade.strike
-    const qty = data.trade.quantity
-    const premium = data.trade.premium
+    const strike = parseFloat(data.trade.strike.amount)
+    const qty = parseFloat(data.trade.quantity.amount)
+    const premium = parseFloat(data.trade.cost.amount)
     const unitpremium = Math.round10(premium / qty, -6)
-    const backing = data.trade.counterparties.reduce((sum, cp) => {
-      return Math.round10(sum + cp.backing, -6)
+    const backing = data.trade.counterParties.reduce((sum, cp) => {
+      return Math.round10(sum + parseFloat(cp.backing.amount), -6)
     }, 0)
     const maxpayout = Math.round10(backing / premium, -6)
-    var cost = <span className="highlight padright">{premium} fox</span>
+    var cost = <span className="highlight padright">{Math.round10(premium, -6)} fox</span>
     if (data.endBlock !== undefined) {
-      var settle = data.end
-      var profit = data.trade.settle
-      var refund = data.trade.counterparties.reduce((acc, cp) => {
-        return acc + cp.settle
+      var settle = parseFloat(data.trade.final.amount)
+      var profit = parseFloat(data.trade.settle.amount)
+      var refund = data.trade.counterParties.reduce((acc, cp) => {
+        return acc + parseFloat(cp.settle.amount)
       }, 0)
       var net = Math.round10(profit - premium, -6)
-      var fv = <span className="highlight padright">{profit} fox</span>
-      var np = <span className="highlight padright">{net} fox</span>
+      var fv = <span className="highlight padright">{Math.round10(profit, -6)} fox</span>
+      var np = <span className="highlight padright">{Math.round10(net, -6)} fox</span>
       var settlePrice = <tr>
-        <td className="rowlabel">Settle price</td>
+        <td className="rowlabel">Settle price:</td>
         <td className="spacer"></td>
-        <td className="rowvalue">@{settle}</td>
+        <td className="rowvalue">@{Math.round10(settle, -6)}</td>
       </tr>
-      var backingrefund = <p>Backing refunded: {refund} fox</p>
+      var backingrefund = <p>Backing Refunded: {Math.round10(refund, -6)} fox</p>
     } else {
       fv = <span className="padright">(in progress)</span>
       np = <span className="padright">(in progress)</span>
@@ -267,31 +275,35 @@ function buildPageTradeHistory(props) {
     if (data.endBlock !== undefined) {
       var endblock = <p>End block: {data.endBlock}</p>
     }
-    if (data.trade.type === 0) {
-      var direction = "⇑"
-      var profitable = Math.round10(strike + unitpremium, -6)
+    if (data.trade.type) {
+      var direction = "⇓"
+      var profitable = Math.round10(strike - unitpremium, -6)
     } else {
-      direction = "⇓"
-      profitable = Math.round10(strike - unitpremium, -6)
+      direction = "⇑"
+      profitable = Math.round10(strike + unitpremium, -6)
     }
     const metrics = <div className="metrics">
       <p>Cost: {cost} Final Value: {fv} Net Profit: {np}</p>
       <div className="statsblock">
         <h5>Timing</h5>
-        <p>Start Time: {new Date(data.trade.start*1000).toLocaleString()}</p>
-        <p>End Time: {new Date(data.trade.expiration*1000).toLocaleString()}</p>
+        <p>Start Time: {new Date(data.trade.start).toLocaleString()}</p>
+        <p>End Time: {new Date(data.trade.expiration).toLocaleString()}</p>
         <p>Start Block: {data.startBlock}</p>
         {endblock}
       </div>
       <div className="statsblock">
         <h5>Contract Details</h5>
-        <p>Quantity: ⚖ {qty}</p>
         <table>
           <tbody>
             <tr>
-              <td className="rowlabel">Strike</td>
+              <td className="rowlabel">Quantity:</td>
               <td className="spacer"></td>
-              <td className="rowvalue">@{strike}</td>
+              <td className="rowvalue">⚖ {qty}</td>
+            </tr>
+            <tr>
+              <td className="rowlabel">Strike:</td>
+              <td className="spacer"></td>
+              <td className="rowvalue">@{Math.round10(strike, -6)}</td>
             </tr>
             <tr>
               <td className="rowlabel">Profitable if:</td>
@@ -299,7 +311,7 @@ function buildPageTradeHistory(props) {
               <td className="rowvalue">{direction} {unitpremium}</td>
             </tr>
             <tr>
-              <td className="rowlabel">Profit Threshold</td>
+              <td className="rowlabel">Profit Threshold:</td>
               <td className="spacer"></td>
               <td className="rowvalue">@{profitable}</td>
             </tr>
@@ -321,20 +333,21 @@ function buildPageTradeHistory(props) {
     const WIDTH = 500
     const HEIGHT = 320
     const TOP = 300
-    const timeGrid = buildTimeGrid(LEFT, data.trade.dur, WIDTH, HEIGHT)
+    const timeGrid = buildTimeGrid(LEFT, durValue[data.trade.dur], WIDTH, HEIGHT)
     const priceGrid = buildPriceGrid(LEFT + WIDTH, TOP, data.history.minp, data.history.maxp)
-    const tradeEnd = data.endBlock === undefined ? data.startBlock + data.trade.dur : data.endBlock
-    if (data.trade.type === 0) {
-      const top = strike + unitpremium
-      var minp = data.history.minp
-      var maxp = data.history.maxp > top ? data.history.maxp : top
-    } else {
+    //const tradeEnd = data.endBlock === undefined ? data.startBlock + durValue[data.trade.duration] : data.endBlock
+    const tradeEnd = data.end === undefined ? data.start + durValue[data.trade.duration] * 1000 : data.end
+    if (data.trade.type) {
       const bottom = strike - unitpremium
-      minp = data.history.minp < bottom ? data.history.minp : bottom
-      maxp = data.history.maxp
+      var minp = data.history.minp < bottom ? data.history.minp : bottom
+      var maxp = data.history.maxp
+    } else {
+      const top = strike + unitpremium
+      minp = data.history.minp
+      maxp = data.history.maxp > top ? data.history.maxp : top
     }
     const hist = buildTradeHistoryChart(data, x => {
-      return 5 + LEFT + (WIDTH - 10) * (x - data.startBlock) / (tradeEnd - data.startBlock)
+      return 5 + LEFT + (WIDTH - 10) * (x - data.start) / (tradeEnd - data.start)
     }, y => {
       return (TOP - 5) - (TOP - 10) * (y - minp) / (maxp - minp)
     })
@@ -354,12 +367,13 @@ function buildPageTradeHistory(props) {
     } else {
       deltaDescription = "Strike - Quoted Spot"
     }
-    const costbreakdownrows = data.trade.counterparties.map((cp,n) => {
-      const spot = cp.qparams.spot
-      const qty = cp.qparams.quantity
-      const prem = cp.qparams.premium
-      const mqty = cp.quantity
-      const mprem = Math.round10(cp.premium / mqty, -6)
+    const costbreakdownrows = data.trade.counterParties.map((cp,n) => {
+      const spot = parseFloat(cp.quoted.spot.amount)
+      const qty = parseFloat(cp.quoted.quantity.amount)
+      const prem = parseFloat(cp.quoted.premium.amount)
+      const mqty = parseFloat(cp.quantity.amount)
+      const cprem = parseFloat(cp.premium.amount)
+      const mprem = Math.round10(cprem / mqty, -6)
       if (data.trade.type === 0) {
         var delta = Math.round10(spot - strike, props.constants.SPOT_PRECISION)
       } else {
@@ -371,15 +385,15 @@ function buildPageTradeHistory(props) {
         discount = <td className="col4">{delta/2}</td>
       }
       return <tr key={n}>
-        <td className="col1 section-right"><button onClick={() => props.viewQuote(cp.quoteId)}>Q-{cp.quoteId}</button></td>
-        <td className="col2">⚖ {qty}</td>
-        <td className="col2 section-right">⚖ {mqty}</td>
+        <td className="col1 section-right"><button onClick={() => props.viewQuote(cp.quoted.quoteId)}>Q-{cp.quoted.quoteId}</button></td>
+        <td className="col2">⚖ {Math.round10(qty, -6)}</td>
+        <td className="col2 section-right">⚖ {Math.round10(mqty, -6)}</td>
         <td className="col3">@{spot}</td>
         <td className="col3 section-right">Δ {delta}</td>
-        <td className="col4">⇕ {prem}</td>
+        <td className="col4">⇕ {Math.round10(prem, -6)}</td>
         {discount}
-        <td className="col4 section-right">{data.trade.type === 0 ? "⇑" : "⇓"} ={mprem}</td>
-        <td className="col5">{Math.round10(cp.premium, -6)} fox</td>
+        <td className="col4 section-right">{data.trade.type ? "⇓" : "⇑"} ={mprem}</td>
+        <td className="col5">{Math.round10(cprem, -6)} fox</td>
       </tr>
     })
     const costbreakdown = <table>
@@ -426,7 +440,7 @@ function buildPageTradeHistory(props) {
           <td className="col2 total">⚖ {qty}</td>
           <td colSpan={4}></td>
           <td>Total Cost</td>
-          <td className="col5 total">{premium} fox</td>
+          <td className="col5 total">{Math.round10(premium, -6)} fox</td>
         </tr>
       </tfoot>
     </table>
@@ -434,21 +448,30 @@ function buildPageTradeHistory(props) {
     // P/L Summary
 
     if (data.endBlock !== undefined) {
-      var totalpayout = <td className="col6 total">{profit} fox</td>
+      var totalpayout = <td className="col6 total">{Math.round10(profit, -6)} fox</td>
     } else {
       totalpayout = <td className="col6 total">in progress</td>
     }
-    const plsummaryrows = data.trade.counterparties.map((cp, n) => {
-      const qty = cp.qparams.quantity
-      const mqty = cp.quantity
-      const qbacking = cp.backing
-      const qrefund = cp.settle
-      const qsettle = Math.round10((qbacking - qrefund), -6)
-      const longpl = 100 * (qsettle - cp.premium) / cp.premium
-      const shortpl = 100 * (cp.premium - qsettle) / qbacking
+    const plsummaryrows = data.trade.counterParties.map((cp, n) => {
+      const qty = parseFloat(cp.quoted.quantity.amount)
+      const mqty = parseFloat(cp.quantity.amount)
+      const qbacking = parseFloat(cp.backing.amount)
+      const cprem = parseFloat(cp.premium.amount)
+      if (cp.refund !== undefined) {
+        var qrefund = parseFloat(cp.refund.amount)
+      } else {
+        qrefund = 0
+      }
+      if (cp.settle !== undefined) {
+        var qsettle = parseFloat(cp.settle.amount)
+      } else {
+        qsettle = 0
+      }
+      const longpl = 100 * (qsettle - cprem) / cprem
+      const shortpl = 100 * (cprem - qsettle) / qbacking
       if (data.endBlock !== undefined) {
-        var cprefund = <td className="col6">{qrefund} fox</td>
-        var cppayout = <td className="col6 section-right">{qsettle} fox</td>
+        var cprefund = <td className="col6">{Math.round10(qrefund, -6)} fox</td>
+        var cppayout = <td className="col6 section-right">{Math.round10(qsettle, -6)} fox</td>
         var cplongpl = <td className="col7">{Math.round10(longpl, -2)} %</td>
         var cpshortpl = <td className="col7 section-right">{Math.round10(shortpl, -2)} %</td>
       } else {
@@ -458,11 +481,11 @@ function buildPageTradeHistory(props) {
         cpshortpl = <td className="col7 section-right">in progress</td>
       }
       return <tr key={n}>
-        <td className="col1 section-right"><button onClick={() => props.viewQuote(cp.quoteId)}>Q-{cp.quoteId}</button></td>
-        <td className="col2">⚖ {qty}</td>
-        <td className="col2 section-right">⚖ {mqty}</td>
-        <td className="col5 section-right">{cp.premium} fox</td>
-        <td className="col6">{qbacking} fox</td>
+        <td className="col1 section-right"><button onClick={() => props.viewQuote(cp.quoted.quoteId)}>Q-{cp.quoted.quoteId}</button></td>
+        <td className="col2">⚖ {Math.round10(qty, -6)}</td>
+        <td className="col2 section-right">⚖ {Math.round10(mqty, -6)}</td>
+        <td className="col5 section-right">{Math.round10(cprem, -6)} fox</td>
+        <td className="col6">{Math.round10(qbacking, -6)} fox</td>
         {cprefund}
         {cppayout}
         {cplongpl}
@@ -554,7 +577,7 @@ function buildPageQuoteHistory(props) {
   var content = <div>
     <div className="quoterow">
       <div className="metrics">
-        <h4>{data.market} / ■ {data.dur} : Quote {data.state}</h4>
+        <h4>{data.market} / ■ {data.duration} : Quote {data.state}</h4>
       </div>
       <div id="quotechart">
         <div id="quotesvg">
@@ -761,11 +784,11 @@ const buildPriceGrid = (width, height, minp, maxp) => {
 
 const buildTradeHistoryChart = (data, scaleX, scaleY) => {
   // Spot history
-  var x1 = scaleX(data.startBlock)
-  var y1 = scaleY(data.start) 
-  const endBlock = data.endBlock === undefined ? data.startBlock + data.trade.dur : data.endBlock
+  var x1 = scaleX(data.start)
+  var y1 = scaleY(parseFloat(data.trade.strike.amount)) 
+  const endTime = data.end === undefined ? data.start + durValue[data.trade.duration] * 1000 : data.end
   const hist = data.history.data.map((el, n) => {
-    const x = scaleX(el.block < data.startBlock ? data.startBlock : el.block)
+    const x = scaleX(el.time < data.start ? data.start : el.time)
     const y = scaleY(el.spot)
     var line = <g key={n}>
       <line x1={x1} y1={y1} x2={x} y2={y1}/>
@@ -776,40 +799,46 @@ const buildTradeHistoryChart = (data, scaleX, scaleY) => {
     return line
   })
   if (data.endBlock !== undefined) {
-    hist.push(<line key="z" x1={x1} y1={y1} x2={scaleX(data.endBlock)} y2={y1}/>)
+    hist.push(<line key="z" x1={x1} y1={y1} x2={scaleX(data.end)} y2={y1}/>)
   }
   
   // trade rect
-  const tradeX1 = scaleX(data.startBlock)
-  const tradeX2 = scaleX(endBlock)
-  const strikeY = scaleY(data.trade.strike)
+  const tradeX1 = scaleX(data.start)
+  const tradeX2 = scaleX(endTime)
+  const strikeY = scaleY(parseFloat(data.trade.strike.amount))
   if (data.endBlock === undefined) {
     var settleY = strikeY
   } else {
-    const final = scaleY(data.end)
-    if (data.trade.type === 0) {
-      settleY = final < strikeY ? final : strikeY
-    } else {
+    const final = scaleY(parseFloat(data.trade.final.amount))
+    if (data.trade.type) {
       settleY = final > strikeY ? final : strikeY 
+    } else {
+      settleY = final < strikeY ? final : strikeY
     }
   }
-  const unitprem = data.trade.premium / data.trade.quantity
-  if (data.trade.type === 0) {
-    const premY = scaleY(data.trade.strike + unitprem)
-    var rect = <rect x={tradeX1} y={premY} width={tradeX2-tradeX1} height={strikeY-premY}/>
-    var trade = "call"
+  const unitprem = parseFloat(data.trade.cost.amount) / parseFloat(data.trade.quantity.amount)
+  if (data.trade.type) {
+    const premY = scaleY(parseFloat(data.trade.strike.amount) - unitprem)
+    const height = premY >= strikeY ? premY-strikeY : 0
+    var rect = <rect x={tradeX1} y={strikeY} width={tradeX2-tradeX1} height={height}/>
+    var trade = "put"
+  } else {
+    const premY = scaleY(parseFloat(data.trade.strike.amount) + unitprem)
+    const height = strikeY >= premY ? strikeY-premY : 0
+    rect = <rect x={tradeX1} y={premY} width={tradeX2-tradeX1} height={height}/>
+    trade = "call"
   }
-  if (data.trade.type === 1) {
-    const premY = scaleY(data.trade.strike - unitprem)
-    rect = <rect x={tradeX1} y={strikeY} width={tradeX2-tradeX1} height={premY-strikeY}/>
-    trade = "put"
+  if (data.end !== undefined) {
+    var trademarker = <g>
+      <line className={"tradex "+trade} x1={tradeX2-3} y1={settleY-3} x2={tradeX2+3} y2={settleY+3}/>
+      <line className={"tradex "+trade} x1={tradeX2+3} y1={settleY-3} x2={tradeX2-3} y2={settleY+3}/>
+    </g>
   }
   const tradegroup = <g>
     {rect}
     <line className={"tradebase "+trade} x1={tradeX1} y1={strikeY} x2={tradeX2} y2={strikeY}/>
     <line className={"tradebase "+trade} x1={tradeX2} y1={strikeY} x2={tradeX2} y2={settleY}/>
-    <line className={"tradex "+trade} x1={tradeX2-3} y1={settleY-3} x2={tradeX2+3} y2={settleY+3}/>
-    <line className={"tradex "+trade} x1={tradeX2+3} y1={settleY-3} x2={tradeX2-3} y2={settleY+3}/>
+    {trademarker}
   </g>
   
   return <g>
