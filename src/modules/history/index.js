@@ -23,6 +23,14 @@ const initialState = {
   }
 }
 
+const durValue = {
+  '5minute': 300,
+  '15minute': 900,
+  '1hour': 3600,
+  '4hour': 14400,
+  '12hour': 43200
+}
+
 export default (state = initialState, action) => {
   switch (action.type) {
     case MENU:
@@ -516,71 +524,71 @@ const computeQuotePrices = async data => {
 
 const getQuoteData = async id => {
   const event = "quote." + id
-  const latestBlock = await api.blockNumber()
-  if (latestBlock.block > 2000) {
-    var startBlock = latestBlock.block - 2000
+  const info = await api.blockInfo()
+  if (info.block > 2000) {
+    var startBlock = info.block - 2000
   } else {
     startBlock = 0
   }
-  const history = await api.history(event + "=''", startBlock, latestBlock.block)
+  const history = await api.history(event + " CONTAINS '.'", startBlock, info.block, [event])
   const quote = await api.getQuote(id)
-  if (quote !== undefined) {
+  if (quote !== null) {
     var market = quote.market
-    var dur = quote.dur
+    var dur = durValue[quote.duration]
   }
   var state = {
     start: startBlock,
-    end: latestBlock.block
+    end: info.block
   }
   var hist = []
   var minp = Number.MAX_VALUE
   var maxp = 0
   for (var i=0; i<history.length; i++) {
     const h = history[i]
-    for (var j=0; j<h.tags.length; j++) {
-      const t = h.tags[j]
-      if (t.key === event) {
-        const block = parseInt(h.block, 10)
-        switch (t.value) {
-          case 'create':
-            market = h.market
-            dur = h.dur
-            state.start = block
-            state.state = 'in progress'
-            state.end = latestBlock.block
-            hist.push({
-              block: block,
-              spot: h.spot,
-              premium: h.premium
-            })
-            break
-          case 'final':
-            state.end = block
-            state.state = 'finalized'
-            break
-          case 'cancel':
-            state.end = block
-            state.state = 'cancel'
-            break
-          case 'update':
-            state.state = 'in progress'
-            if (minp > h.spot - h.premium) minp = h.spot - h.premium
-            if (maxp < h.spot + h.premium) maxp = h.spot + h.premium
-            hist.push({
-              block: block,
-              spot: h.spot,
-              premium: h.premium
-            })
-            break
-          case 'deposit':
-            state.state = 'in progress'
-            break
-          case 'match':
-            state.state = 'in progress'
-            break
-          default:
-        }
-      }
+    switch (h.tags[event]) {
+      case 'event.create':
+        market = h.market
+        dur = durValue[h.duration]
+        state.start = h.block
+        state.state = 'in progress'
+        state.end = info.block
+        hist.push({
+          block: h.block,
+          time: h.time,
+          spot: parseFloat(h.spot.amount),
+          premium: parseFloat(h.premium.amount)
+        })
+        break
+      case 'event.final':
+        state.end = h.block
+        state.state = 'finalized'
+        break
+      case 'event.cancel':
+        state.end = h.block
+        state.state = 'cancel'
+        break
+      case 'event.update':
+        market = h.market
+        dur = durValue[h.duration]
+        state.state = 'in progress'
+        const spot = parseFloat(h.spot.amount)
+        const premium = parseFloat(h.premium.amount)
+        if (minp > spot - premium) minp = spot - premium
+        if (maxp < spot + premium) maxp = spot + premium
+        hist.push({
+          block: h.block,
+          time: h.time,
+          spot: spot,
+          premium: premium
+        })
+        break
+      case 'event.deposit':
+        state.state = 'in progress'
+        break
+      case 'event.match':
+        state.state = 'in progress'
+        break
+      default:
     }
   }
   if (hist.length > 0) {
@@ -590,7 +598,7 @@ const getQuoteData = async id => {
       premium: hist[0].premium
     })
     hist.push({
-      block: latestBlock.block,
+      block: info.block,
       spot: hist[hist.length-1].spot,
       premium: hist[hist.length-1].premium
     })

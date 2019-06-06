@@ -570,14 +570,15 @@ function buildPageQuoteHistory(props) {
   const timeGrid = buildTimeScale(data.start, data.end, WIDTH, HEIGHT)
   const priceGrid = buildPriceGrid(LEFT + WIDTH, TOP, data.minp, data.maxp)
   const hist = buildQuoteHistoryChart(data, props.history.data.view, x => {
-    return 5 + LEFT + (WIDTH - 10) * (x - data.start) / (data.end - data.start)
+    return 5 + LEFT + WIDTH * (x - data.start) / (data.end - data.start)
   }, y => {
     return (TOP - 5) - (TOP - 10) * (y - data.minp) / (data.maxp - data.minp)
   })
+  //console.log("data=" + JSON.stringify(data, null, 2))
   var content = <div>
     <div className="quoterow">
       <div className="metrics">
-        <h4>{data.market} / ■ {data.duration} : Quote {data.state}</h4>
+        <h4>{data.market} / ■ {data.dur} : Quote {data.state}</h4>
       </div>
       <div id="quotechart">
         <div id="quotesvg">
@@ -851,24 +852,30 @@ const buildQuoteHistoryChart = (data, view, scaleX, scaleY) => {
   if (data.hist.length > 1) {
     if (view.quotepremiums) {
       var last = data.hist[0]
-      var histrect = data.hist.slice(1).map((el,n) => {
+      var histrect = data.hist.slice(1).reduce((acc, el, n) => {
         const lastx = scaleX(last.block)
         const x = scaleX(el.block)
         const lowY = scaleY(last.spot - last.premium)
         const highY = scaleY(last.spot + last.premium)
         last = el
-        return <rect key={n} x={lastx} y={highY} width={x-lastx} height={lowY-highY}/>
-      })
+        if (n > 0) {
+          acc.push(<rect key={n} x={lastx} y={highY} width={x-lastx} height={lowY-highY}/>)
+        }
+        return acc
+      }, [])
     }
     if (view.quotespot) {
       last = data.hist[0]
-      var histline = data.hist.slice(1).map((el,n) => {
+      var histline = data.hist.slice(1).reduce((acc, el, n) => {
         const lastx = scaleX(last.block)
         const x = scaleX(el.block)
         const midY = scaleY(last.spot)
         last = el
-        return <line key={n} x1={lastx} y1={midY} x2={x} y2={midY}/>
-      })
+        if (n > 0) {
+          acc.push(<line key={n} x1={lastx} y1={midY} x2={x} y2={midY}/>)
+        }
+        return acc
+      }, [])
     }
   }
   if (data.consensus.length > 1) {
