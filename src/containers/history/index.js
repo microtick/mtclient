@@ -248,7 +248,7 @@ function buildPageTradeHistory(props) {
     const backing = data.trade.counterParties.reduce((sum, cp) => {
       return Math.round10(sum + parseFloat(cp.backing.amount), -6)
     }, 0)
-    const maxpayout = Math.round10(backing / premium, -6)
+    const maxpayout = Math.round10(backing / premium, -2)
     var cost = <span className="highlight padright">{Math.round10(premium, -6)} fox</span>
     if (data.endBlock !== undefined) {
       var settle = parseFloat(data.trade.final.amount)

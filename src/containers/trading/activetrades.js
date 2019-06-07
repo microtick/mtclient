@@ -6,6 +6,14 @@ import { selectMarket, selectDur } from '../../modules/microtick'
 import { viewTrade } from '../../modules/history'
 import { settleTradeDialog } from '../../modules/dialog'
 
+const commonName = {
+  '5minute': "5 minutes",
+  '15minute': "15 minutes",
+  '1hour': "1 hour",
+  '4hour': "4 hours",
+  '12hour': "12 hours"
+}
+
 const ActiveTrades = props => {
   var totalPremium = 0
   var totalCurrent = 0
@@ -44,7 +52,7 @@ const ActiveTrades = props => {
       <td>{tr.dir === 'long' ? 'Long' : 'Short'}</td>
       <td>{tr.type === 0 ? "Call" : "Put"}</td>
       <td><button onClick={() => { props.selectMarket(tr.market); props.selectDur(tr.dur) }}>{tr.market}</button></td>
-      <td>{tr.dur}</td>
+      <td>{commonName[tr.dur]}</td>
       <td>{tr.start.toLocaleTimeString()}</td>
       <td>{tr.end.toLocaleTimeString()}</td>
       {remain}

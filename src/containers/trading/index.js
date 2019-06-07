@@ -224,8 +224,8 @@ class Home extends React.Component {
               <div id="action">
                 <p className="blue">Place Quote</p>
               </div>
-              <p>🠝/ 🠟 select your spot</p>
-              <p>🠜 / 🠞 increase or decrease premium</p>
+              <p>⬅ / ➡ select your spot</p>
+              <p>⬆ / ⬇ increase or decrease premium</p>
               <p>Click to fine tune and place order</p>
             </div>
           </div>
@@ -236,7 +236,7 @@ class Home extends React.Component {
               <div id="action">
                 <p className="green">Buy Call</p>
               </div>
-              <p>🠜 / 🠞 increase or decrease ⚖ quantity</p>
+              <p>⬅ / ➡ increase or decrease ⚖ quantity</p>
               <p>Click to fine tune and place order</p>
             </div>
           </div>
@@ -247,7 +247,7 @@ class Home extends React.Component {
               <div id="action">
                 <p className="red">Buy Put</p>
               </div>
-              <p>🠜 / 🠞 increase or decrease ⚖ quantity</p>
+              <p>⬅ / ➡ increase or decrease ⚖ quantity</p>
               <p>Click to fine tune and place order</p>
             </div>
           </div>
