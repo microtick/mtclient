@@ -12,6 +12,7 @@ import {createTestTokensNotification,
 import { chartCursorPos, orderBookCursorPos } from '../../containers/trading/chart'
 import store from '../../store'
 import api from '../api'
+import { init } from '../chain/tendermint'
 
 const datafeed = require('./datafeed')
 
@@ -495,6 +496,9 @@ async function updateHistory(dispatch) {
     minp: minp,
     maxp: maxp
   })
+  dispatch({
+    type: DONELOADING
+  })
 }
 
 export const selectMarket = choice => {
@@ -524,18 +528,15 @@ export const selectMarket = choice => {
     
     // Subscribe MarketTick events
     //var lastId = 0
-    globals.marketSubscription = datafeed.addMarket(globals.market, async event => {
-      //if (event.returnValues.id < lastId) return
-      //lastId = event.returnValues.id
-      globals.spot = parseFloat(event.consensus.amount)
-      const info = await api.getMarketInfo(event.value)
+    globals.marketSubscription = datafeed.addMarket(globals.market, async (data, tags) => {
+      globals.spot = parseFloat(data.consensus.amount)
+      const info = await api.getMarketInfo(tags['mtm.MarketTick'])
       globals.weight = parseFloat(info.sumWeight.amount)
       globals.sumqty = parseFloat(info.sumWeight.amount)
       globals.backing = parseFloat(info.sumBacking.amount)
-      //console.log("MarketTick: " + JSON.stringify(event))
       dispatch({
         type: TICK,
-        block: event.block,
+        block: data.block,
         time: Date.now(),
         spot: globals.spot,
         weight: globals.weight,
@@ -543,6 +544,7 @@ export const selectMarket = choice => {
         backing: globals.backing
       })
       fetchOrderBook(dispatch)
+      fetchActive(dispatch)
     })
     datafeed.subscribe()
     
@@ -581,13 +583,8 @@ export const selectDur = choice => {
     default:
   }
   
-  
   return async dispatch => {
     await updateHistory(dispatch)
-    dispatch({
-      type: DONELOADING
-    })
-    
     await fetchOrderBook(dispatch)
     dispatch({
       type: DUR,
@@ -597,7 +594,6 @@ export const selectDur = choice => {
 }
 
 const selectAccount = async () => {
-  api.init()
   const block = await api.blockInfo()
   globals.blockNumber = block.block
   const accountInfo = await api.getAccountInfo(globals.account)
@@ -624,9 +620,9 @@ const selectAccount = async () => {
   })
   globals.accountSubscriptions = {}
   
-  async function tradeMarketTick(ev) {
-    const market = ev.value
-    const spot = parseFloat(ev.consensus.amount)
+  async function tradeMarketTick(data, tags) {
+    const market = tags['mtm.MarketTick']
+    const spot = parseFloat(data.consensus.amount)
     globals.trades.map(trade => {
       if (trade.market === market) {
         trade.spot = spot
@@ -643,100 +639,87 @@ const selectAccount = async () => {
     })
   }
   
-  async function processTrade(ev, dir) {
-    //console.log("processTrade=" + JSON.stringify(ev, null, 2))
-    const data = ev.trade
-    const id = data.id
-    const type = data.type ? BuyPut : BuyCall
-    const market = data.market
-    const start = new Date(data.start)
-    const end = new Date(data.expiration)
-    const strike = parseFloat(data.strike.amount)
-    const backing = data.counterParties.reduce((acc, el) => {
-      acc += parseFloat(el.backing.amount)
-      return acc
-    }, 0)
-    const qty = parseFloat(data.quantity.amount)
-    const prem = parseFloat(data.cost.amount)
-    const data2 = await api.getMarketSpot(market)
-    const spot = parseFloat(data2.consensus.amount)
-    var current = (type === 0) ? 
-      (spot > strike ? (spot - strike) * qty : 0) :
-      (spot < strike ? (strike - spot) * qty : 0) 
-    if (current > backing) current = backing
-    const profit = dir === 'long' ? current - prem : prem - current
-    const trade = {
-      id: id,
-      dir: dir,
-      type: type,
-      active: true,
-      market: market,
-      dur: data.duration,
-      spot: spot,
-      startBlock: ev.block,
-      start: start, 
-      end: end,
-      strike: strike,
-      backing: backing,
-      qty: qty,
-      premium: prem,
-      current: current,
-      profit: profit,
-      final: strike
-    }
-    //console.log("Adding trade: " + JSON.stringify(trade))
-    globals.trades.push(trade)
-    globals.accountSubscriptions[id] = datafeed.addMarket(market, tradeMarketTick)
-  }
-  async function processTradeEnd(ev) {
-    //console.log("processTradeEnd=" + JSON.stringify(ev, null, 2))
-    globals.trades = globals.trades.filter(tr => {
-      if (tr.id === ev.id) {
-        //console.log("Setting trade to inactive")
-        tr.active = false
-        //tr.end = ev.timestamp
-        tr.endBlock = ev.block
-        const final = ev.final.amount
-        if ((tr.type === Call && final > tr.strike) || (tr.type === Put && final < tr.strike)) {
-          tr.final = final
-        }
+  async function processAccountEvent(data, tags) {
+    if (data.originator === 'marketTrade' || data.originator === 'limitTrade') {
+      //console.log("processTrade=" + JSON.stringify(ev, null, 2))
+      const trade = data.trade
+      const dir = trade.long === globals.account ? 'long' : 'short'
+      const id = trade.id
+      const type = trade.type ? BuyPut : BuyCall
+      const market = trade.market
+      const start = new Date(trade.start)
+      const end = new Date(trade.expiration)
+      const strike = parseFloat(trade.strike.amount)
+      const backing = trade.counterParties.reduce((acc, el) => {
+        acc += parseFloat(el.backing.amount)
+        return acc
+      }, 0)
+      const qty = parseFloat(trade.quantity.amount)
+      const prem = parseFloat(trade.cost.amount)
+      const trade2 = await api.getMarketSpot(market)
+      const spot = parseFloat(trade2.consensus.amount)
+      var current = (type === 0) ? 
+        (spot > strike ? (spot - strike) * qty : 0) :
+        (spot < strike ? (strike - spot) * qty : 0) 
+      if (current > backing) current = backing
+      const profit = dir === 'long' ? current - prem : prem - current
+      const tradeData = {
+        id: id,
+        dir: dir,
+        type: type,
+        active: true,
+        market: market,
+        dur: trade.duration,
+        spot: spot,
+        startBlock: data.block,
+        start: start, 
+        end: end,
+        strike: strike,
+        backing: backing,
+        qty: qty,
+        premium: prem,
+        current: current,
+        profit: profit,
+        final: strike
       }
-      return true;
-    })
-    const accountInfo = await api.getAccountInfo(globals.account)
-    const balance = parseFloat(accountInfo.balance.amount)
-    store.dispatch({
-      type: ACCOUNT,
-      acct: globals.account, 
-      balance: balance,
-    })
-    datafeed.removeMarket(globals.accountSubscriptions[ev.id])
-    delete globals.accountSubscriptions[ev.id]
+      globals.trades.push(tradeData)
+      globals.accountSubscriptions[id] = datafeed.addMarket(market, tradeMarketTick)
+    }
+    if (data.originator === 'settleTrade') {
+      //console.log("processTradeEnd=" + JSON.stringify(ev, null, 2))
+      globals.trades = globals.trades.filter(tr => {
+        if (tr.id === data.id) {
+          //console.log("Setting trade to inactive")
+          tr.active = false
+          //tr.end = ev.timestamp
+          tr.endBlock = data.block
+          const final = data.final.amount
+          if ((tr.type === Call && final > tr.strike) || (tr.type === Put && final < tr.strike)) {
+            tr.final = final
+          }
+        }
+        return true;
+      })
+      const accountInfo = await api.getAccountInfo(globals.account)
+      const balance = parseFloat(accountInfo.balance.amount)
+      store.dispatch({
+        type: ACCOUNT,
+        acct: globals.account, 
+        balance: balance,
+      })
+      datafeed.removeMarket(globals.accountSubscriptions[data.id])
+      delete globals.accountSubscriptions[data.id]
+    }
   }
   
   new Promise(async () => {
     // Get past trades
     var startBlock = globals.blockNumber - (43200 * 3) / BLOCKTIME
     if (startBlock < 0) startBlock = 0
-    var events = await api.history("acct." + globals.account + "='trade.long'", startBlock, globals.blockNumber)
+    var events = await api.history("acct." + globals.account + " CONTAINS '.'", startBlock, globals.blockNumber)
     for (var i=0; i<events.length; i++) {
       var ev = events[i]
-      await processTrade(ev, 'long')
-    }
-    events = await api.history("acct." + globals.account + "='settle.long'", startBlock, globals.blockNumber)
-    for (i=0; i<events.length; i++) {
-      ev = events[i]
-      await processTradeEnd(ev)
-    }
-    events = await api.history("acct." + globals.account + "='trade.short'", startBlock, globals.blockNumber)
-    for (i=0; i<events.length; i++) {
-      ev = events[i]
-      await processTrade(ev, 'short')
-    }
-    events = await api.history("acct." + globals.account + "='settle.short'", startBlock, globals.blockNumber)
-    for (i=0; i<events.length; i++) {
-      ev = events[i]
-      await processTradeEnd(ev)
+      await processAccountEvent(ev)
     }
     datafeed.subscribe()
     store.dispatch({
@@ -744,31 +727,8 @@ const selectAccount = async () => {
     })
   })
   
-  globals.tradeWatch = await api.subscribe("acct." + globals.account + "='trade.long'", async ev => {
-    await processTrade(ev, 'long')
-    datafeed.subscribe()
-    store.dispatch({
-      type: TRADELIST
-    })
-  })
-  globals.tradeEndWatch = await api.subscribe("acct." + globals.account + "='settle.long'", async ev => {
-    await processTradeEnd(ev)
-    datafeed.subscribe()
-    store.dispatch({
-      type: TRADELIST
-    })
-  })
-  globals.tradeCounterpartyWatch = await api.subscribe("acct." + globals.account + "='trade.short'", async ev => {
-    fetchActive(store.dispatch)
-    fetchOrderBook(store.dispatch)
-    await processTrade(ev, 'short')
-    datafeed.subscribe()
-    store.dispatch({
-      type: TRADELIST
-    })
-  })
-  globals.tradeEndCounterpartyWatch = await api.subscribe("acct." + globals.account + "='settle.short'", async ev => {
-    await processTradeEnd(ev)
+  globals.tradeWatch = await api.subscribe("acct." + globals.account + " CONTAINS '.'", async ev => {
+    await processAccountEvent(ev)
     datafeed.subscribe()
     store.dispatch({
       type: TRADELIST
@@ -812,7 +772,7 @@ async function fetchOrderBook(dispatch) {
     try {
       const consensusData = await api.getMarketSpot(market)
       const marketSpot = parseFloat(consensusData.consensus.amount)
-      const orderBookInfo = await api.getOrderbookInfo(market, api.durationReverseLookup[dur])
+      const orderBookInfo = await api.getOrderbookInfo(market, api.durationFromSeconds(dur))
       var q1 = 0.0 // quantity
       var c = 0.0 // cost
       if (type === CallAsk) {
@@ -850,7 +810,7 @@ async function fetchOrderBook(dispatch) {
         }
       }
     } catch (err) {
-      //console.log("No quotes for " + market + " : " + dur)
+      console.log("Error fetching order book: " + err.message)
     }
     obj.price = qty => {
       if (qty === 0) return 0
@@ -913,16 +873,11 @@ async function fetchOrderBook(dispatch) {
       })
     }
   })
-  
-  dispatch({
-    type: DONELOADING
-  })
-  
 }
 
 async function fetchActive(dispatch) {
   // Get current quotes
-  console.log("Fetching quotes for account " + globals.account)
+  //console.log("Fetching quotes for account " + globals.account)
   globals.quotes = []
   //const quoteInfo = await api.getAccountQuotes(globals.account)
   var accountInfo = await api.getAccountInfo(globals.account)
@@ -959,7 +914,6 @@ export const buyParams = () => {
 }
 
 export const buyCall = () => {
-  console.log("buying call")
   return async dispatch => {
     dispatch({
       type: MOUSESTATE,
@@ -967,10 +921,10 @@ export const buyCall = () => {
     })
     const qty = parseFloat(globals.qty.toFixed(6))
     const market = globals.market
-    const dur = api.durationReverseLookup[globals.dur]
+    const dur = api.durationFromSeconds(globals.dur)
     const notId = createBuyNotification(dispatch, BuyCall, market, dur, qty)
     try {
-      await api.marketTrade(market, dur, "call", qty)
+      await api.marketTrade(market, dur, "call", qty + "quantity")
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
@@ -984,7 +938,7 @@ export const buyCall = () => {
         balance: balance
       })
     } catch (err) {
-      console.log("error")
+      console.log("Buy call failed: " + err.message)
       removeNotification(dispatch, notId)
       createErrorNotification(dispatch, "Buy call failed", err.message)
     }
@@ -992,7 +946,6 @@ export const buyCall = () => {
 }
 
 export const buyPut = () => {
-  console.log("buying put")
   return async dispatch => {
     dispatch({
       type: MOUSESTATE,
@@ -1000,10 +953,10 @@ export const buyPut = () => {
     })
     const qty = parseFloat(globals.qty.toFixed(6))
     const market = globals.market
-    const dur = api.durationReverseLookup[globals.dur]
+    const dur = api.durationFromSeconds(globals.dur)
     const notId = createBuyNotification(dispatch, BuyPut, market, dur, qty)
     try {
-      await api.marketTrade(market, dur, "put", qty)
+      await api.marketTrade(market, dur, "put", qty + "quantity")
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
@@ -1017,6 +970,7 @@ export const buyPut = () => {
         balance: balance
       })
     } catch (err) {
+      console.log("Buy put failed: " + err.message)
       removeNotification(dispatch, notId)
       createErrorNotification(dispatch, "Buy put failed", err.message)
     }
@@ -1127,7 +1081,7 @@ export const placeQuote = () => {
       mouseState: 0
     })
     const market = globals.market
-    const dur = api.durationReverseLookup[globals.dur]
+    const dur = api.durationFromSeconds(globals.dur)
     const spot = globals.quote.spot
     const premium = globals.quote.premium
     const backing = globals.quote.backing
@@ -1139,29 +1093,12 @@ export const placeQuote = () => {
     console.log("  backing: " + backing + "(" + typeof backing + ")")
     const notId = createPlaceQuoteNotification(dispatch, market, dur, spot, premium, backing)
     try {
-      const id = await api.createQuote(market, dur, backing, spot, premium)
+      await api.createQuote(market, dur, backing + "fox", spot + "spot", premium + "premium")
+      //const id = res.tx_result.data.id
       setTimeout(() => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
       createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-      const data = await api.getQuote(id)
-      const weight = data.quantity
-      globals.quotes.push({
-        id: id,
-        provider: data.provider,
-        market: data.market,
-        dur: data.dur,
-        spot: data.spot.amount,
-        premium: data.premium.amount,
-        backing: data.backing.amount,
-        modified: new Date(data.modified),
-        canModify: new Date(data.canModify),
-        quantity: data.quantity.amount,
-        weight: weight.amount
-      })
-      dispatch({
-        type: QUOTELIST
-      })
       const accountInfo = await api.getAccountInfo(globals.account)
       const balance = parseFloat(accountInfo.balance.amount)
       dispatch({
@@ -1185,15 +1122,6 @@ export const cancelQuote = async (dispatch, id) => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-    globals.quotes = globals.quotes.filter(q => {
-      if (q.id !== id) {
-        return true
-      }
-      return false
-    })
-    dispatch({
-      type: QUOTELIST
-    })
     const accountInfo = await api.getAccountInfo(globals.account)
     const balance = parseFloat(accountInfo.balance.amount)
     dispatch({
@@ -1211,7 +1139,7 @@ export const backQuote = async (dispatch, id, amount) => {
   console.log("Backing quote: " + id + " amount=" + amount)
   const notId = createBackQuoteNotification(dispatch, id, amount)
   try {
-    await api.depositQuote(id, amount)
+    await api.depositQuote(id, amount + "fox")
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1234,7 +1162,7 @@ export const updateSpot = async (dispatch, id, newspot) => {
   console.log("Updating spot: " + id + " new spot=" + newspot)
   const notId = createUpdateSpotNotification(dispatch, id, newspot)
   try {
-    await api.updateQuote(id, newspot, 0)
+    await api.updateQuote(id, newspot + "spot", "0premium")
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1250,7 +1178,7 @@ export const updatePremium = async (dispatch, id, newpremium) => {
   console.log("Updating premium: " + id + " new premium=" + newpremium)
   const notId = createUpdatePremiumNotification(dispatch, id, newpremium)
   try {
-    await api.updateQuote(id, 0, newpremium)
+    await api.updateQuote(id, "0spot", newpremium + "premium")
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1320,9 +1248,9 @@ export const choosePassword = () => {
       type: PASSWORD
     })
     const password = document.getElementById('password').value
-    var keys = await api.generateWallet()
-    console.log("keys=" + JSON.stringify(keys))
-    await api.createAccount(keys)
+    await api.init()
+    await init()
+    var keys = await api.getWallet()
     keys.priv = btoa(window.sjcl.encrypt(password, keys.priv))
     document.cookie = "mtm.account=" + JSON.stringify(keys) + ";max-age=31536000;"
     console.log("Creating account on server: " + keys.acct)
@@ -1345,8 +1273,9 @@ export const enterPassword = () => {
     const keys = JSON.parse(checkAccount[0])
     try {
       keys.priv = window.sjcl.decrypt(password, atob(keys.priv))
-      console.log("Creating account on server: " + keys.acct)
-      await api.createAccount(keys)
+      console.log("Connecting account: " + keys.acct)
+      await api.init(keys)
+      await init()
       globals.account = keys.acct
       selectAccount()
     } catch (err) {

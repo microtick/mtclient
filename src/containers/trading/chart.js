@@ -60,7 +60,7 @@ const buildTimeGrid = props => {
   } else {
     grids = [ 5000, 10000, 15000 ]
   }
-  if (view.minb !== null && !isNaN(view.minb)) {
+  if (view.minb !== null && !isNaN(view.minb) && view.maxb > view.minb) {
     const rules = []
     const text = []
     for (var i in grids) {
@@ -386,7 +386,7 @@ const buildBackground = props => {
       //const newspot = (parseFloat(props.spot) * parseFloat(props.weight) + price * weight) / (weight + parseFloat(props.weight))
       const qty = backing / (10 * prem)
       const weight = qty
-      const newspot = (parseFloat(props.spot) * parseFloat(props.weight) + price * weight) / (weight + parseFloat(props.weight))
+      const newspot = (props.spot * props.weight + price * weight) / (weight + props.weight)
       var call = prem + (price - newspot) / 2
       if (call < 0) call = 0
       var put = prem - (price - newspot) / 2
@@ -513,10 +513,10 @@ const buildOrderbookSpot = props => {
 const buildOrderbookPremiums = props => {
   const premiums = props.premiums
   if (premiums && props.mousestate) {
-    if (props.premiums.buy) {
-      var spot = parseFloat(props.spot)
+    if (premiums.buy) {
+      var spot = props.spot
     } else {
-      spot = props.premiums.indicatedSpot
+      spot = premiums.indicatedSpot
     }
     const view = props.view
     
@@ -571,14 +571,23 @@ const buildOrderBook = props => {
 const Chart = props => {
   //if (props.selected && props.spot !== undefined && props.view.maxp > props.view.minp) {
   if (!props.loading) {
+    //console.log("build background")
     const background = buildBackground(props)
+    //console.log("build time grid")
     const timegrid = buildTimeGrid(props)
+    //console.log("build price grid")
     const pricegrid = buildPriceGrid(props)
+    //console.log("build price overlay")
     const data = buildPriceOverlay(props)
+    //console.log("build trades overlay")
     const trades = buildTradesOverlay(props)
+    //console.log("build orderbook spot")
     const spot = buildOrderbookSpot(props)
+    //console.log("build orderbook premiums")
     const prems = buildOrderbookPremiums(props)
+    //console.log("build orderbook")
     const orderbook = buildOrderBook(props)
+    //console.log("build foreground")
     const foreground = buildForeground(props)
     var chart =
       <div>

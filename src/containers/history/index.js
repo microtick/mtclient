@@ -190,16 +190,12 @@ function buildPageAccountHistory(props) {
       </thead>
       <tbody>
         <tr className="even">
-          <td colSpan={2}></td>
-          <td>Starting Balance</td>
-          <td colSpan={7}></td>
+          <td colSpan={10}></td>
           <td>{startingBalance} fox</td>
         </tr>
         {list}
         <tr className={data.list.length%2?'even':'odd'}>
-          <td colSpan={2}></td>
-          <td>Ending Balance</td>
-          <td colSpan={7}></td>
+          <td colSpan={10}></td>
           <td>{endingBalance} fox</td>
         </tr>
       </tbody>
@@ -207,7 +203,7 @@ function buildPageAccountHistory(props) {
   </div>
   content = <div>
     <div>
-      <span>Transactions per page </span>
+      <span>Transaction blocks per page </span>
       <button onClick={props.button10}>10</button>
       <button onClick={props.button25}>25</button>
       <button onClick={props.button50}>50</button>

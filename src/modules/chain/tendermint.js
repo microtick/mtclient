@@ -8,7 +8,6 @@ export const PROVIDER = 'tendermint/provider'
 
 const initialState = {
   app: {
-    version: "0.1", //config.version,
     timestamp: 0
   },
   block: {
@@ -60,37 +59,22 @@ export default (state = initialState, action) => {
 }
 
 export const init = async () => {
-  /*
-  const checkProvider = document.cookie.split(';').filter(item => {
-    return item.indexOf('mtm.provider=') >= 0
-  }).map(item => {
-    return item.slice(item.indexOf('=') + 1)
-  })
-  if (checkProvider.length > 0) {
-    await api.setProvider(checkProvider[0])
-    store.dispatch({
-      type: PROVIDER,
-      edit: false,
-      url: checkProvider[0]
-    })
-  }
-  */
-  console.log("Creating web socket")
   var lasttime = 0
   var lastlocal = 0
   api.subscribe("tm.event='NewBlock'", message => {
     try {
-      lasttime = new Date(message.value.block.header.time).getTime() / 1000
+      lasttime = new Date(message.data.value.block.header.time).getTime() / 1000
       lastlocal = new Date().getTime() / 1000
       store.dispatch({
         type: BLOCK,
         block: {
-          number: parseInt(message.value.block.header.height, 10),
+          number: parseInt(message.data.value.block.header.height, 10),
           timestamp: lasttime,
-          hash: message.value.block.header.last_block_id.hash
+          hash: message.data.value.block.header.last_block_id.hash
         }
       })
     } catch (err) {
+      console.log("Block error")
     }
   })
   
@@ -102,31 +86,4 @@ export const init = async () => {
     })
   }, 1000)
   
-  //const accts = await(await api.getAccounts())
-  //store.dispatch({
-    //type: ACCOUNTLIST,
-    //accounts: accts.map(acct => {
-      //return { value: acct, label: acct }
-    //})
-  //})
 }
-
-/*
-export const setProvider = async status => {
-  if (!status) {
-    var provider = document.getElementById('providerInput').value
-    console.log("new provider=" + provider)
-    var res = await api.setProvider(provider)
-    if (res) {
-      document.cookie = "mtm.provider=" + provider + ";max-age=31536000;"
-    }
-  }
-  store.dispatch({
-    type: PROVIDER,
-    edit: status,
-    url: res ? provider : config.provider
-  })
-}
-*/
-
-init()

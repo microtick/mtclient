@@ -12,16 +12,16 @@ const globals = {
   changed: false
 }
 
-async function callback(event) {
-  const market = event.value
+async function callback(data, tags) {
+  //console.log(JSON.stringify(event, null, 2))
+  const market = tags['mtm.MarketTick']
   Object.keys(globals.subscriptions).map(key => {
     const obj = globals.subscriptions[key]
     if (obj.market === market) {
-      obj.cb(event)
+      obj.cb(data, tags)
     }
     return null
   })
-  
 }
 
 export const subscribe = async () => {

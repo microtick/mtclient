@@ -8,7 +8,6 @@ const About = props => {
   return <div id="div-about">
     <h4>Microtick Decentralized Oracle</h4>
     <p>Limited Testnet Release</p>
-    <p>{props.version}</p>
     <p className="just"><span className="title">Confidential Information.</span> By accessing this site, you agree to keep all materials confidential.  You agree not to 
     disseminate or otherwise provide any material obtained from this site to any person not currently 
     an Authorized User defined as a user who has been granted access to this site. Prohibited dissemination 
