@@ -544,7 +544,7 @@ export const selectMarket = choice => {
         backing: globals.backing
       })
       fetchOrderBook(dispatch)
-      fetchActive(dispatch)
+      //fetchActive(dispatch)
     })
     datafeed.subscribe()
     
