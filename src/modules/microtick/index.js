@@ -456,8 +456,9 @@ async function updateHistory(dispatch) {
   var startBlock = currentBlock.block - globals.chart.size / BLOCKTIME
   if (startBlock < 0) startBlock = 0
   var min = Number.MAX_VALUE, max = 0
-  var rawHistory = await api.history("mtm.MarketTick='" + globals.market + "'", startBlock, currentBlock.block)
   const currentSpot = await api.getMarketSpot(globals.market)
+  /*
+  var rawHistory = await api.history("mtm.MarketTick='" + globals.market + "'", startBlock, currentBlock.block)
   if (rawHistory.length > 250) {
     // interpolate
     const inter = Math.floor(rawHistory.length / 250)
@@ -467,12 +468,25 @@ async function updateHistory(dispatch) {
     })
   }
   const history = rawHistory.map(hist => {
+    console.log(JSON.stringify(hist))
     const value = parseFloat(hist.consensus.amount)
     if (min > value) min = value
     if (max < value) max = value
     return {
       block: hist.block,
       time: hist.time,
+      value: value
+    }
+  })
+  */
+  const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.block, 150)
+  const history = rawHistory.map(hist => {
+    const value = hist.consensus
+    if (min > value) min = value
+    if (max < value) max = value
+    return {
+      block: hist.height,
+      time: Date.parse(hist.time),
       value: value
     }
   })

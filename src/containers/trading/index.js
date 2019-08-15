@@ -345,7 +345,7 @@ class Home extends React.Component {
                     { value: 'ATOMUSD', label: 'Crypto: Cosmos Atom/USD' },
                     { value: 'ETHUSD', label: 'Crypto: Ethereum ETH/USD' },
                     { value: 'XBTUSD', label: 'Crypto: Bitcoin BTC/USD' },
-                    { value: 'LTCUSD', label: 'Crypto: Litecoin LTC/USD' },
+                    //{ value: 'LTCUSD', label: 'Crypto: Litecoin LTC/USD' },
                     //{ value: 'UNI', label: 'Magical Unicorns' },
                     //{ value: 'XMRUSD', label: 'Crypto: Monero XMR/USD' },
                     //{ value: 'ZECUSD', label: 'Crypto: Zcash ZEC/USD' },
