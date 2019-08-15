@@ -254,6 +254,12 @@ const getAccountData = async () => {
         if (globals.acct === x.settler) {
           credit += parseFloat(x.incentive.amount) - commission
         }
+        // bug bandaid
+        if (x.balance === undefined) {
+          var balance = parseFloat(x.Balance.amount)
+        } else {
+          balance = parseFloat(x.balance.amount)
+        }
         hist.push({
           type: 'settle.long',
           time: time,
@@ -264,7 +270,7 @@ const getAccountData = async () => {
           debit: 0,
           credit: credit,
           commission: commission,
-          balance: parseFloat(x.balance.amount),
+          balance: balance
         })
       }
       if (x.tags[acctTag] === 'settle.short') {
