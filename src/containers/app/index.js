@@ -312,7 +312,7 @@ const App = props => {
     {dialog}
     <div id="page-header" className="row">
       <div id="div-logo">
-        <img src={logo} alt={"logo"}/>
+        <a href="http://microtick.com" alt="Microtick"><img src={logo} alt={"logo"}/></a>
       </div>
       <div id="div-chain">
         <h3>Chain Information</h3>
