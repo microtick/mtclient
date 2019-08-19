@@ -302,7 +302,6 @@ const App = props => {
     provider = "not connected"
   }
   */
-  var providerWidget = <span>localhost</span>
   return <div>
     <section id="ui"> 
       <div id="notifications">
@@ -310,15 +309,20 @@ const App = props => {
       </div>
     </section>
     {dialog}
-    <div id="page-header" className="row">
-      <div id="div-logo">
-        <a href="http://microtick.com" alt="Microtick"><img src={logo} alt={"logo"}/></a>
-      </div>
+    <div id="page-header">
+      <a href="http://microtick.com" alt="Microtick"><img src={logo} alt={"logo"}/></a>
+      <nav role="navigation">
+        <a href="http://microtick.com">Home</a>
+        <a href="http://microtick.com/background-information.html">Learn More</a>
+        <a href="#" class="current">Try the Testnet</a>
+        <a href="http://microtick.com/contact.html">Contact</a>
+      </nav>
+    </div>
+    <div id="page-subheader">
       <div id="div-chain">
         <h3>Chain Information</h3>
         <p>Block height = {props.block} <span className="right">{props.time}</span></p>
         <p>Block hash = <span className="sm">{props.hash}</span></p>
-        <p>Tendermint provider = {providerWidget}</p>
       </div>
       <div id="div-account">
         <h3>Account Information</h3>
