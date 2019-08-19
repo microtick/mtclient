@@ -224,8 +224,8 @@ class Home extends React.Component {
               <div id="action">
                 <p className="blue">Place Quote</p>
               </div>
-              <p>⬅ / ➡ select your spot</p>
-              <p>⬆ / ⬇ increase or decrease premium</p>
+              <p>⬅ / ➡ increase or decrease premium</p>
+              <p>⬆ / ⬇ select your spot</p>
               <p>Click to fine tune and place order</p>
             </div>
           </div>
