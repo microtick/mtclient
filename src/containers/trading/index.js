@@ -259,18 +259,6 @@ class Home extends React.Component {
         <h4>Instructions</h4>
         <div className="row">
           <div className="section">
-            <h5>Buy Call or Put</h5>
-            <ol>
-              <li>Select the market you are interested in above.</li>
-              <li>Select the time duration you are interested in from the table above.</li>
-              <li>Buy a call or put by hovering the mouse over the right hand side of the chart. 
-               To buy a call, hover above the current spot price indicated by the horizontal line. To buy a
-               put, hover below the spot price.</li>
-              <li>Click at the approximate amount and a dialog will appear allowing you to adjust the 
-               quantity. Confirm the trade by clicking "Buy Call" or "Buy Put"</li>
-            </ol>
-          </div>
-          <div className="section">
             <h5>Place Quote</h5>
             <ol>
               <li>Select the market you are interested in above.</li>
@@ -281,6 +269,18 @@ class Home extends React.Component {
               <li>Click and a dialog will appear allowing you to specify the backing for the
                  quote, and fine-tune the spot and premium you want. Confirm the quote by clicking 
                  "Place Quote".</li>
+            </ol>
+          </div>
+          <div className="section">
+            <h5>Buy Call or Put</h5>
+            <ol>
+              <li>Select the market you are interested in above.</li>
+              <li>Select the time duration you are interested in from the table above.</li>
+              <li>Buy a call or put by hovering the mouse over the right hand side of the chart. 
+               To buy a call, hover above the current spot price indicated by the horizontal line. To buy a
+               put, hover below the spot price.</li>
+              <li>Click at the approximate amount and a dialog will appear allowing you to adjust the 
+               quantity. Confirm the trade by clicking "Buy Call" or "Buy Put"</li>
             </ol>
           </div>
         </div>
