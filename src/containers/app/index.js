@@ -318,6 +318,7 @@ const App = props => {
       <nav role="navigation">
         <a href="http://microtick.com">Home</a>
         <a href="http://microtick.com/background-information.html">Learn More</a>
+        <a href="http://microtick.com/how-to-table-of-contents.html">How To</a>
         <a href="#" class="current">Try the Testnet</a>
         <a href="http://microtick.com/contact.html">Contact</a>
       </nav>
