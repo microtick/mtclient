@@ -260,9 +260,13 @@ const App = props => {
       return false
     })
     const total = props.status.quoteBacking + props.status.tradeBacking + long - short
+    if (props.balance === 0) {
+      var fundAccountMsg = <p className="funding">Post your cosmos address on the Microtick <a href="https://t.me/microtick_general">Telegram channel</a> to get test fox tokens</p>
+    }
     var acctInfo = <div>
       <p>Token balance = {Math.round10(props.balance, -6)} fox</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} fox</span></p>
+      {fundAccountMsg}
     </div>
   }
   switch (props.menu.selected) {
