@@ -558,7 +558,7 @@ export const selectMarket = choice => {
         backing: globals.backing
       })
       fetchOrderBook(dispatch)
-      //fetchActive(dispatch)
+      fetchActive(dispatch)
     })
     datafeed.subscribe()
     
@@ -654,6 +654,7 @@ const selectAccount = async () => {
   }
   
   async function processAccountEvent(data, tags) {
+    //console.log("Account event: " + data.originator)
     if (data.originator === 'marketTrade' || data.originator === 'limitTrade') {
       //console.log("processTrade=" + JSON.stringify(ev, null, 2))
       const trade = data.trade
@@ -892,15 +893,17 @@ async function fetchOrderBook(dispatch) {
 async function fetchActive(dispatch) {
   // Get current quotes
   //console.log("Fetching quotes for account " + globals.account)
-  globals.quotes = []
+  const quotes = []
   //const quoteInfo = await api.getAccountQuotes(globals.account)
   var accountInfo = await api.getAccountInfo(globals.account)
+  //console.log(JSON.stringify(accountInfo, null, 2))
   const quoteInfo = accountInfo.activeQuotes
   for (var i=0; i<quoteInfo.length; i++) {
     const quoteId = quoteInfo[i]
+    //console.log("Quote=" + quoteId)
     const data = await api.getQuote(quoteId)
     const weight = data.quantity
-    globals.quotes.push({
+    quotes.push({
       id: quoteId,
       provider: data.provider,
       market: data.market,
@@ -914,6 +917,7 @@ async function fetchActive(dispatch) {
       weight: weight.amount
     })
   }
+  globals.quotes = quotes
   dispatch({
     type: QUOTELIST
   })
@@ -1136,6 +1140,7 @@ export const cancelQuote = async (dispatch, id) => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
+    fetchActive(dispatch)
     const accountInfo = await api.getAccountInfo(globals.account)
     const balance = parseFloat(accountInfo.balance.amount)
     dispatch({
