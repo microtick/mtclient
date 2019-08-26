@@ -486,7 +486,7 @@ async function updateHistory(dispatch) {
     if (max < value) max = value
     return {
       block: hist.height,
-      time: Date.parse(hist.time),
+      time: hist.time,
       value: value
     }
   })
