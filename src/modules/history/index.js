@@ -255,11 +255,7 @@ const getAccountData = async () => {
           credit += parseFloat(x.incentive.amount) - commission
         }
         // bug bandaid
-        if (x.balance === undefined) {
-          var balance = parseFloat(x.Balance.amount)
-        } else {
-          balance = parseFloat(x.balance.amount)
-        }
+        const balance = parseFloat(x.balance.amount)
         hist.push({
           type: 'settle.long',
           time: time,
