@@ -1242,7 +1242,7 @@ export const settleTrade = async (dispatch, id) => {
   console.log("Settling trade: " + id)
   const notId = createSettleNotification(dispatch, id)
   try {
-    await api.settleTrades()
+    await api.settleTrade(id)
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
