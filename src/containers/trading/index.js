@@ -325,7 +325,6 @@ class Home extends React.Component {
         <p id="spottext" className="actual">@{Math.round10(props.spot, props.constants.SPOT_PRECISION)}</p>
         <p id="mass">Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} fox</p>
         <p id="weight">Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
-        <p id="sens">Sensitivity = ⚖ {Math.round10(2.0 / props.weight, props.constants.UNIT_PRECISION)}</p>
       </div>
     }
     return <div id="div-trading">
