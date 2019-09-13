@@ -479,7 +479,7 @@ async function updateHistory(dispatch) {
     }
   })
   */
-  const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.block, 150)
+  const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.block, 100)
   const history = rawHistory.map(hist => {
     const value = hist.consensus
     if (min > value) min = value
