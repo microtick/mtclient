@@ -7,11 +7,11 @@ import { updateSpotDialog, updatePremiumDialog, depositQuoteDialog, cancelQuoteD
 import { viewQuote } from '../../modules/history'
 
 const commonName = {
-  300: "5 minute",
-  900: "15 minute",
-  3600: "1 hour",
-  14400: "4 hour",
-  43200: "12 hour"
+  '5minute': "5 minutes",
+  '15minute': "15 minutes",
+  '1hour': "1 hour",
+  '4hour': "4 hours",
+  '12hour': "12 hours"
 }
 
 const ActiveQuotes = props => {

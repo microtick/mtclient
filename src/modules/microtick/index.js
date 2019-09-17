@@ -908,7 +908,7 @@ async function fetchActive(dispatch) {
       id: quoteId,
       provider: data.provider,
       market: data.market,
-      dur: data.dur,
+      dur: data.duration,
       spot: data.spot.amount,
       premium: data.premium.amount,
       backing: data.backing.amount,
