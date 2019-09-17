@@ -329,7 +329,7 @@ class Home extends React.Component {
               {elems.premiums}
             </tr>
           </tbody>
-        */
+      */
     }
     if (props.spot > 0) {
       const tooltip_marketmass = "Total token backing for this market"

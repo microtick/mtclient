@@ -373,27 +373,46 @@ const buildBackground = props => {
       var bounds = event.target.getBoundingClientRect()
       var delta = (width - event.clientX + bounds.left + 1) / 4
       var y = event.clientY - bounds.top
-      if (delta < Math.abs(y - sy) / 2.0) {
-        delta = (Math.abs(y - sy) / 2.0) + 1 // delta is in pixel values so add 1 px to make sure values are rounded correctly
-      }
       
       const backing = parseFloat(props.quote.backing)
-      const price = props.view.minp - (y - height) * (props.view.maxp - props.view.minp) / height
-      const prem = delta * (props.view.maxp - props.view.minp) / height
-      //const nprem = prem * 100.0 / price
-      //const qty = backing / (10 * prem)
-      //const weight = qty * props.dur / Math.pow(nprem, 2)
-      //const newspot = (parseFloat(props.spot) * parseFloat(props.weight) + price * weight) / (weight + parseFloat(props.weight))
-      const qty = backing / (10 * prem)
+      var price = props.view.minp - (y - height) * (props.view.maxp - props.view.minp) / height
+      var prem = delta * (props.view.maxp - props.view.minp) / height
+      
+      const back = isNaN(props.orderbook.totalBacking[props.dur]) ? 0 : props.orderbook.totalBacking[props.dur]
+      const wt = isNaN(props.orderbook.totalWeight[props.dur]) ? 0 : props.orderbook.totalWeight[props.dur]
+      const partialprem = wt === 0 ? 0 : back / (props.constants.LEVERAGE * wt)      
+      
+      if (prem > partialprem * 2) {
+        prem = partialprem * 2
+      }
+      
+      const qty = backing / (props.constants.LEVERAGE * prem)
       const weight = qty
-      const newspot = (props.spot * props.weight + price * weight) / (weight + props.weight)
+      var newspot = (props.spot * props.weight + price * weight) / (weight + props.weight)
+      
+      if (price > newspot + 2 * prem) {
+        newspot = props.spot + 2 * backing / (props.constants.LEVERAGE * props.weight)
+        price = newspot + 2 * prem
+      }
+      if (price < newspot - 2 * prem) {
+        newspot = props.spot - 2 * backing / (props.constants.LEVERAGE * props.weight)
+        price = newspot - 2 * prem
+      }
+      
+      //console.log("spot=" + props.spot)
+      //console.log("newspot=" + newspot)
+      //console.log("prem=" + prem)
+      
+      //console.log("backing= " + backing)
+      //console.log("price=" + price)
+      //console.log("weight=" + weight)
+      //console.log("market weight=" + props.weight)
+      
       var call = prem + (price - newspot) / 2
       if (call < 0) call = 0
       var put = prem - (price - newspot) / 2
       if (put < 0) put = 0
-      //console.log("spot=" + props.spot)
-      //console.log("weight=" + props.weight)
-      //console.log("new weight=" + weight)
+      
       props.orderbook.setQuotePremiums(qty, price, prem, weight, newspot, call, put)
       chartCursorPos(qty, price, prem, newspot, props.view.maxp, props.view.minp)
     }
@@ -615,6 +634,7 @@ const Chart = props => {
 }
 
 const mapStateToProps = state => ({
+  constants: state.app.constants,
   loading: state.microtick.loading,
   blocktime: state.microtick.blocktime,
   selected: state.microtick.market.selected,
