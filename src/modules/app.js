@@ -9,7 +9,8 @@ const initialState = {
   constants: {
     UNIT_PRECISION: -4,
     TOKEN_PRECISION: -6,
-    SPOT_PRECISION: -4
+    SPOT_PRECISION: -4,
+    LEVERAGE: 10
   }
 }
 

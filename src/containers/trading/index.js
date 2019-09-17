@@ -149,7 +149,6 @@ class Home extends React.Component {
         const newspot = props.premiums.indicatedSpot
         const tooltip_weight = "Weight = Quantity"
         const tooltip_newspot = "New Spot = (Market Spot * Market Weight + Spot * Weight) / (Market Weight + Weight)"
-        const backingstep = Math.pow(10, Math.floor(Math.log10(props.quote.backing)))
         const premstep = Math.roundLog(props.premiums.prem / 10)
         const spotstep = premstep
         if (props.account === undefined) {
@@ -180,11 +179,9 @@ class Home extends React.Component {
                   <td>■ {props.dur} blocks</td>
                 </tr>
                 <tr>
-                  <td data-tip="Number of tokens backing this quote">Backing</td>
+                  <td>Backing</td>
                   <td></td>
-                  <td><input type="number" id="quote-backing" onChange={props.changeBacking} 
-                    value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backingstep}/> fox
-                  </td>
+                  <td>{Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} fox</td>
                 </tr>
                 <tr>
                   <td data-tip="Observed spot">Spot</td>
@@ -294,18 +291,20 @@ class Home extends React.Component {
         res.buttons.push(<td key={n}>
           <button onClick={() => props.selectDur(intval)} className={clazz}>■ {commonName[d]}</button>
         </td>)
-        //const qty = isNaN(props.orderbook.totalQty[d]) ? 0 : Math.round10(props.orderbook.totalQty[d], props.constants.UNIT_PRECISION)
-        const wt = isNaN(props.orderbook.totalWeight[d]) ? 0 : Math.round10(props.orderbook.totalWeight[d], props.constants.UNIT_PRECISION)
-        //res.quantities.push(<td className={col} key={n}>{qty}</td>)
-        res.weights.push(<td className={col} key={n}>⚖ {wt}</td>)
+        const back = isNaN(props.orderbook.totalBacking[d]) ? 0 : props.orderbook.totalBacking[d]
+        const wt = isNaN(props.orderbook.totalWeight[d]) ? 0 : props.orderbook.totalWeight[d]
+        const prem = wt === 0 ? 0 : back / (props.constants.LEVERAGE * wt)
+        res.premiums.push(<td className={col} key={n}>⇕ {Math.round10(prem, props.constants.UNIT_PRECISION)}</td>)
+        res.weights.push(<td className={"weight " + col} key={n}>⚖ {Math.round10(wt, props.constants.UNIT_PRECISION)}</td>)
+        res.backing.push(<td className={col} key={n}>{Math.round10(back, props.constants.UNIT_PRECISION)} fox</td>)
         return res
       },{
         buttons: [],
-        //quantities: [],
-        weights: []
+        premiums: [],
+        weights: [],
+        backing: []
       })
       var orderbook = <div id="div-order">
-        <h4>Quote Duration</h4>
         <table>
           <thead>
             <tr>
@@ -319,12 +318,31 @@ class Home extends React.Component {
           </tbody>
         </table>
       </div>
+      /*
+          <tbody>
+            <tr>
+              {elems.backing}
+            </tr>
+          </tbody>
+          <tbody>
+            <tr>
+              {elems.premiums}
+            </tr>
+          </tbody>
+        */
     }
     if (props.spot > 0) {
+      const tooltip_marketmass = "Total token backing for this market"
+      const tooltip_marketweight = "Sum of all the quote weights for this market (quote weight = premium / backing)"
+      const backing = Math.pow(10, Math.floor(Math.log10(props.quote.backing)))
       var spot = <div id="spot">
-        <p id="spottext" className="actual">@{Math.round10(props.spot, props.constants.SPOT_PRECISION)}</p>
-        <p id="mass">Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} fox</p>
-        <p id="weight">Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
+        <ReactToolTip/>
+        <p id="spottext" className="actual">Consensus = @{Math.round10(props.spot, props.constants.SPOT_PRECISION)}</p>
+        <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} fox</p>
+        <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
+        <p id="movemarket">A quote with backing of <input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backing}/> 
+          fox can move this market {Math.round10(props.quote.backing / (5 * props.weight), props.constants.UNIT_PRECISION)} (at most)
+        </p>
       </div>
     }
     return <div id="div-trading">
@@ -356,14 +374,18 @@ class Home extends React.Component {
                   ]}
                 />
               </div>
+            </div>
+            <div className="row">
               {orderbook}
-              {spot}
             </div>
             <div className="row">
               <div>
                 <Chart/>
               </div>
-              {dialog}
+              <div>
+                {spot}
+                {dialog}
+              </div>
             </div>
           </div>
         </div>

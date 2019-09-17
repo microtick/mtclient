@@ -494,6 +494,7 @@ async function updateHistory(dispatch) {
     min = globals.spot
     max = globals.spot
   }
+  console.log("pushing: " + currentSpot.consensus.amount)
   history.push({
     block: currentBlock.block,
     time: Date.now(),
@@ -769,11 +770,11 @@ async function fetchOrderBook(dispatch) {
   const market = globals.market
   const dur = globals.dur
   
-  const totalQty = {}
+  const totalBacking = {}
   const totalWeight = {}
   const obData = await api.getMarketInfo(market)
   for (var i=0; i<globals.durs.length; i++) {
-    totalQty[globals.durs[i]] = parseFloat(obData.orderBooks[i].sumWeight.amount)
+    totalBacking[globals.durs[i]] = parseFloat(obData.orderBooks[i].sumBacking.amount)
     totalWeight[globals.durs[i]] = parseFloat(obData.orderBooks[i].sumWeight.amount)
   }
   
@@ -846,7 +847,7 @@ async function fetchOrderBook(dispatch) {
   
   dispatch({
     type: ORDERBOOK,
-    totalQty: totalQty,
+    totalBacking: totalBacking,
     totalWeight: totalWeight,
     calls: calls,
     puts: puts,

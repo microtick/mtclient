@@ -422,7 +422,7 @@ const buildBackground = props => {
       var bounds = event.target.getBoundingClientRect()
       const x = event.clientX - bounds.left + chart_ob_left
       const y = event.clientY - bounds.top
-      const qty = (x - chart_ob_left) * props.orderbook.totalQty[props.dur] / chart_ob_width
+      const qty = (x - chart_ob_left) * props.orderbook.totalWeight[props.dur] / chart_ob_width
       const sy = height - height * (parseFloat(props.spot) - props.view.minp) / (props.view.maxp - props.view.minp)
       const callprice = props.orderbook.calls.price(qty)
       const putprice = props.orderbook.puts.price(qty)
@@ -433,7 +433,7 @@ const buildBackground = props => {
         props.mouseState(3)
         props.orderbook.setBuyPremium(qty, false)
       }
-      orderBookCursorPos(qty, props.orderbook.totalQty[props.dur], parseFloat(props.spot), y <= sy, y <= sy ? callprice : putprice, 
+      orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], parseFloat(props.spot), y <= sy, y <= sy ? callprice : putprice, 
         props.view.maxp, props.view.minp)
     }
     const obMouseClick = event => {
@@ -547,15 +547,15 @@ const buildOrderBook = props => {
     const view = props.view
     const sy = height - height * (spot - view.minp) / (view.maxp - view.minp)
     const callquoterects = props.orderbook.calls.quotes.map((quote, id) => {
-      const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalQty[props.dur]
-      const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalQty[props.dur] 
+      const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+      const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur] 
       const top = parseFloat(spot) + quote.premium
       const y2 = height - height * (top - view.minp) / (view.maxp - view.minp)
       return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
     })
     const putquoterects = props.orderbook.puts.quotes.map((quote, id) => {
-      const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalQty[props.dur]
-      const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalQty[props.dur]
+      const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+      const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur]
       const bottom = parseFloat(spot) - quote.premium
       const y2 = height - height * (bottom - view.minp) / (view.maxp - view.minp)
       return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
