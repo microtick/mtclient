@@ -826,7 +826,7 @@ async function fetchOrderBook(dispatch) {
         }
       }
     } catch (err) {
-      console.log("Error fetching order book: " + err.message)
+      console.log("Error fetching order book: " + err)
     }
     obj.price = qty => {
       if (qty === 0) return 0
