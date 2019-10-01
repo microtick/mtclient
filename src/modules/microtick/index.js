@@ -957,9 +957,9 @@ export const buyCall = () => {
         balance: balance
       })
     } catch (err) {
-      console.log("Buy call failed: " + err.message)
+      console.log("Buy call failed: " + err)
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, "Buy call failed", err.message)
+      createErrorNotification(dispatch, "Buy call failed", err)
     }
   }
 }
@@ -989,9 +989,9 @@ export const buyPut = () => {
         balance: balance
       })
     } catch (err) {
-      console.log("Buy put failed: " + err.message)
+      console.log("Buy put failed: " + err)
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, "Buy put failed", err.message)
+      createErrorNotification(dispatch, "Buy put failed", err)
     }
   }
 }
@@ -1127,7 +1127,7 @@ export const placeQuote = () => {
       })
     } catch (err) {
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, "Place quote failed", err.message)
+      createErrorNotification(dispatch, "Place quote failed", err)
     }
   }
 }
@@ -1151,7 +1151,7 @@ export const cancelQuote = async (dispatch, id) => {
     })
   } catch (err) {
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Cancellation failed", err.message)
+    createErrorNotification(dispatch, "Cancellation failed", err)
   }
 }
 
@@ -1174,7 +1174,7 @@ export const backQuote = async (dispatch, id, amount) => {
     })
   } catch (err) {
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Deposit failed", err.message)
+    createErrorNotification(dispatch, "Deposit failed", err)
   }
 }
 
@@ -1190,7 +1190,7 @@ export const updateSpot = async (dispatch, id, newspot) => {
     fetchActive(dispatch)
   } catch (err) {
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update spot failed", err.message)
+    createErrorNotification(dispatch, "Update spot failed", err)
   }
 }
 
@@ -1206,7 +1206,7 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     fetchActive(dispatch)
   } catch (err) {
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update premium failed", err.message)
+    createErrorNotification(dispatch, "Update premium failed", err)
   }
 }
 
