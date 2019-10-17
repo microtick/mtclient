@@ -14,6 +14,14 @@ const commonName = {
   '12hour': "12 hours"
 }
 
+const durIntVal = {
+  '5minute': 300,
+  '15minute': 900,
+  '1hour': 3600,
+  '4hour': 14400,
+  '12hour': 43200
+}
+
 const ActiveTrades = props => {
   var totalPremium = 0
   var totalCurrent = 0
@@ -51,7 +59,7 @@ const ActiveTrades = props => {
       <td><button onClick={() => props.viewTrade(tr.id)}>T-{tr.id}</button></td>
       <td>{tr.dir === 'long' ? 'Long' : 'Short'}</td>
       <td>{tr.type === 0 ? "Call" : "Put"}</td>
-      <td><button onClick={() => { props.selectMarket(tr.market); props.selectDur(tr.dur) }}>{tr.market}</button></td>
+      <td><button onClick={() => { props.selectMarket(tr.market); props.selectDur(durIntVal[tr.dur]) }}>{tr.market}</button></td>
       <td>{commonName[tr.dur]}</td>
       <td>{tr.start.toLocaleTimeString()}</td>
       <td>{tr.end.toLocaleTimeString()}</td>
