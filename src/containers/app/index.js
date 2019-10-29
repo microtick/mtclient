@@ -340,8 +340,10 @@ const App = props => {
       {password}
       {page}
     </main>
-    <div id="page-footer" className="row">
+    <div id="page-footer">
       <p>Copyright &copy; 2018-19 Microtick LLC</p>
+      <p>Microtick option standardization U.S. patents 7,856,395 and 8,229,840.</p>
+      <p>Microtick blockchain-based oracle patent pending.</p>
     </div>
   </div>
 }

@@ -193,7 +193,11 @@ main {
 
 #page-footer {
   font-size: 12px;
-  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+
+#page-footer p {
 }
 
 #dialog {
