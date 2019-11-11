@@ -341,7 +341,7 @@ class Home extends React.Component {
         <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} fox</p>
         <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
         <p id="movemarket">At the current market weight, a quote with backing of <input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backing}/> 
-          fox can move this market {Math.round10(props.quote.backing / (5 * props.weight), props.constants.UNIT_PRECISION)} (at most)
+          fox can move this market {Math.round10(props.quote.backing / (5 * props.weight), -6)} (at most)
         </p>
       </div>
     }
