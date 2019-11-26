@@ -12,13 +12,13 @@ const globals = {
   changed: false
 }
 
-async function callback(data, tags) {
+async function callback(data, events) {
   //console.log(JSON.stringify(event, null, 2))
-  const market = tags['mtm.MarketTick']
+  const market = events['mtm.MarketTick']
   Object.keys(globals.subscriptions).map(key => {
     const obj = globals.subscriptions[key]
     if (obj.market === market) {
-      obj.cb(data, tags)
+      obj.cb(data, events)
     }
     return null
   })

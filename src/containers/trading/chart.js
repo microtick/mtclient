@@ -369,7 +369,7 @@ const buildBackground = props => {
     const chMouseMove = event => {
       if (props.dialog.showinline) return
       
-      const sy = height - height * (props.spot - props.view.minp) / (props.view.maxp - props.view.minp)
+      //const sy = height - height * (props.spot - props.view.minp) / (props.view.maxp - props.view.minp)
       var bounds = event.target.getBoundingClientRect()
       var delta = (width - event.clientX + bounds.left + 1) / 4
       var y = event.clientY - bounds.top

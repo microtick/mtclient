@@ -181,11 +181,11 @@ const getAccountData = async () => {
   
   const history = await api.pageHistory(globals.acct, globals.viewPage, globals.viewInc)
   var hist = []
-  const acctTag = "acct." + globals.acct
+  const acctEvent = "acct." + globals.acct
   history.map((x, i) => {
     const time = new Date(x.time).toLocaleString("en-US")
     if (x.originator === 'send') {
-      if (x.tags[acctTag] === "account.deposit") {
+      if (x.events[acctEvent] === "account.deposit") {
         const amount = parseInt(x.transfer[0].amount, 10)
         hist.push({
           type: 'deposit',
@@ -198,12 +198,12 @@ const getAccountData = async () => {
           balance: parseFloat(x.balanceTo.amount)
         })
       }
-      if (x.tags[acctTag] === "account.withdraw") {
+      if (x.events[acctEvent] === "account.withdraw") {
         
       }
     }
     if (x.originator === 'marketTrade' || x.originator === 'limitTrade') {
-      if (x.tags[acctTag] === "trade.long") {
+      if (x.events[acctEvent] === "trade.long") {
         const cost = parseFloat(x.trade.cost.amount)
         const commission = parseFloat(x.trade.commission.amount) + parseFloat(x.trade.settleIncentive.amount)
         hist.push({
@@ -222,7 +222,7 @@ const getAccountData = async () => {
           balance: parseFloat(x.trade.balance.amount)
         })
       }
-      if (x.tags[acctTag] === 'trade.short') {
+      if (x.events[acctEvent] === 'trade.short') {
         x.trade.counterParties.map(cp => {
           if (cp.short === globals.acct) {
             const premium = parseFloat(cp.premium.amount)
@@ -247,7 +247,7 @@ const getAccountData = async () => {
       }
     }
     if (x.originator === 'settleTrade') {
-      if (x.tags[acctTag] === "settle.long") {
+      if (x.events[acctEvent] === "settle.long") {
         const settle = parseFloat(x.settle.amount)
         const commission = parseFloat(x.commission.amount)
         var credit = settle
@@ -269,7 +269,7 @@ const getAccountData = async () => {
           balance: balance
         })
       }
-      if (x.tags[acctTag] === 'settle.short') {
+      if (x.events[acctEvent] === 'settle.short') {
         x.counterparties.map(cp => {
           if (cp.short === globals.acct) {
             const refund = parseFloat(cp.refund.amount)
@@ -407,13 +407,13 @@ async function getTradeInfo(id) {
   const key = "trade." + id
   const hist = await api.history(key + " CONTAINS 'event'", 0, info.block, [key])
   const data = hist.reduce((acc, x) => {
-    if (x.tags[key] === "event.create") {
+    if (x.events[key] === "event.create") {
       acc.startBlock = x.block
       acc.start = x.time
       acc.trade = x.trade
       acc.state = "active"
     }
-    if (x.tags[key] === 'event.settle') {
+    if (x.events[key] === 'event.settle') {
       acc.endBlock = x.block
       acc.end = x.time
       acc.state = "settled"
@@ -547,7 +547,7 @@ const getQuoteData = async id => {
   var maxp = 0
   for (var i=0; i<history.length; i++) {
     const h = history[i]
-    switch (h.tags[event]) {
+    switch (h.events[event]) {
       case 'event.create':
         market = h.market
         dur = durValue[h.duration]

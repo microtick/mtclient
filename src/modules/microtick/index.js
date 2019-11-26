@@ -543,9 +543,9 @@ export const selectMarket = choice => {
     
     // Subscribe MarketTick events
     //var lastId = 0
-    globals.marketSubscription = datafeed.addMarket(globals.market, async (data, tags) => {
+    globals.marketSubscription = datafeed.addMarket(globals.market, async (data, events) => {
       globals.spot = parseFloat(data.consensus.amount)
-      const info = await api.getMarketInfo(tags['mtm.MarketTick'])
+      const info = await api.getMarketInfo(events['mtm.MarketTick'])
       globals.weight = parseFloat(info.sumWeight.amount)
       globals.sumqty = parseFloat(info.sumWeight.amount)
       globals.backing = parseFloat(info.sumBacking.amount)
@@ -635,8 +635,8 @@ const selectAccount = async () => {
   })
   globals.accountSubscriptions = {}
   
-  async function tradeMarketTick(data, tags) {
-    const market = tags['mtm.MarketTick']
+  async function tradeMarketTick(data, events) {
+    const market = events['mtm.MarketTick']
     const spot = parseFloat(data.consensus.amount)
     globals.trades.map(trade => {
       if (trade.market === market) {
@@ -654,7 +654,7 @@ const selectAccount = async () => {
     })
   }
   
-  async function processAccountEvent(data, tags) {
+  async function processAccountEvent(data, events) {
     //console.log("Account event: " + data.originator)
     if (data.originator === 'marketTrade' || data.originator === 'limitTrade') {
       //console.log("processTrade=" + JSON.stringify(ev, null, 2))
