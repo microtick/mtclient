@@ -170,10 +170,10 @@ function calcMinMax(obj) {
     }
     return null
   })
-  var height = maxp - minp
-  if (height === 0) height = 1
-  globals.chart.minp = minp - height * .05
-  globals.chart.maxp = maxp + height * .05
+  //var height = maxp - minp
+  //if (height === 0) height = 1
+  globals.chart.minp = minp
+  globals.chart.maxp = maxp 
   return {
     ...obj,
     chart: {
@@ -371,7 +371,6 @@ export default (state = initialState, action) => {
         max = globals.spot
         min = globals.spot
       }
-      var height = max - min
       return calcMinMax({
         ...state,
         chart: {
@@ -380,8 +379,8 @@ export default (state = initialState, action) => {
             data: newdata,
             minb: targetmin,
             maxb: action.block.number,
-            minp: min - height * .05,
-            maxp: max + height * .05
+            minp: min,
+            maxp: max
           }
         }
       })
@@ -500,9 +499,8 @@ async function updateHistory(dispatch) {
     time: Date.now(),
     value: parseFloat(currentSpot.consensus.amount)
   })
-  var height = max - min
-  const minp = min - height * .05
-  const maxp = max + height * .05
+  const minp = min
+  const maxp = max
   dispatch({
     type: HISTORY,
     data: history,
@@ -1059,7 +1057,7 @@ export const changeBacking = event => {
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / 10 * globals.quote.premium
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.maxp, globals.chart.minp)
+    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.minp)
   }
 }
 
@@ -1075,7 +1073,7 @@ export const changeSpot = event => {
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / 10 * globals.quote.premium
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.maxp, globals.chart.minp)
+    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.minp)
   }
 }
 
@@ -1089,7 +1087,7 @@ export const changePremium = event => {
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / 10 * globals.quote.premium
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.maxp, globals.chart.minp)
+    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.minp)
   }
 }
 
