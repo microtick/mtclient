@@ -562,23 +562,43 @@ const buildOrderbookPremiums = props => {
 
 const buildOrderBook = props => {
   if (props.orderbook) {
-    const spot = props.spot
     const view = props.view
-    const sy = height - height * (spot - view.minp) / (view.maxp - view.minp)
-    const callquoterects = props.orderbook.calls.quotes.map((quote, id) => {
-      const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
-      const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur] 
-      const top = parseFloat(spot) + quote.premium
-      const y2 = height - height * (top - view.minp) / (view.maxp - view.minp)
-      return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
-    })
-    const putquoterects = props.orderbook.puts.quotes.map((quote, id) => {
-      const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
-      const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur]
-      const bottom = parseFloat(spot) - quote.premium
-      const y2 = height - height * (bottom - view.minp) / (view.maxp - view.minp)
-      return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
-    })
+    if (props.premiums.buy || props.mousestate !== 1) {
+      var spot = props.spot
+      var sy = height - height * (spot - view.minp) / (view.maxp - view.minp)
+      var callquoterects = props.orderbook.calls.quotes.map((quote, id) => {
+        const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur] 
+        const top = parseFloat(spot) + quote.premium
+        const y2 = height - height * (top - view.minp) / (view.maxp - view.minp)
+        return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
+      })
+      var putquoterects = props.orderbook.puts.quotes.map((quote, id) => {
+        const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const bottom = parseFloat(spot) - quote.premium
+        const y2 = height - height * (bottom - view.minp) / (view.maxp - view.minp)
+        return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
+      })
+    } else {
+      spot = props.premiums.indicatedSpot
+      if (spot === undefined) spot = props.spot
+      sy = height - height * (spot - view.minp) / (view.maxp - view.minp)
+      callquoterects = props.orderbook.calls.quotes.map((quote, id) => {
+        const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur] 
+        const top = parseFloat(spot) + quote.premium - (spot - props.spot) / 2
+        const y2 = height - height * (top - view.minp) / (view.maxp - view.minp)
+        return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
+      })
+      putquoterects = props.orderbook.puts.quotes.map((quote, id) => {
+        const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const bottom = parseFloat(spot) - quote.premium  - (spot - props.spot) / 2
+        const y2 = height - height * (bottom - view.minp) / (view.maxp - view.minp)
+        return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
+      })
+    }
     return <g id="orderbook" viewBox="-10 -10 120 110">
       <g>{callquoterects}</g>
       <g>{putquoterects}</g>
