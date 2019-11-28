@@ -565,6 +565,7 @@ const initDynamicView = props => {
   minp = parseFloat(view.minp)
   maxp = parseFloat(view.maxp)
   if (props.orderbook && props.mousestate === 1) {
+    // check quote heights
     var spot = props.premiums.indicatedSpot
     props.orderbook.calls.quotes.map(quote => {
       const top = spot + quote.premium - (spot - props.spot) / 2
@@ -573,6 +574,11 @@ const initDynamicView = props => {
       if (bottom < minp) minp = bottom
       return null
     })
+    // check top / bottom quote premiums
+    const upper = props.premiums.qs + props.premiums.prem
+    const lower = props.premiums.qs - props.premiums.prem
+    if (upper > maxp) maxp = upper
+    if (lower < minp) minp = lower
   }
   var height = maxp - minp
   if (height === 0) height = 1
