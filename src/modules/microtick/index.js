@@ -238,7 +238,8 @@ export default (state = initialState, action) => {
           premiums: {
             data: []
           }
-        }
+        },
+        premiums: {}
       }
     case DUR:
       return {
