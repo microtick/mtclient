@@ -543,9 +543,9 @@ export const selectMarket = choice => {
     
     // Subscribe MarketTick events
     //var lastId = 0
-    globals.marketSubscription = datafeed.addMarket(globals.market, async (data, tags) => {
+    globals.marketSubscription = datafeed.addMarket(globals.market, async (data, events) => {
       globals.spot = parseFloat(data.consensus.amount)
-      const info = await api.getMarketInfo(tags['mtm.MarketTick'])
+      const info = await api.getMarketInfo(events['mtm.MarketTick'])
       globals.weight = parseFloat(info.sumWeight.amount)
       globals.sumqty = parseFloat(info.sumWeight.amount)
       globals.backing = parseFloat(info.sumBacking.amount)
@@ -635,8 +635,8 @@ const selectAccount = async () => {
   })
   globals.accountSubscriptions = {}
   
-  async function tradeMarketTick(data, tags) {
-    const market = tags['mtm.MarketTick']
+  async function tradeMarketTick(data, events) {
+    const market = events['mtm.MarketTick']
     const spot = parseFloat(data.consensus.amount)
     globals.trades.map(trade => {
       if (trade.market === market) {
@@ -654,7 +654,7 @@ const selectAccount = async () => {
     })
   }
   
-  async function processAccountEvent(data, tags) {
+  async function processAccountEvent(data, events) {
     //console.log("Account event: " + data.originator)
     if (data.originator === 'marketTrade' || data.originator === 'limitTrade') {
       //console.log("processTrade=" + JSON.stringify(ev, null, 2))
@@ -957,9 +957,10 @@ export const buyCall = () => {
         balance: balance
       })
     } catch (err) {
-      console.log("Buy call failed: " + err)
+      const msg = "" + err
+      console.log("Buy call failed: " + msg)
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, "Buy call failed", err)
+      createErrorNotification(dispatch, "Buy call failed", msg)
     }
   }
 }
@@ -989,9 +990,10 @@ export const buyPut = () => {
         balance: balance
       })
     } catch (err) {
-      console.log("Buy put failed: " + err)
+      const msg = "" + err
+      console.log("Buy put failed: " + msg)
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, "Buy put failed", err)
+      createErrorNotification(dispatch, "Buy put failed", msg)
     }
   }
 }
@@ -1126,8 +1128,9 @@ export const placeQuote = () => {
         balance: balance,
       })
     } catch (err) {
+      const msg = "" + err
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, "Place quote failed", err)
+      createErrorNotification(dispatch, "Place quote failed", msg)
     }
   }
 }
@@ -1149,9 +1152,10 @@ export const cancelQuote = async (dispatch, id) => {
       acct: globals.account, 
       balance: balance
     })
-  } catch (err) {
+  } cratch (err) {
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Cancellation failed", err)
+    createErrorNotification(dispatch, "Cancellation failed", msg)
   }
 }
 
@@ -1173,8 +1177,9 @@ export const backQuote = async (dispatch, id, amount) => {
       balance: balance,
     })
   } catch (err) {
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Deposit failed", err)
+    createErrorNotification(dispatch, "Deposit failed", msg)
   }
 }
 
@@ -1189,8 +1194,9 @@ export const updateSpot = async (dispatch, id, newspot) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActive(dispatch)
   } catch (err) {
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update spot failed", err)
+    createErrorNotification(dispatch, "Update spot failed", msg)
   }
 }
 
@@ -1205,8 +1211,9 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActive(dispatch)
   } catch (err) {
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update premium failed", err)
+    createErrorNotification(dispatch, "Update premium failed", msg)
   }
 }
 
