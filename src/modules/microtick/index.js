@@ -494,7 +494,7 @@ async function updateHistory(dispatch) {
     min = globals.spot
     max = globals.spot
   }
-  console.log("pushing: " + currentSpot.consensus.amount)
+  //console.log("pushing: " + currentSpot.consensus.amount)
   history.push({
     block: currentBlock.block,
     time: Date.now(),
@@ -503,6 +503,8 @@ async function updateHistory(dispatch) {
   var height = max - min
   const minp = min - height * .05
   const maxp = max + height * .05
+  //console.log("minp=" + minp)
+  //console.log("maxp=" + maxp)
   dispatch({
     type: HISTORY,
     data: history,
@@ -543,16 +545,16 @@ export const selectMarket = choice => {
     
     // Subscribe MarketTick events
     //var lastId = 0
-    globals.marketSubscription = datafeed.addMarket(globals.market, async (data, events) => {
-      globals.spot = parseFloat(data.consensus.amount)
-      const info = await api.getMarketInfo(events['mtm.MarketTick'])
+    globals.marketSubscription = datafeed.addMarket(globals.market, async (market, data) => {
+      globals.spot = data.consensus
+      const info = await api.getMarketInfo(market)
       globals.weight = parseFloat(info.sumWeight.amount)
       globals.sumqty = parseFloat(info.sumWeight.amount)
       globals.backing = parseFloat(info.sumBacking.amount)
       dispatch({
         type: TICK,
-        block: data.block,
-        time: Date.now(),
+        block: data.height,
+        time: data.time,
         spot: globals.spot,
         weight: globals.weight,
         sumqty: globals.sumqty,
@@ -635,8 +637,7 @@ const selectAccount = async () => {
   })
   globals.accountSubscriptions = {}
   
-  async function tradeMarketTick(data, events) {
-    const market = events['mtm.MarketTick']
+  async function tradeMarketTick(market, data) {
     const spot = parseFloat(data.consensus.amount)
     globals.trades.map(trade => {
       if (trade.market === market) {
@@ -654,8 +655,8 @@ const selectAccount = async () => {
     })
   }
   
-  async function processAccountEvent(data, events) {
-    //console.log("Account event: " + data.originator)
+  async function processAccountEvent(data) {
+    console.log("processAccountEvent")
     if (data.originator === 'marketTrade' || data.originator === 'limitTrade') {
       //console.log("processTrade=" + JSON.stringify(ev, null, 2))
       const trade = data.trade
@@ -743,7 +744,7 @@ const selectAccount = async () => {
     })
   })
   
-  globals.tradeWatch = await api.subscribe("acct." + globals.account + " CONTAINS '.'", async ev => {
+  globals.tradeWatch = await api.subscribe("trade.long", async (key, ev) => {
     await processAccountEvent(ev)
     datafeed.subscribe()
     store.dispatch({

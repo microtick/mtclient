@@ -12,13 +12,14 @@ const globals = {
   changed: false
 }
 
-async function callback(data, events) {
-  //console.log(JSON.stringify(event, null, 2))
-  const market = events['mtm.MarketTick']
+async function callback(key, tick) {
+  const market = key.slice(7)
+  //console.log("market=" + market)
+  //console.log("tick=" + JSON.stringify(tick))
   Object.keys(globals.subscriptions).map(key => {
     const obj = globals.subscriptions[key]
     if (obj.market === market) {
-      obj.cb(data, events)
+      obj.cb(market, tick)
     }
     return null
   })
@@ -31,7 +32,7 @@ export const subscribe = async () => {
       if (!globals.subscribed.includes[market]) {
         // Subscribe
         console.log("Subscribing: " + market)
-        const id = await api.subscribe("mtm.MarketTick='" + market + "'", callback)
+        const id = await api.subscribe("market." + market, callback)
         globals.subscribed.push({
           market: market,
           id: id
