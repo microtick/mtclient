@@ -56,6 +56,14 @@ svg .loading {
   fill: #f00;
 }
 
+#callquote {
+  fill: #0f0;
+}
+
+#putquote {
+  fill: #f00;
+}
+
 svg#chart line.spot {
   stroke-width: 2.5px;
 }

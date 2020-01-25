@@ -51,7 +51,7 @@ const globals = {
     size: DEFAULTCHARTSIZE
   },
   quote: {
-    backing: 1
+    backing: 100
   },
   quotes: []
 }
@@ -118,7 +118,7 @@ const initialState = {
     list: []
   },
   quote: {
-    backing: 1,
+    backing: 100,
     list: []
   }
 }
@@ -930,7 +930,8 @@ export const buyCall = () => {
         balance: accountInfo.balance
       })
     } catch (err) {
-      console.log("Buy call failed: " + err)
+      const msg = "" + err
+      console.log("Buy call failed: " + msg)
       removeNotification(dispatch, notId)
       const accountInfo = await api.getAccountInfo(globals.account)
       if (accountInfo.balance === 0) {
@@ -966,7 +967,8 @@ export const buyPut = () => {
         balance: accountInfo.balance
       })
     } catch (err) {
-      console.log("Buy put failed: " + err)
+      const msg = "" + err
+      console.log("Buy put failed: " + msg)
       removeNotification(dispatch, notId)
       const accountInfo = await api.getAccountInfo(globals.account)
       if (accountInfo.balance === 0) {
@@ -1108,6 +1110,7 @@ export const placeQuote = () => {
         balance: accountInfo.balance,
       })
     } catch (err) {
+      const msg = "" + err
       removeNotification(dispatch, notId)
       const accountInfo = await api.getAccountInfo(globals.account)
       if (accountInfo.balance === 0) {
@@ -1138,8 +1141,9 @@ export const cancelQuote = async (dispatch, id) => {
     })
   } catch (err) {
     console.log(err.message)
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Cancellation failed", err)
+    createErrorNotification(dispatch, "Cancellation failed", msg)
   }
 }
 
@@ -1161,8 +1165,9 @@ export const backQuote = async (dispatch, id, amount) => {
       balance: accountInfo.balance,
     })
   } catch (err) {
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Deposit failed", err)
+    createErrorNotification(dispatch, "Deposit failed", msg)
   }
 }
 
@@ -1178,8 +1183,9 @@ export const updateSpot = async (dispatch, id, newspot) => {
     fetchActive()
     fetchOrderBook()
   } catch (err) {
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update spot failed", err)
+    createErrorNotification(dispatch, "Update spot failed", msg)
   }
 }
 
@@ -1195,8 +1201,9 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     fetchActive()
     fetchOrderBook()
   } catch (err) {
+    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update premium failed", err)
+    createErrorNotification(dispatch, "Update premium failed", msg)
   }
 }
 

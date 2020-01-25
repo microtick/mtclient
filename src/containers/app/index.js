@@ -171,15 +171,11 @@ const App = props => {
       </div>
     }
     if (not.type === 'error') {
-      if (not.tx) {
-        var tx = <p className="footnote">Message: {not.tx}</p>
-      }
       return <div key={id} className="outer error">
         <div className="inner">
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
           <h3>Error</h3>
           <p className="message">{not.msg}</p>
-          {tx}
         </div>
       </div>
     }
