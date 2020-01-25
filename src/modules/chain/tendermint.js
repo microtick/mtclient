@@ -61,7 +61,7 @@ export default (state = initialState, action) => {
 export const init = async () => {
   var lasttime = 0
   var lastlocal = 0
-  api.subscribe("blocks", (name, block) => {
+  api.addBlockHandler(block => {
     try {
       lasttime = new Date(block.time).getTime() / 1000
       lastlocal = new Date().getTime() / 1000

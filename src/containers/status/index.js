@@ -25,7 +25,7 @@ const Status = props => {
     })
     var total = data.quoteBacking + data.tradeBacking + long - short
     if (data.curBalance !== undefined) {
-      total += parseFloat(data.curBalance.amount)
+      total += data.curBalance
     }
     content = <div>
       <div id="balances">
@@ -39,7 +39,6 @@ const Status = props => {
             <thead>
               <tr>
                 <td></td>
-                <td>Active</td>
                 <td>Unrealized Gains / Losses</td>
                 <td>Backing</td>
               </tr>
@@ -47,19 +46,16 @@ const Status = props => {
             <tbody>
               <tr>
                 <td>Quotes</td>
-                <td>{data.numQuotes}</td>
                 <td>---</td>
                 <td>{Math.round10(data.quoteBacking, props.constants.TOKEN_PRECISION)} fox</td>
               </tr>
               <tr>
                 <td>Trades (long)</td>
-                <td>{data.numTradesLong}</td>
                 <td>{long}</td>
                 <td>---</td>
               </tr>
               <tr>
                 <td>Trades (short)</td>
-                <td>{data.numTradesShort}</td>
                 <td>{-short}</td>
                 <td>{Math.round10(data.tradeBacking, props.constants.TOKEN_PRECISION)} fox</td>
               </tr>
@@ -67,7 +63,6 @@ const Status = props => {
             <tfoot>
               <tr>
                 <td></td>
-                <td>Total</td>
                 <td><div className="balance">{Math.round10(long - short, props.constants.TOKEN_PRECISION)} fox</div></td>
                 <td><div className="balance">{Math.round10(data.quoteBacking + data.tradeBacking, props.constants.TOKEN_PRECISION)} fox</div></td>
               </tr>

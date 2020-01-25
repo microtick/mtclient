@@ -128,13 +128,12 @@ const buildPriceOverlay = props => {
   const view = props.view
   const data = props.data
   //console.log("view=" + JSON.stringify(view))
-  //console.log("data=" + JSON.stringify(data))
   const mint = view.now - view.dur
   if (data.length > 0) {
     const points = data.map((p, i) => {
       const x = width * (p.time - mint) / view.dur
       //const x2 = width * (p.block - view.minb) / (view.maxb - view.minb)
-      //console.log("x=" + x + " x2=" + x2)
+      //console.log("x=" + x)
       const y = height - height * (p.value - view.minp) / (view.maxp - view.minp)
       return <circle className="spot" key={i} cx={x} cy={y}/>
     })
@@ -374,7 +373,7 @@ const buildBackground = props => {
       var delta = (width - event.clientX + bounds.left + 1) / 4
       var y = event.clientY - bounds.top
       
-      const backing = parseFloat(props.quote.backing)
+      const backing = props.quote.backing
       var price = props.view.minp - (y - height) * (props.view.maxp - props.view.minp) / height
       var prem = delta * (props.view.maxp - props.view.minp) / height
       
@@ -543,7 +542,7 @@ const buildOrderbookPremiums = props => {
     const sy = height - height * (spot - view.minp) / (view.maxp - view.minp)
     // Call
     if (premiums.indicatedCallPremium !== undefined) {
-      const top = spot + parseFloat(premiums.indicatedCallPremium)
+      const top = spot + premiums.indicatedCallPremium
       var y2 = height - height * (top - view.minp) / (view.maxp - view.minp)
       var call = <rect id="ordercall" className="premcall" x={chart_mp_left} y={y2} width={chart_mp_width} height={sy-y2}/>
     }
@@ -570,14 +569,14 @@ const buildOrderBook = props => {
       const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur] 
       const top = parseFloat(spot) + quote.premium
       const y2 = height - height * (top - view.minp) / (view.maxp - view.minp)
-      return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
+      return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
     })
     const putquoterects = props.orderbook.puts.quotes.map((quote, id) => {
       const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
       const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur]
       const bottom = parseFloat(spot) - quote.premium
       const y2 = height - height * (bottom - view.minp) / (view.maxp - view.minp)
-      return <rect key={id} className={"quote" + (quote.id % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
+      return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
     })
     return <g id="orderbook" viewBox="-10 -10 120 110">
       <g>{callquoterects}</g>
