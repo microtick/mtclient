@@ -1015,11 +1015,10 @@ function newQuoteParams(dispatch) {
 export const changeQtyCall = event => {
   var qty = parseFloat(event.target.value)
   if (qty < 0 || isNaN(qty)) qty = 0
-  if (qty > globals.orderbook.totalQty[globals.dur]) qty = globals.orderbook.totalQty[globals.dur]
+  if (qty > globals.orderbook.totalWeight[globals.dur]) qty = globals.orderbook.totalWeight[globals.dur]
   return async dispatch => {
     globals.orderbook.setBuyPremium(qty, true)
-    orderBookCursorPos(qty, globals.orderbook.totalQty[globals.dur], globals.spot, true, globals.orderbook.calls.price(qty),
-      globals.chart.maxp, globals.chart.minp) 
+    orderBookCursorPos(qty, globals.orderbook.totalWeight[globals.dur], globals.spot, true, globals.orderbook.calls.price(qty))
   }
 }
 
@@ -1028,8 +1027,7 @@ export const changeQtyPut = event => {
   if (qty < 0 || isNaN(qty)) qty = 0
   return async dispatch => {
     globals.orderbook.setBuyPremium(qty, false)
-    orderBookCursorPos(qty, globals.orderbook.totalQty[globals.dur], globals.spot, false, globals.orderbook.puts.price(qty),
-      globals.chart.maxp, globals.chart.minp) 
+    orderBookCursorPos(qty, globals.orderbook.totalWeight[globals.dur], globals.spot, false, globals.orderbook.puts.price(qty))
   }
 }
 
@@ -1043,7 +1041,7 @@ export const changeBacking = event => {
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / 10 * globals.quote.premium
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.maxp, globals.chart.minp)
+    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
 
@@ -1053,13 +1051,13 @@ export const changeSpot = event => {
   //spot = step * Math.floor(spot / step)
   if (spot < 0) spot = 0
   return async dispatch => {
-    globals.quote.spot = spot.toString()
+    globals.quote.spot = spot
     dispatch({
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / 10 * globals.quote.premium
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.maxp, globals.chart.minp)
+    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
 
@@ -1067,13 +1065,13 @@ export const changePremium = event => {
   var premium = parseFloat(event.target.value)
   if (premium < 0) premium = 0
   return async dispatch => {
-    if (premium > 0) globals.quote.premium = premium.toString()
+    globals.quote.premium = premium
     dispatch({
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / 10 * globals.quote.premium
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot, globals.chart.maxp, globals.chart.minp)
+    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
 
@@ -1110,7 +1108,6 @@ export const placeQuote = () => {
         balance: accountInfo.balance,
       })
     } catch (err) {
-      const msg = "" + err
       removeNotification(dispatch, notId)
       const accountInfo = await api.getAccountInfo(globals.account)
       if (accountInfo.balance === 0) {

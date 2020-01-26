@@ -62,7 +62,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Sell {c.ttype ? "Put" : "Call"}</td>
+          <td>Sell {c.option}</td>
           {viewTrade}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.duration]}</td>
@@ -76,7 +76,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Settle Long</td>
+          <td>Settle long</td>
           {viewTrade}
           <td colSpan={2}></td>
           <td>{amount} fox</td>
@@ -89,7 +89,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Settle Refund</td>
+          <td>Settle refund</td>
           {viewTrade}
           <td colSpan={2}></td>
           <td>{amount} fox</td>
@@ -114,7 +114,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Create Quote</td>
+          <td>Create quote</td>
           {viewQuote}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.duration]}</td>
@@ -128,7 +128,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Deposit Backing</td>
+          <td>Deposit backing</td>
           {viewQuote}
           <td colSpan={2}></td>
           <td>{amount} fox</td>
@@ -141,7 +141,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Update Quote</td>
+          <td>Update quote</td>
           {viewQuote}
           <td colSpan={2}></td>
           <td>---</td>
@@ -154,7 +154,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Cancel Quote</td>
+          <td>Cancel quote</td>
           {viewQuote}
           <td colSpan={2}></td>
           <td>{amount} fox</td>
@@ -218,7 +218,7 @@ function buildPageAccountHistory(props) {
     {content}
   </div>
   var title = <div>
-    <h3>Account History</h3>
+    <h3>Account Ledger</h3>
     <h4>Transaction history page {data.page} of {data.total}</h4>
   </div>
   return {
@@ -279,7 +279,7 @@ function buildPageTradeHistory(props) {
       profitable = Math.round10(strike + unitpremium, -6)
     }
     const metrics = <div className="metrics">
-      <p>Cost: {cost} Final Value: {fv} Net Profit: {np}</p>
+      <p>Cost: {cost} Final Value: {fv} Net Profit (long): {np}</p>
       <div className="statsblock">
         <h5>Timing</h5>
         <p>Start Time: {new Date(data.trade.start).toLocaleString()}</p>
@@ -552,7 +552,7 @@ function buildPageTradeHistory(props) {
     
   }
   return {
-    nav: <button onClick={props.viewAccount}>Account History</button>,
+    nav: <button onClick={props.viewAccount}>Return to Account Ledger</button>,
     title: title,
     content: content
   }
@@ -560,7 +560,7 @@ function buildPageTradeHistory(props) {
 
 function buildPageQuoteHistory(props) {
   const data = props.history.data.info
-  var nav = <button onClick={props.viewAccount}>Account History</button>
+  var nav = <button onClick={props.viewAccount}>Return to Account Ledger</button>
   var title = <h3>Quote Q-{data.id}</h3>
   const LEFT = 100
   const WIDTH = 800
@@ -659,7 +659,7 @@ function buildPageQuoteHistory(props) {
 const History = props => {
   if (props.account === undefined) {
     var page = {
-      title: <h3>Account History</h3>,
+      title: <h3>Account Ledger</h3>,
       content: <p>No account selected</p>
     }
   } else if (props.history.data === undefined) {

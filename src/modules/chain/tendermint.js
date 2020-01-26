@@ -35,6 +35,7 @@ export default (state = initialState, action) => {
       return {
         ...state,
         block: {
+          chainid: action.block.chainid,
           number: action.block.number,
           hash: action.block.hash,
           timestamp: action.block.timestamp
@@ -68,6 +69,7 @@ export const init = async () => {
       store.dispatch({
         type: BLOCK,
         block: {
+          chainid: block.chainid,
           number: parseInt(block.height, 10),
           timestamp: lasttime,
           hash: block.hash

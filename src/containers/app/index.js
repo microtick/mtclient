@@ -320,6 +320,7 @@ const App = props => {
     <div id="page-subheader">
       <div id="div-chain">
         <h3>Chain Information</h3>
+        <p>Chain = {props.chainid}</p>
         <p>Block height = {props.block} <span className="right">{props.time}</span></p>
         <p>Block hash = <span className="sm">{props.hash}</span></p>
       </div>
@@ -346,6 +347,7 @@ const mapStateToProps = state => ({
   password: state.microtick.password,
   constants: state.app.constants,
   menu: state.app.menu,
+  chainid: state.tendermint.block.chainid,
   block: state.tendermint.block.number,
   provider: state.tendermint.provider,
   hash: state.tendermint.block.hash,

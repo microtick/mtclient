@@ -41,11 +41,11 @@ const chart_mp_width = 10
 const chart_ob_left = 810
 const chart_ob_width = 190
 
-var minp
-var maxp
+var minp = 0
+var maxp = 0
 var calls
 var puts
-var dynamicWeight
+var dynamicWeight = 0
 
 const buildTimeGrid = props => {
   const view = props.view
@@ -214,11 +214,11 @@ const buildTradesOverlay = props => {
   </g>
 }
 
-export const chartCursorPos = function(qty, spot, prem, newspot, chminp) {
+export const chartCursorPos = function(qty, spot, prem, newspot) {
   if (typeof spot === 'string') spot = parseFloat(spot)
   if (typeof prem === 'string') prem = parseFloat(prem)
   if (typeof newspot === 'string') newspot = parseFloat(newspot)
-  const y = height - (spot - chminp) * height / (maxp - minp)
+  const y = height - (spot - minp) * height / (maxp - minp)
   const delta = prem * height / (maxp - minp)
   const qc = document.getElementById('quotecursor')
   if (qc) {
@@ -268,7 +268,7 @@ export const chartCursorPos = function(qty, spot, prem, newspot, chminp) {
   }
 }
 
-export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price, maxp, minp) {
+export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
   const cursx = document.getElementById('cursorx')
   const cx = chart_ob_left + qty * chart_ob_width / totalqty
   if (isNaN(cx)) return
@@ -534,7 +534,6 @@ const buildOrderbookPremiums = props => {
     } else {
       spot = premiums.indicatedSpot
     }
-    const view = props.view
     
     // Spot
     const sy = height - height * (spot - minp) / (maxp - minp)
@@ -559,8 +558,8 @@ const buildOrderbookPremiums = props => {
 
 const initDynamicView = props => {
   const view = props.view
-  minp = parseFloat(view.minp)
-  maxp = parseFloat(view.maxp)
+  minp = view.minp
+  maxp = view.maxp
   if (props.orderbook) {
     if (props.mousestate === 1) {
       // check quote heights
@@ -592,7 +591,6 @@ const initDynamicView = props => {
 }
 
 const buildOrderBook = props => {
-  const view = props.view
   if (props.orderbook) {
     if (props.premiums.buy || props.mousestate !== 1) {
       var spot = props.spot
@@ -632,7 +630,8 @@ const buildOrderBook = props => {
         const y2 = height - height * (top - minp) / (maxp - minp)
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
       })
-      const quoteTop = spot + parseFloat(props.premiums.indicatedCallPremium)
+      var quoteTop = spot
+      if (props.premiums.indicatedCallPremium !== undefined) quoteTop += props.premiums.indicatedCallPremium
       var y3 = height - height * (quoteTop - minp) / (maxp - minp)
       callquoterects.push(<rect key="callquote" id="callquote" x={leftX} y={y3} width={shift} height={sy-y3}/>)
       leftX = chart_ob_left
@@ -650,7 +649,8 @@ const buildOrderBook = props => {
         const y2 = height - height * (bottom - minp) / (maxp - minp)
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
       })
-      const quoteBottom = spot - parseFloat(props.premiums.indicatedPutPremium)
+      var quoteBottom = spot
+      if (props.premiums.indicatedPutPremium !== undefined) quoteBottom -= props.premiums.indicatedPutPremium
       y3 = height - height * (quoteBottom - minp) / (maxp - minp)
       putquoterects.push(<rect key="putquote" id="putquote" x={leftX} y={sy} width={shift} height={y3-sy}/>)
     }
