@@ -1,7 +1,7 @@
 import API from 'mtapi'
 
 const config = {
-  ws: "ws://localhost:1320",
+  ws: process.env.MICROTICK_WEBSOCKET,
   version: "v0.1.6"
 }
 

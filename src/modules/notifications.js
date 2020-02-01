@@ -9,6 +9,8 @@ const NOTIFY_SETTLE = "notifications/settle"
 const NOTIFY_SUCCESS = "notifications/success"
 const NOTIFY_ERROR = "notifications/error"
 const NOTIFY_REMOVE = "notifications/remove"
+const NOTIFY_FAUCET_REQUEST = "notifications/faucetrequest"
+const NOTIFY_FAUCET_LIMIT = "notifications/fauceterror"
 
 var uuid = 1
 
@@ -130,6 +132,21 @@ export default (state = initialState, action) => {
     return {
       list: newdata
     }
+  case NOTIFY_FAUCET_REQUEST:
+    newdata = state.list.reduce((res, el) => {
+      res.push({
+        ...el
+      })
+      return res
+    }, [])
+    newdata.push({
+      type: 'faucet',
+      id: action.id,
+      acct: action.acct
+    })
+    return {
+      list: newdata
+    }
   case NOTIFY_SETTLE:
     newdata = state.list.reduce((res, el) => {
       res.push({
@@ -164,6 +181,9 @@ export default (state = initialState, action) => {
         if (el.type === 'update') {
           msg = "Spot updated"
         }
+        if (el.type === 'faucet') {
+          msg = "Account funded"
+        }
       }
       return null
     })
@@ -193,6 +213,20 @@ export default (state = initialState, action) => {
       id: action.id,
       msg: action.msg,
       tx: action.tx
+    })
+    return {
+      list: newdata
+    }
+  case NOTIFY_FAUCET_LIMIT:
+    newdata = state.list.reduce((res, el) => {
+      res.push({
+        ...el
+      })
+      return res
+    }, [])
+    newdata.push({
+      type: 'faucetlimit',
+      id: action.id
     })
     return {
       list: newdata
@@ -345,4 +379,23 @@ export const closeNotification = id => {
       id: id
     })
   }
+}
+
+export const createFaucetRequestNotification = (dispatch, acct) => {
+  const uid = uuid++
+  dispatch({
+      type: NOTIFY_FAUCET_REQUEST,
+      id: uid,
+      acct: acct
+  })
+  return uid
+}
+
+export const createFaucetLimitNotification = (dispatch) => {
+  const uid = uuid++
+  dispatch({
+    type: NOTIFY_FAUCET_LIMIT,
+    id: uid
+  })
+  return uid
 }

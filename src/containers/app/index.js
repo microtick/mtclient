@@ -20,7 +20,7 @@ import About from '../about'
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
 import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, closeDialog } from '../../modules/dialog'
-import { choosePassword, enterPassword, newAccount } from '../../modules/microtick'
+import { choosePassword, enterPassword, newAccount, requestTokens } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
 import logo from './mtlogo-sm.png'
@@ -152,6 +152,25 @@ const App = props => {
         </div>
       </div>
     }
+    if (not.type === 'faucet') {
+      return <div key={id} className={"outer faucet"}>
+        <div className="inner">
+          <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
+          <h3>Requesting tokens</h3>
+          <p className="footnote">Requesting faucet tokens for account: {not.acct}</p>
+        </div>
+      </div>
+    }
+    if (not.type === 'faucetlimit') {
+      return <div key={id} className="outer error">
+        <div className="inner">
+          <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
+          <h3>Error</h3>
+          <p className="message">Account has reached its automatic funding limit.</p>
+          <p>Visit the <a target="_blank" href="https://t.me/microtick_general">Microtick telegram channel</a> to request more.</p>
+        </div>
+      </div>
+    }
     if (not.type === 'settle') {
       return <div key={id} className={"outer settle"}>
         <div className="inner">
@@ -254,13 +273,9 @@ const App = props => {
       return false
     })
     const total = props.status.quoteBacking + props.status.tradeBacking + long - short
-    if (props.balance === 0) {
-      var fundAccountMsg = <p className="funding">Post your cosmos address on the Microtick <a href="https://t.me/microtick_general">Telegram channel</a> to get test fox tokens</p>
-    }
     var acctInfo = <div>
       <p>Token balance = {Math.round10(props.balance, -6)} fox</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} fox</span></p>
-      {fundAccountMsg}
     </div>
   }
   switch (props.menu.selected) {
@@ -326,6 +341,7 @@ const App = props => {
       </div>
       <div id="div-account">
         <h3>Account Information</h3>
+        <button id="requestbutton" onClick={() => props.requestTokens()}>Request more tokens</button>
         <p>Address = {props.account}</p>
         {acctInfo}
       </div>
@@ -369,6 +385,7 @@ const mapDispatchToProps = dispatch => {
     choosePassword,
     enterPassword,
     newAccount,
+    requestTokens,
     closeNotification,
     updateSpot,
     updatePremium,

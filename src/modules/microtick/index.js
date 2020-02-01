@@ -5,14 +5,17 @@ import {createBuyNotification,
         createUpdateSpotNotification,
         createUpdatePremiumNotification,
         createSettleNotification,
+        createFaucetRequestNotification,
         createSuccessNotification,
         createErrorNotification,
+        createFaucetLimitNotification,
         removeNotification} from '../notifications'
 import { chartCursorPos, orderBookCursorPos } from '../../containers/trading/chart'
 import store from '../../store'
 import api from '../api'
 import { init } from '../chain/tendermint'
 import { SequentialTaskQueue } from 'sequential-task-queue'
+import axios from 'axios'
 
 const BLOCKTIME = 5
 
@@ -1276,6 +1279,39 @@ export const enterPassword = () => {
       dispatch({
         type: INVALIDPASSWORD
       })
+    }
+  }
+}
+
+export const requestTokens = () => {
+  return async dispatch => {
+    console.log("Request tokens")
+    const notId = createFaucetRequestNotification(dispatch, globals.account)
+    try {
+      const res = await axios.get(process.env.MICROTICK_FAUCET + "/" + globals.account)
+      console.log(JSON.stringify(res.data, null, 2))
+      if (res.data !== "success") {
+        if (res.data.startsWith("failure: ")) {
+          const error = res.data.slice(9)
+          if (error.startsWith("locked")) {
+            removeNotification(dispatch, notId)
+            createErrorNotification(dispatch, "Faucet request failed: " + error)
+          }
+          if (error.startsWith("limit")) {
+            removeNotification(dispatch, notId)
+            createFaucetLimitNotification(dispatch)
+          }
+        }
+      } else {
+        setTimeout(() => {
+          removeNotification(dispatch, notId)
+        }, DIALOG_TIME1)
+        createSuccessNotification(dispatch, DIALOG_TIME2, notId)
+      }
+    } catch (err) {
+      const msg = "" + err
+      removeNotification(dispatch, notId)
+      createErrorNotification(dispatch, "Faucet request failed", msg)
     }
   }
 }

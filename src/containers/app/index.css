@@ -153,6 +153,10 @@ main {
   cursor: pointer;
 }
 
+#requestbutton {
+  float: right;
+}
+
 .funding {
   font-size: 13px;
   text-align: center;
@@ -303,6 +307,11 @@ main {
   background: #448;
 }
 
+#notifications div.faucet {
+  color: #000;
+  background: #448;
+}
+
 #notifications div.cancel {
   color: #000;
   background: #fd0;
@@ -322,8 +331,14 @@ main {
 }
 
 #notifications div.error {
-  color: #f00;
+  color: #fff;
   background: #800;
+}
+
+#notifications div.error a {
+  color: #3bf;
+  font-weight: bold;
+  text-decoration: none;
 }
 
 #notifications div.success {
