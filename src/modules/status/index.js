@@ -9,6 +9,9 @@ const globals = {
 }
 
 const initialState = {
+  quoteBacking: 0,
+  tradeBacking: 0,
+  curBalance: 0
 }
 
 export default (state = initialState, action) => {
@@ -41,10 +44,8 @@ const getStatusData = async () => {
   const data = {
     type: STATUS,
     numQuotes: acctInfo.activeQuotes.length,
-    numTradesLong: 0, //acctInfo.activeTrades.long.length,
-    numTradesShort: 0, //acctInfo.activeTrades.short.length,
-    quoteBacking: parseFloat(acctInfo.quoteBacking.amount),
-    tradeBacking: parseFloat(acctInfo.tradeBacking.amount),
+    quoteBacking: acctInfo.quoteBacking,
+    tradeBacking: acctInfo.tradeBacking,
     curBalance: acctInfo.balance
   }
   store.dispatch(data)

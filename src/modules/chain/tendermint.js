@@ -35,6 +35,7 @@ export default (state = initialState, action) => {
       return {
         ...state,
         block: {
+          chainid: action.block.chainid,
           number: action.block.number,
           hash: action.block.hash,
           timestamp: action.block.timestamp
@@ -61,16 +62,17 @@ export default (state = initialState, action) => {
 export const init = async () => {
   var lasttime = 0
   var lastlocal = 0
-  api.subscribe("tm.event='NewBlock'", message => {
+  api.addBlockHandler(block => {
     try {
-      lasttime = new Date(message.data.value.block.header.time).getTime() / 1000
+      lasttime = new Date(block.time).getTime() / 1000
       lastlocal = new Date().getTime() / 1000
       store.dispatch({
         type: BLOCK,
         block: {
-          number: parseInt(message.data.value.block.header.height, 10),
+          chainid: block.chainid,
+          number: parseInt(block.height, 10),
           timestamp: lasttime,
-          hash: message.data.value.block.header.last_block_id.hash
+          hash: block.hash
         }
       })
     } catch (err) {

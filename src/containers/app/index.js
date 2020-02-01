@@ -26,8 +26,6 @@ import { choosePassword, enterPassword, newAccount } from '../../modules/microti
 import logo from './mtlogo-sm.png'
 import "./index.css"
 
-import { testBalance } from '../../modules/microtick'
-
 import { menuSelected } from '../../modules/app'
 
 const App = props => {
@@ -322,6 +320,7 @@ const App = props => {
     <div id="page-subheader">
       <div id="div-chain">
         <h3>Chain Information</h3>
+        <p>Chain = {props.chainid}</p>
         <p>Block height = {props.block} <span className="right">{props.time}</span></p>
         <p>Block hash = <span className="sm">{props.hash}</span></p>
       </div>
@@ -337,7 +336,7 @@ const App = props => {
       {page}
     </main>
     <div id="page-footer">
-      <p>Copyright &copy; 2018-19 Microtick LLC</p>
+      <p>Copyright &copy; 2018-2020 Microtick LLC</p>
       <p>Microtick option standardization U.S. patents 7,856,395 and 8,229,840.</p>
       <p>Microtick blockchain-based oracle patent pending.</p>
     </div>
@@ -348,6 +347,7 @@ const mapStateToProps = state => ({
   password: state.microtick.password,
   constants: state.app.constants,
   menu: state.app.menu,
+  chainid: state.tendermint.block.chainid,
   block: state.tendermint.block.number,
   provider: state.tendermint.provider,
   hash: state.tendermint.block.hash,
@@ -376,7 +376,6 @@ const mapDispatchToProps = dispatch => {
     cancelQuote,
     closeDialog,
     settleTrade,
-    testBalance,
     menuSelected
   }, dispatch)
 }
