@@ -939,8 +939,10 @@ export const buyCall = () => {
       const accountInfo = await api.getAccountInfo(globals.account)
       if (accountInfo.balance === 0) {
         createErrorNotification(dispatch, "Buy call failed: check account balance")
+      } else if (msg.includes("Insufficient funds")) {
+        createErrorNotification(dispatch, "Buy call failed: insufficient funds")
       } else {
-        createErrorNotification(dispatch, "Buy call failed: " + JSON.stringify(err))
+        createErrorNotification(dispatch, "Buy call failed: " + msg)
       }
     }
   }
