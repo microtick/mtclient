@@ -167,7 +167,7 @@ const App = props => {
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
           <h3>Error</h3>
           <p className="message">Account has reached its automatic funding limit.</p>
-          <p>Visit the <a target="_blank" href="https://t.me/microtick_general">Microtick telegram channel</a> to request more.</p>
+          <p>Visit the <a target="_blank" rel="noopener noreferrer" href="https://t.me/microtick_general">Microtick telegram channel</a> to request more.</p>
         </div>
       </div>
     }
