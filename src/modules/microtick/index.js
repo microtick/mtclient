@@ -262,42 +262,44 @@ async function processTradeStart(trade) {
   console.log("processTradeStart: " + trade.id)
   //console.log("processTrade=" + JSON.stringify(ev, null, 2))
   const end = new Date(trade.expiration)
-  //if (Date.parse(end) > Date.now()) {
-    const dir = trade.long === globals.account ? 'long' : 'short'
-    const id = trade.id
-    //console.log("Trade start: " + id)
-    const type = trade.option === "call" ? BuyCall : BuyPut
-    const market = trade.market
-    const start = new Date(trade.start)
-    const spot = await api.getMarketSpot(trade.market)
-    var current = (type === 0) ? (spot.consensus > trade.strike ? 
-      (spot.consensus - trade.strike) * trade.quantity : 0) : 
-      (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * trade.quantity : 0) 
-    if (current > trade.backing) current = trade.backing
-    const profit = dir === 'long' ? current - trade.cost : trade.cost - current
-    const tradeData = {
-      id: id,
-      dir: dir,
-      type: type,
-      active: true,
-      market: market,
-      dur: trade.duration,
-      spot: spot.consensus,
-      startBlock: trade.height,
-      start: start, 
-      end: end,
-      strike: trade.strike,
-      backing: trade.backing,
-      qty: trade.quantity,
-      premium: trade.cost,
-      current: current,
-      profit: profit,
-      final: trade.strike
-    }
-    globals.trades.push(tradeData)
-    globals.accountSubscriptions[id] = market
-    await api.subscribe(market)
-  //}
+  var active = true
+  if (Date.parse(end) < Date.now()) {
+    active = false
+  }
+  const dir = trade.long === globals.account ? 'long' : 'short'
+  const id = trade.id
+  //console.log("Trade start: " + id)
+  const type = trade.option === "call" ? BuyCall : BuyPut
+  const market = trade.market
+  const start = new Date(trade.start)
+  const spot = await api.getMarketSpot(trade.market)
+  var current = (type === 0) ? (spot.consensus > trade.strike ? 
+    (spot.consensus - trade.strike) * trade.quantity : 0) : 
+    (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * trade.quantity : 0) 
+  if (current > trade.backing) current = trade.backing
+  const profit = dir === 'long' ? current - trade.cost : trade.cost - current
+  const tradeData = {
+    id: id,
+    dir: dir,
+    type: type,
+    active: active,
+    market: market,
+    dur: trade.duration,
+    spot: spot.consensus,
+    startBlock: trade.height,
+    start: start, 
+    end: end,
+    strike: trade.strike,
+    backing: trade.backing,
+    qty: trade.quantity,
+    premium: trade.cost,
+    current: current,
+    profit: profit,
+    final: trade.strike
+  }
+  globals.trades.push(tradeData)
+  globals.accountSubscriptions[id] = market
+  await api.subscribe(market)
 }
 
 async function processTradeEnd(trade) {
@@ -978,8 +980,10 @@ export const buyPut = () => {
       const accountInfo = await api.getAccountInfo(globals.account)
       if (accountInfo.balance === 0) {
         createErrorNotification(dispatch, "Buy put failed: check account balance")
+      } else if (msg.includes("Insufficient funds")) {
+        createErrorNotification(dispatch, "Buy put failed: insufficient funds")
       } else {
-        createErrorNotification(dispatch, "Buy put failed: " + JSON.stringify(err))
+        createErrorNotification(dispatch, "Buy put failed: " + msg)
       }
     }
   }
@@ -1113,12 +1117,15 @@ export const placeQuote = () => {
         balance: accountInfo.balance,
       })
     } catch (err) {
+      const msg = "" + err
       removeNotification(dispatch, notId)
       const accountInfo = await api.getAccountInfo(globals.account)
       if (accountInfo.balance === 0) {
         createErrorNotification(dispatch, "Place quote failed: check account balance")
+      } else if (msg.includes("Insufficient funds")) {
+        createErrorNotification(dispatch, "Place quote failed: insufficient funds")
       } else {
-        createErrorNotification(dispatch, "Place quote failed: " + JSON.stringify(err))
+        createErrorNotification(dispatch, "Place quote failed: " + msg)
       }
     }
   }
