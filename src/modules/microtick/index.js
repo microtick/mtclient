@@ -259,10 +259,10 @@ function calcMinMax(obj) {
 }
 
 async function processTradeStart(trade) {
-  //console.log("processTradeStart: " + trade.id)
+  console.log("processTradeStart: " + trade.id)
   //console.log("processTrade=" + JSON.stringify(ev, null, 2))
   const end = new Date(trade.expiration)
-  if (Date.parse(end) > Date.now()) {
+  //if (Date.parse(end) > Date.now()) {
     const dir = trade.long === globals.account ? 'long' : 'short'
     const id = trade.id
     //console.log("Trade start: " + id)
@@ -297,11 +297,11 @@ async function processTradeStart(trade) {
     globals.trades.push(tradeData)
     globals.accountSubscriptions[id] = market
     await api.subscribe(market)
-  }
+  //}
 }
 
 async function processTradeEnd(trade) {
-  //console.log("processTradeEnd: " + trade.id)
+  console.log("processTradeEnd: " + trade.id)
   //console.log("Trade end: " + trade.id)
   globals.trades = globals.trades.filter(async tr => {
     if (tr.id === trade.id) {
