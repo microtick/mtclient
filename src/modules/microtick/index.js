@@ -936,6 +936,7 @@ export const buyCall = () => {
       })
     } catch (err) {
       removeNotification(dispatch, notId)
+      console.log(err)
       createErrorNotification(dispatch, err.message)
     }
   }
@@ -966,6 +967,7 @@ export const buyPut = () => {
       })
     } catch (err) {
       removeNotification(dispatch, notId)
+      console.log(err)
       createErrorNotification(dispatch, err.message)
     }
   }
@@ -1100,6 +1102,7 @@ export const placeQuote = () => {
       })
     } catch (err) {
       removeNotification(dispatch, notId)
+      console.log(err)
       createErrorNotification(dispatch, err.message)
     }
   }
@@ -1124,6 +1127,7 @@ export const cancelQuote = async (dispatch, id) => {
     })
   } catch (err) {
     removeNotification(dispatch, notId)
+    console.log(err)
     createErrorNotification(dispatch, err.message)
   }
 }
@@ -1147,6 +1151,7 @@ export const backQuote = async (dispatch, id, amount) => {
     })
   } catch (err) {
     removeNotification(dispatch, notId)
+    console.log(err)
     createErrorNotification(dispatch, err.message)
   }
 }
@@ -1164,6 +1169,7 @@ export const updateSpot = async (dispatch, id, newspot) => {
     fetchOrderBook()
   } catch (err) {
     removeNotification(dispatch, notId)
+    console.log(err)
     createErrorNotification(dispatch, err.message)
   }
 }
@@ -1181,6 +1187,7 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     fetchOrderBook()
   } catch (err) {
     removeNotification(dispatch, notId)
+    console.log(err)
     createErrorNotification(dispatch, err.message)
   }
 }
@@ -1290,6 +1297,7 @@ export const requestTokens = () => {
       }
     } catch (err) {
       removeNotification(dispatch, notId)
+      console.log(err)
       createErrorNotification(dispatch, "Faucet request failed", err.message)
     }
   }
