@@ -935,17 +935,8 @@ export const buyCall = () => {
         balance: accountInfo.balance
       })
     } catch (err) {
-      const msg = "" + err
-      console.log("Buy call failed: " + msg)
       removeNotification(dispatch, notId)
-      const accountInfo = await api.getAccountInfo(globals.account)
-      if (accountInfo.balance === 0) {
-        createErrorNotification(dispatch, "Buy call failed: check account balance")
-      } else if (msg.includes("Insufficient funds")) {
-        createErrorNotification(dispatch, "Buy call failed: insufficient funds")
-      } else {
-        createErrorNotification(dispatch, "Buy call failed: " + msg)
-      }
+      createErrorNotification(dispatch, err.message)
     }
   }
 }
@@ -974,17 +965,8 @@ export const buyPut = () => {
         balance: accountInfo.balance
       })
     } catch (err) {
-      const msg = "" + err
-      console.log("Buy put failed: " + msg)
       removeNotification(dispatch, notId)
-      const accountInfo = await api.getAccountInfo(globals.account)
-      if (accountInfo.balance === 0) {
-        createErrorNotification(dispatch, "Buy put failed: check account balance")
-      } else if (msg.includes("Insufficient funds")) {
-        createErrorNotification(dispatch, "Buy put failed: insufficient funds")
-      } else {
-        createErrorNotification(dispatch, "Buy put failed: " + msg)
-      }
+      createErrorNotification(dispatch, err.message)
     }
   }
 }
@@ -1117,16 +1099,8 @@ export const placeQuote = () => {
         balance: accountInfo.balance,
       })
     } catch (err) {
-      const msg = "" + err
       removeNotification(dispatch, notId)
-      const accountInfo = await api.getAccountInfo(globals.account)
-      if (accountInfo.balance === 0) {
-        createErrorNotification(dispatch, "Place quote failed: check account balance")
-      } else if (msg.includes("Insufficient funds")) {
-        createErrorNotification(dispatch, "Place quote failed: insufficient funds")
-      } else {
-        createErrorNotification(dispatch, "Place quote failed: " + msg)
-      }
+      createErrorNotification(dispatch, err.message)
     }
   }
 }
@@ -1149,10 +1123,8 @@ export const cancelQuote = async (dispatch, id) => {
       balance: accountInfo.balance
     })
   } catch (err) {
-    console.log(err.message)
-    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Cancellation failed", msg)
+    createErrorNotification(dispatch, err.message)
   }
 }
 
@@ -1174,9 +1146,8 @@ export const backQuote = async (dispatch, id, amount) => {
       balance: accountInfo.balance,
     })
   } catch (err) {
-    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Deposit failed", msg)
+    createErrorNotification(dispatch, err.message)
   }
 }
 
@@ -1192,9 +1163,8 @@ export const updateSpot = async (dispatch, id, newspot) => {
     fetchActive()
     fetchOrderBook()
   } catch (err) {
-    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update spot failed", msg)
+    createErrorNotification(dispatch, err.message)
   }
 }
 
@@ -1210,9 +1180,8 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     fetchActive()
     fetchOrderBook()
   } catch (err) {
-    const msg = "" + err
     removeNotification(dispatch, notId)
-    createErrorNotification(dispatch, "Update premium failed", msg)
+    createErrorNotification(dispatch, err.message)
   }
 }
 
@@ -1305,10 +1274,12 @@ export const requestTokens = () => {
           if (error.startsWith("locked")) {
             removeNotification(dispatch, notId)
             createErrorNotification(dispatch, "Faucet request failed: " + error)
-          }
-          if (error.startsWith("limit")) {
+          } else if (error.startsWith("limit")) {
             removeNotification(dispatch, notId)
             createFaucetLimitNotification(dispatch)
+          } else {
+            removeNotification(dispatch, notId)
+            createErrorNotification(dispatch, error)
           }
         }
       } else {
@@ -1318,9 +1289,8 @@ export const requestTokens = () => {
         createSuccessNotification(dispatch, DIALOG_TIME2, notId)
       }
     } catch (err) {
-      const msg = "" + err
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, "Faucet request failed", msg)
+      createErrorNotification(dispatch, "Faucet request failed", err.message)
     }
   }
 }

@@ -21,17 +21,17 @@ const ActiveQuotes = props => {
       if (a.market < b.market) return -1
       return a.dur - b.dur
     }).map((q, id) => {
-      var deposit = <td><button onClick={() => props.depositQuoteDialog(q.id)}>Deposit</button></td>
       const modified = q.modified.getTime() / 1000
       const canModify = q.canModify.getTime() / 1000
       if (props.timestamp >= canModify) {
         var actions = [
           <td key={1}><button onClick={() => props.updateSpotDialog(q.id, q.spot, q.premium)}>Spot</button></td>,
           <td key={2}><button onClick={() => props.updatePremiumDialog(q.id, q.spot, q.premium)}>Premium</button></td>,
-          <td key={3}><button onClick={() => props.cancelQuoteDialog(q.id)}>Cancel</button></td>
+          <td key={3}><button onClick={() => props.cancelQuoteDialog(q.id)}>Cancel</button></td>,
+          <td key={4}><button onClick={() => props.depositQuoteDialog(q.id)}>Deposit</button></td>
         ]
       } else {
-        actions = <td colSpan="3">not available</td>
+        actions = <td colSpan="4">not available</td>
       }
       return <tr className={(id%2 === 0) ? "odd" : "even"} key={id}>
         <td><span className="count">{id+1}</span></td>
@@ -44,7 +44,6 @@ const ActiveQuotes = props => {
         <td>{Math.round10(q.backing, props.constants.TOKEN_PRECISION)} fox</td>
         <td>{Math.round10(props.timestamp - modified, 0)} seconds</td>
         {actions}
-        {deposit}
       </tr>
     })
     var activequotes = <div id="div-quotes">
