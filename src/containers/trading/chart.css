@@ -64,6 +64,26 @@ svg .loading {
   fill: #f00;
 }
 
+#chartdiv {
+  flex: 3;
+}
+
+#controldiv {
+  flex: 1;
+}
+
+#chartwrap {
+  width: 100%;
+  margin: auto;
+}
+
+svg#chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: auto;
+}
+
 svg#chart line.spot {
   stroke-width: 2.5px;
 }

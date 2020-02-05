@@ -29,17 +29,7 @@ const commonName = {
   86400: "1 d"
 }
 
-const chartwidth = 1000
-const width = 800
-const height = 500
-
-// Selected premiums
-const chart_mp_left = 800
-const chart_mp_width = 10
-
-// Orderbook
-const chart_ob_left = 810
-const chart_ob_width = 190
+const layout = {}
 
 var minp = 0
 var maxp = 0
@@ -47,179 +37,60 @@ var calls
 var puts
 var dynamicWeight = 0
 
-const buildTimeGrid = props => {
+const initDynamicView = props => {
+  // get layout
+  const elem = document.getElementById('chart')
+  if (elem === null) return false
+  const bounds = elem.getBoundingClientRect()
+  layout.chartwidth = bounds.width
+  layout.width = layout.chartwidth * 0.75
+  layout.height = bounds.height
+  layout.chart_mp_left = layout.width
+  layout.chart_mp_width = 10
+  layout.chart_ob_left = layout.chart_mp_left + 10
+  layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+  
   const view = props.view
-  if (props.chartsize === 600) {
-    var grids = [ 300, 600 ]
-  } else if (props.chartsize === 1800) {
-    grids = [ 300, 600, 900, 1200, 1500, 1800 ]
-  } else if (props.chartsize === 3600) {
-    grids = [ 900, 1800, 2700, 3600 ]
-  } else if (props.chartsize === 7200) {
-    grids = [ 1800, 3600, 5400, 7200 ]
-  } else if (props.chartsize === 14400) {
-    grids = [ 3600, 7200, 10800, 14400 ]
-  } else if (props.chartsize === 28800) {
-    grids = [ 7200, 14400, 21600, 28800 ]
-  } else if (props.chartsize === 86400) {
-    grids = [ 21600, 43200, 64800, 86400 ]
-  } else {
-    grids = [ 5000, 10000, 15000 ]
-  }
-  if (view.minb !== null && !isNaN(view.minb) && view.maxb > view.minb) {
-    const rules = []
-    const text = []
-    for (var i in grids) {
-      let clz = "gridrule"
-      if (grids[i] === props.dur) {
-        clz += " heavy"
-      }
-      const grid = grids[i] / props.blocktime
-      const x = width * ((view.maxb-grid) - view.minb) / (view.maxb - view.minb)
-      rules.push(<line key={i} className={clz} x1={x} y1={0} x2={x} y2={height}/>)
-      text.push(<text key={i} className="gridtext" x={x+5} y={height-4}>{commonName[grids[i]]}</text>)
-    }
-    return <g>
-      <line className="gridrule" x1={width} y1={0} x2={width} y2={height}/>
-      {rules}
-      {text}
-    </g>
-  }
-}
-
-const buildPriceGrid = props => {
-  //console.log("minp=" + minp)
-  //console.log("maxp=" + maxp)
-  var div = height / 40;
-  var delta = Math.log10((maxp - minp) / div);
-  //console.log("delta=" + delta);
-  var floor = Math.floor(delta);
-  //console.log("floor=" + floor);
-  var frac = delta - floor;
-  var base = 2;
-  if (frac > 0.3010 && frac <= 0.6942) base = 5;
-  if (frac > 0.6942) base = 10;
-  //console.log("base=" + base);
-  var inc = Math.pow(10, Math.log10(base) + floor);
-  //console.log("inc=" + inc);
-  var start = (Math.floor(minp / inc) + 1) * inc;
-  var tics = [];
-  while (start < maxp) {
-      tics.push(Math.round10(start, floor-1));
-      start += inc;
-  }
-  //console.log("tics=" + tics)
-  const grids = tics.map((tic, i) => {
-    const y = height - height * (tic - minp) / (maxp - minp)
-    return <g key={i}>
-      <line className="gridrule" x1={0} x2={width} y1={y} y2={y}/>
-      <text className="gridtext" x="5" y={y-4}>{tic}</text>
-    </g>
-  })
-  return <g className="grid">
-    {grids}
-  </g>
-}
-
-const buildPriceOverlay = props => {
-  const view = props.view
-  const data = props.data
-  //console.log("view=" + JSON.stringify(view))
-  const mint = view.now - view.dur
-  if (data.length > 0) {
-    const points = data.map((p, i) => {
-      const x = width * (p.time - mint) / view.dur
-      //const x2 = width * (p.block - view.minb) / (view.maxb - view.minb)
-      //console.log("x=" + x)
-      const y = height - height * (p.value - minp) / (maxp - minp)
-      return <circle className="spot" key={i} cx={x} cy={y}/>
-    })
-    var curx = 0
-    if (data.length > 0) {
-      var lasty = height - height * (data[0].value - minp) / (maxp - minp)
+  minp = view.minp
+  maxp = view.maxp
+  if (props.orderbook) {
+    if (props.mousestate === 1) {
+      // check quote heights
+      var spot = props.premiums.indicatedSpot
+      calls = props.orderbook.calls.quotes.map(quote => {
+        const top = spot + quote.premium - (spot - props.spot) / 2
+        if (top > maxp) maxp = top
+        return quote
+      })
+      puts = props.orderbook.puts.quotes.map(quote => {
+        const bottom = spot - quote.premium  - (spot - props.spot) / 2
+        if (bottom < minp) minp = bottom
+        return quote
+      })
+      // check top / bottom quote premiums
+      const upper = props.premiums.qs + props.premiums.prem
+      const lower = props.premiums.qs - props.premiums.prem
+      if (upper > maxp) maxp = upper
+      if (lower < minp) minp = lower
     } else {
-      lasty = height - height * (props.spot - minp) / (maxp - minp)
+      calls = props.orderbook.calls.quotes
+      puts = props.orderbook.puts.quotes
     }
-    const lines = data.map((p, i) => {
-      const x = width * (p.time - mint) / view.dur
-      //const x = width * (p.block - view.minb) / (view.maxb - view.minb)
-      const y = height - height * (p.value - minp) / (maxp - minp)
-      const linegr = <g key={i}>
-        <line className="spot" key={0} x1={curx} x2={x} y1={lasty} y2={lasty}/>
-        <line className="spot" key={1} x1={x} x2={x} y1={lasty} y2={y}/>
-      </g>
-      curx = x
-      lasty = y
-      return linegr
-    })
-    lines.push(<line className="spot" key={data.length+2} x1={curx} x2={width+2} y1={lasty} y2={lasty}/>)
-    return <g>
-      <g>
-        {lines}
-      </g>
-      <g>
-        {points}
-      </g>
-    </g>
-  } 
-}
-
-const buildTradesOverlay = props => {
-  const view = props.view
-  const mint = view.now - view.dur
-  const t = props.trades.filter(t => {
-    return t.market === props.market
-  }).map((t, i) => {
-    const strike = t.strike
-    const sum = t.type === 0 ? 
-      parseFloat(t.strike) + parseFloat(t.premium) / parseFloat(t.qty) : 
-      parseFloat(t.strike) - parseFloat(t.premium) / parseFloat(t.qty)
-    const x1 = width * (t.start.getTime() - mint) / view.dur
-    //const x1 = width * (t.startBlock - view.minb) / (view.maxb - view.minb)
-    if (t.endBlock !== undefined) {
-      var x2 = width * (t.end.getTime() - mint) / view.dur
-      //var x2 = width * (t.endBlock - view.minb) / (view.maxb - view.minb)
-    } else {
-      x2 = width
-    }
-    const y1 = height - height * (strike - minp) / (maxp - minp)
-    const y2 = height - height * (sum - minp) / (maxp - minp)
-    const yfinal = height - height * (t.final - minp) / (maxp - minp)
-    var clz = t.type === 0 ? "call" : "put"
-    const x = x1 < x2 ? x1 : x2
-    const y = y1 < y2 ? y1 : y2
-    const w = x2 > width ? width - x1 : x2 - x1
-    const h = y1 < y2 ? y2 - y1 : y1 - y2
-    if (!t.active) clz = "inactive"
-    if (x1 === x2) {
-      var begin = <line className={clz + " begin"} x1={x1} x2={x1} y1={y1} y2={y2}/>
-    }
-    if (x2 < width) {
-      var end = <g>
-        <line className={clz + " tradebase " + t.dir} x1={x2} y1={y1} x2={x2} y2={yfinal}/>
-        <line className={clz + " tradebase"} x1={x2-3} x2={x2+3} y1={yfinal-3} y2={yfinal+3}/>
-        <line className={clz + " tradebase"} x1={x2-3} x2={x2+3} y1={yfinal+3} y2={yfinal-3}/>
-      </g>
-    }
-    return <g key={i}>
-      {begin}
-      <rect className={clz} x={x} y={y} width={w} height={h}/>
-      <line className={clz + " tradebase " + t.dir} x1={x1} y1={y1} x2={x2 > width ? width : x2} y2={y1}/>
-      <circle className={clz} cx={x1} cy={y1}/>
-      {end}
-    </g>
-  })
-  return <g>
-    {t}
-  </g>
+  }
+  var height = maxp - minp
+  if (height === 0) height = 1
+  minp = minp - height * .05
+  maxp = maxp + height * .05
+  
+  return true
 }
 
 export const chartCursorPos = function(qty, spot, prem, newspot) {
   if (typeof spot === 'string') spot = parseFloat(spot)
   if (typeof prem === 'string') prem = parseFloat(prem)
   if (typeof newspot === 'string') newspot = parseFloat(newspot)
-  const y = height - (spot - minp) * height / (maxp - minp)
-  const delta = prem * height / (maxp - minp)
+  const y = layout.height - (spot - minp) * layout.height / (maxp - minp)
+  const delta = prem * layout.height / (maxp - minp)
   const qc = document.getElementById('quotecursor')
   if (qc) {
     qc.setAttribute('y1', y)
@@ -240,7 +111,7 @@ export const chartCursorPos = function(qty, spot, prem, newspot) {
   if (qtext) {
     qtext.innerHTML = "@" + rtPrice + "  ⚖ " + Math.round10(qty, -4)
     const textProps = qtext.getBoundingClientRect()
-    qtext.setAttribute('x', width - textProps.width-10)
+    qtext.setAttribute('x', layout.width - textProps.width-10)
     qtext.setAttribute('y', y+5)
   }
   const posprem = document.getElementById('posprem')
@@ -248,7 +119,7 @@ export const chartCursorPos = function(qty, spot, prem, newspot) {
     //posprem.innerHTML = "Spot + " + Math.round10(prem, -4) + " = " + Math.round10(spot+prem, -4)
     posprem.innerHTML = "⇑ " + Math.round10(prem, -4)
     const textProps = posprem.getBoundingClientRect()
-    posprem.setAttribute('x', width - textProps.width-10)
+    posprem.setAttribute('x', layout.width - textProps.width-10)
     posprem.setAttribute('y', y-delta-4)
   }
   const negprem = document.getElementById('negprem')
@@ -256,46 +127,46 @@ export const chartCursorPos = function(qty, spot, prem, newspot) {
     //negprem.innerHTML = "Spot - " + Math.round10(prem, -4) + " = " + Math.round10(spot-prem, -4)
     negprem.innerHTML = "⇓ " + Math.round10(prem, -4)
     const textProps = negprem.getBoundingClientRect()
-    negprem.setAttribute('x', width - textProps.width-10)
+    negprem.setAttribute('x', layout.width - textProps.width-10)
     negprem.setAttribute('y', y+delta+14)
   }
   const nstext = document.getElementById('rightamt')
   if (nstext) {
-    const nsy = height - height * (newspot - minp) / (maxp - minp)
+    const nsy = layout.height - layout.height * (newspot - minp) / (maxp - minp)
     nstext.innerHTML = "New spot=@" + Math.round10(newspot, -4)
-    nstext.setAttribute('x', chart_ob_left + 5)
+    nstext.setAttribute('x', layout.chart_ob_left + 5)
     nstext.setAttribute('y', nsy + 5)
   }
 }
 
 export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
   const cursx = document.getElementById('cursorx')
-  const cx = chart_ob_left + qty * chart_ob_width / totalqty
+  const cx = layout.chart_ob_left + qty * layout.chart_ob_width / totalqty
   if (isNaN(cx)) return
   if (cursx) {
     cursx.setAttribute('y1', 0)
-    cursx.setAttribute('y2', height) 
+    cursx.setAttribute('y2', layout.height) 
     cursx.setAttribute('x1', cx)
     cursx.setAttribute('x2', cx) 
   }
   const cursy = document.getElementById('cursory')
   if (cursy) {
     if (iscall) {
-      const cy = height - height * (spot + price - minp) / (maxp - minp)
+      const cy = layout.height - layout.height * (spot + price - minp) / (maxp - minp)
       cursy.setAttribute('y1', cy)
       cursy.setAttribute('y2', cy)
     } else {
-      const py = height - height * (spot - price - minp) / (maxp - minp)
+      const py = layout.height - layout.height * (spot - price - minp) / (maxp - minp)
       cursy.setAttribute('y1', py)
       cursy.setAttribute('y2', py)
     }
   }
   const otext = document.getElementById('rightamt')
   if (otext) {
-    const sy = height - height * (parseFloat(spot) - minp) / (maxp - minp)
+    const sy = layout.height - layout.height * (parseFloat(spot) - minp) / (maxp - minp)
     otext.innerHTML = "⚖ " + Math.round10(qty, -4)
     const textProps = otext.getBoundingClientRect()
-    if (cx + textProps.width + 5 > chartwidth) {
+    if (cx + textProps.width + 5 > layout.chartwidth) {
       otext.setAttribute('x', cx - textProps.width - 5)
     } else {
       otext.setAttribute('x', cx + 5)
@@ -306,17 +177,17 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
   if (ctext) {
     if (iscall) {
       const cp = parseFloat(spot) + price / 2
-      const cy = height - height * (cp - minp) / (maxp - minp)
+      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
       ctext.innerHTML = "⇑ " + Math.round10(price, -4)
       const textProps = ctext.getBoundingClientRect()
-      ctext.setAttribute('x', width - textProps.width - 5)
+      ctext.setAttribute('x', layout.width - textProps.width - 5)
       ctext.setAttribute('y', cy + 5)
     } else {
       const pp = parseFloat(spot) - price / 2 
-      const py = height - height * (pp - minp) / (maxp - minp)
+      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
       ctext.innerHTML = "⇓ " + Math.round10(price, -4)
       const textProps = ctext.getBoundingClientRect()
-      ctext.setAttribute('x', width - textProps.width - 5)
+      ctext.setAttribute('x', layout.width - textProps.width - 5)
       ctext.setAttribute('y', py + 5)
     }
   }
@@ -324,12 +195,12 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
   if (costamt) {
     if (iscall) {
       const cp = parseFloat(spot) + price
-      const cy = height - height * (cp - minp) / (maxp - minp)
+      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
       costamt.innerHTML = Math.round10(qty * price, -4) + " fox"
       const textProps = costamt.getBoundingClientRect()
-      if (cx + textProps.width / 2 > chartwidth) {
+      if (cx + textProps.width / 2 > layout.chartwidth) {
         costamt.setAttribute('x', cx - textProps.width - 5)
-      } else if (cx - textProps.width / 2 - 5 < chart_ob_left) {
+      } else if (cx - textProps.width / 2 - 5 < layout.chart_ob_left) {
         costamt.setAttribute('x', cx + 5)
       } else {
         costamt.setAttribute('x', cx - textProps.width / 2 - 5)
@@ -337,12 +208,12 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
       costamt.setAttribute('y', cy - 4)
     } else {
       const pp = parseFloat(spot - price)
-      const py = height - height * (pp - minp) / (maxp - minp)
+      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
       costamt.innerHTML = Math.round10(qty * price, -4) + " fox"
       const textProps = costamt.getBoundingClientRect()
-      if (cx + textProps.width / 2 > chartwidth) {
+      if (cx + textProps.width / 2 > layout.chartwidth) {
         costamt.setAttribute('x', cx - textProps.width - 5)
-      } else if (cx - textProps.width / 2 - 5 < chart_ob_left) {
+      } else if (cx - textProps.width / 2 - 5 < layout.chart_ob_left) {
         costamt.setAttribute('x', cx + 5)
       } else {
         costamt.setAttribute('x', cx - textProps.width / 2 - 5)
@@ -367,12 +238,12 @@ const buildBackground = props => {
       
       //const sy = height - height * (props.spot - props.minp) / (props.maxp - props.minp)
       var bounds = event.target.getBoundingClientRect()
-      var delta = (width - event.clientX + bounds.left + 1) / 4
+      var delta = (bounds.width - event.clientX + bounds.left + 1) / 4
       var y = event.clientY - bounds.top
       
       const backing = props.quote.backing
-      var price = minp - (y - height) * (maxp - minp) / height
-      var prem = delta * (maxp - minp) / height
+      var price = minp - (y - layout.height) * (maxp - minp) / layout.height
+      var prem = delta * (maxp - minp) / layout.height
       
       const back = isNaN(props.orderbook.totalBacking[props.dur]) ? 0 : props.orderbook.totalBacking[props.dur]
       const wt = isNaN(props.orderbook.totalWeight[props.dur]) ? 0 : props.orderbook.totalWeight[props.dur]
@@ -422,7 +293,7 @@ const buildBackground = props => {
       if (props.dialog.showinline) return
       var bounds = event.target.getBoundingClientRect()
       const y = event.clientY - bounds.top
-      const sy = height - height * (parseFloat(props.spot) - minp) / (maxp - minp)
+      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
       if (y <= sy) {
         props.mouseState(2)
       } else {
@@ -436,10 +307,10 @@ const buildBackground = props => {
     const obMouseMove = event => {
       if (props.dialog.showinline) return
       var bounds = event.target.getBoundingClientRect()
-      const x = event.clientX - bounds.left + chart_ob_left
+      const x = event.clientX - bounds.left + layout.chart_ob_left
       const y = event.clientY - bounds.top
-      const qty = (x - chart_ob_left) * props.orderbook.totalWeight[props.dur] / chart_ob_width
-      const sy = height - height * (parseFloat(props.spot) - minp) / (maxp - minp)
+      const qty = (x - layout.chart_ob_left) * props.orderbook.totalWeight[props.dur] / layout.chart_ob_width
+      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
       const callprice = props.orderbook.calls.price(qty)
       const putprice = props.orderbook.puts.price(qty)
       if (y <= sy) {
@@ -456,7 +327,7 @@ const buildBackground = props => {
       if (props.dialog.showinline) return
       var bounds = event.target.getBoundingClientRect()
       const y = event.clientY - bounds.top
-      const sy = height - height * (parseFloat(props.spot) - minp) / (maxp - minp)
+      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
       if (y <= sy) {
         props.buyCallDialog()
       } else {
@@ -465,22 +336,189 @@ const buildBackground = props => {
     }
     
     return <g>
-      <rect id="chartback" x={0} width={width} y={0} height={height}
+      <rect id="chartback" x={0} width={layout.width} y={0} height={layout.height}
         onMouseEnter={chMouseEnter} onMouseLeave={chMouseLeave} 
         onMouseMove={chMouseMove} onClick={chMouseClick}/>
-      <rect id="obback" x={chart_ob_left} y={0} width={chart_ob_width} height={height}
+      <rect id="obback" x={layout.chart_ob_left} y={0} width={layout.chart_ob_width} height={layout.height}
         onMouseEnter={obMouseEnter} onMouseLeave={obMouseLeave} 
         onMouseMove={obMouseMove} onClick={obMouseClick}/>
     </g>
   }
 }
 
+const buildTimeGrid = props => {
+  const view = props.view
+  if (props.chartsize === 600) {
+    var grids = [ 300, 600 ]
+  } else if (props.chartsize === 1800) {
+    grids = [ 300, 600, 900, 1200, 1500, 1800 ]
+  } else if (props.chartsize === 3600) {
+    grids = [ 900, 1800, 2700, 3600 ]
+  } else if (props.chartsize === 7200) {
+    grids = [ 1800, 3600, 5400, 7200 ]
+  } else if (props.chartsize === 14400) {
+    grids = [ 3600, 7200, 10800, 14400 ]
+  } else if (props.chartsize === 28800) {
+    grids = [ 7200, 14400, 21600, 28800 ]
+  } else if (props.chartsize === 86400) {
+    grids = [ 21600, 43200, 64800, 86400 ]
+  } else {
+    grids = [ 5000, 10000, 15000 ]
+  }
+  if (view.minb !== null && !isNaN(view.minb) && view.maxb > view.minb) {
+    const rules = []
+    const text = []
+    for (var i in grids) {
+      let clz = "gridrule"
+      if (grids[i] === props.dur) {
+        clz += " heavy"
+      }
+      const grid = grids[i] / props.blocktime
+      const x = layout.width * ((view.maxb-grid) - view.minb) / (view.maxb - view.minb)
+      rules.push(<line key={i} className={clz} x1={x} y1={0} x2={x} y2={layout.height}/>)
+      text.push(<text key={i} className="gridtext" x={x+5} y={layout.height-4}>{commonName[grids[i]]}</text>)
+    }
+    return <g>
+      <line className="gridrule" x1={layout.width} y1={0} x2={layout.width} y2={layout.height}/>
+      {rules}
+      {text}
+    </g>
+  }
+}
+
+const buildPriceGrid = props => {
+  //console.log("minp=" + minp)
+  //console.log("maxp=" + maxp)
+  var div = layout.height / 40;
+  var delta = Math.log10((maxp - minp) / div);
+  //console.log("delta=" + delta);
+  var floor = Math.floor(delta);
+  //console.log("floor=" + floor);
+  var frac = delta - floor;
+  var base = 2;
+  if (frac > 0.3010 && frac <= 0.6942) base = 5;
+  if (frac > 0.6942) base = 10;
+  //console.log("base=" + base);
+  var inc = Math.pow(10, Math.log10(base) + floor);
+  //console.log("inc=" + inc);
+  var start = (Math.floor(minp / inc) + 1) * inc;
+  var tics = [];
+  while (start < maxp) {
+      tics.push(Math.round10(start, floor-1));
+      start += inc;
+  }
+  //console.log("tics=" + tics)
+  const grids = tics.map((tic, i) => {
+    const y = layout.height - layout.height * (tic - minp) / (maxp - minp)
+    return <g key={i}>
+      <line className="gridrule" x1={0} x2={layout.width} y1={y} y2={y}/>
+      <text className="gridtext" x="5" y={y-4}>{tic}</text>
+    </g>
+  })
+  return <g className="grid">
+    {grids}
+  </g>
+}
+
+const buildPriceOverlay = props => {
+  const view = props.view
+  const data = props.data
+  //console.log("view=" + JSON.stringify(view))
+  const mint = view.now - view.dur
+  if (data.length > 0) {
+    const points = data.map((p, i) => {
+      const x = layout.width * (p.time - mint) / view.dur
+      //const x2 = width * (p.block - view.minb) / (view.maxb - view.minb)
+      //console.log("x=" + x)
+      const y = layout.height - layout.height * (p.value - minp) / (maxp - minp)
+      return <circle className="spot" key={i} cx={x} cy={y}/>
+    })
+    var curx = 0
+    if (data.length > 0) {
+      var lasty = layout.height - layout.height * (data[0].value - minp) / (maxp - minp)
+    } else {
+      lasty = layout.height - layout.height * (props.spot - minp) / (maxp - minp)
+    }
+    const lines = data.map((p, i) => {
+      const x = layout.width * (p.time - mint) / view.dur
+      //const x = width * (p.block - view.minb) / (view.maxb - view.minb)
+      const y = layout.height - layout.height * (p.value - minp) / (maxp - minp)
+      const linegr = <g key={i}>
+        <line className="spot" key={0} x1={curx} x2={x} y1={lasty} y2={lasty}/>
+        <line className="spot" key={1} x1={x} x2={x} y1={lasty} y2={y}/>
+      </g>
+      curx = x
+      lasty = y
+      return linegr
+    })
+    lines.push(<line className="spot" key={data.length+2} x1={curx} x2={layout.width+2} y1={lasty} y2={lasty}/>)
+    return <g>
+      <g>
+        {lines}
+      </g>
+      <g>
+        {points}
+      </g>
+    </g>
+  } 
+}
+
+const buildTradesOverlay = props => {
+  const view = props.view
+  const mint = view.now - view.dur
+  const t = props.trades.filter(t => {
+    return t.market === props.market
+  }).map((t, i) => {
+    const strike = t.strike
+    const sum = t.type === 0 ? 
+      parseFloat(t.strike) + parseFloat(t.premium) / parseFloat(t.qty) : 
+      parseFloat(t.strike) - parseFloat(t.premium) / parseFloat(t.qty)
+    const x1 = layout.width * (t.start.getTime() - mint) / view.dur
+    //const x1 = width * (t.startBlock - view.minb) / (view.maxb - view.minb)
+    if (t.endBlock !== undefined) {
+      var x2 = layout.width * (t.end.getTime() - mint) / view.dur
+      //var x2 = width * (t.endBlock - view.minb) / (view.maxb - view.minb)
+    } else {
+      x2 = layout.width
+    }
+    const y1 = layout.height - layout.height * (strike - minp) / (maxp - minp)
+    const y2 = layout.height - layout.height * (sum - minp) / (maxp - minp)
+    const yfinal = layout.height - layout.height * (t.final - minp) / (maxp - minp)
+    var clz = t.type === 0 ? "call" : "put"
+    const x = x1 < x2 ? x1 : x2
+    const y = y1 < y2 ? y1 : y2
+    const w = x2 > layout.width ? layout.width - x1 : x2 - x1
+    const h = y1 < y2 ? y2 - y1 : y1 - y2
+    if (!t.active) clz = "inactive"
+    if (x1 === x2) {
+      var begin = <line className={clz + " begin"} x1={x1} x2={x1} y1={y1} y2={y2}/>
+    }
+    if (x2 < layout.width) {
+      var end = <g>
+        <line className={clz + " tradebase " + t.dir} x1={x2} y1={y1} x2={x2} y2={yfinal}/>
+        <line className={clz + " tradebase"} x1={x2-3} x2={x2+3} y1={yfinal-3} y2={yfinal+3}/>
+        <line className={clz + " tradebase"} x1={x2-3} x2={x2+3} y1={yfinal+3} y2={yfinal-3}/>
+      </g>
+    }
+    return <g key={i}>
+      {begin}
+      <rect className={clz} x={x} y={y} width={w} height={h}/>
+      <line className={clz + " tradebase " + t.dir} x1={x1} y1={y1} x2={x2 > layout.width ? layout.width : x2} y2={y1}/>
+      <circle className={clz} cx={x1} cy={y1}/>
+      {end}
+    </g>
+  })
+  return <g>
+    {t}
+  </g>
+}
+
 const buildForeground = props => {
   if (props.mousestate === 1) {
     var ret = <g>
-      <line id="quotecursor" className="cursor" x1={0} y1={0} x2={width} y2={0}/>
-      <line id="qctop" className="cursor" x1={0} y1={0} x2={width} y2={0}/>
-      <line id="qcbottom" className="cursor" x1={0} y1={0} x2={width} y2={0}/>
+      <line id="quotecursor" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
+      <line id="qctop" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
+      <line id="qcbottom" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <text id="qcspot" className="ordertip" x={0} y={0}></text>
       <text id="posprem" className="ordertip" x={0} y={0}></text>
       <text id="negprem" className="ordertip" x={0} y={0}></text>
@@ -488,8 +526,8 @@ const buildForeground = props => {
   }
   if (props.mousestate === 2 || props.mousestate === 3) {
     ret = <g>
-      <line id="cursorx" className="cursor" x1={chart_ob_left} y1={0} x2={chart_ob_left} y2={height}/>
-      <line id="cursory" className="cursor" x1={chart_ob_left} y1={0} x2={chart_ob_left + chart_ob_width -1} y2={0}/>
+      <line id="cursorx" className="cursor" x1={layout.chart_ob_left} y1={0} x2={layout.chart_ob_left} y2={layout.height}/>
+      <line id="cursory" className="cursor" x1={layout.chart_ob_left} y1={0} x2={layout.chart_ob_left + layout.chart_ob_width -1} y2={0}/>
       <text id="leftamt" className="ordertip" x={0} y={0}></text>
       <text id="rightamt" className="ordertip" x={0} y={0}></text>
       <text id="costamt" className="ordertip" x={0} y={0}></text>
@@ -499,24 +537,24 @@ const buildForeground = props => {
 }
 
 const buildOrderbookSpot = props => {
-  const sy = height - height * (props.spot - minp) / (maxp - minp)
-  const mid = chart_mp_left + chart_mp_width / 2
-  const right = chart_mp_left + chart_mp_width
+  const sy = layout.height - layout.height * (props.spot - minp) / (maxp - minp)
+  const mid = layout.chart_mp_left + layout.chart_mp_width / 2
+  const right = layout.chart_mp_left + layout.chart_mp_width
   if (props.premiums) {
     if (props.premiums.buy || props.mousestate !== 1) {
       var spot = parseFloat(props.spot)
-      var yspot = height - height * (spot - minp) / (maxp - minp)
+      var yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
       return <g id="spotpointer">
-        <line x1={chart_mp_left} y1={sy} x2={right} y2={sy}/>
+        <line x1={layout.chart_mp_left} y1={sy} x2={right} y2={sy}/>
         <line x1={right} y1={sy} x2={right-3} y2={sy+3}/>
         <line x1={right} y1={sy} x2={right-3} y2={sy-3}/>
       </g>
     } else {
       spot = props.premiums.indicatedSpot
       if (spot === undefined) spot = props.spot
-      yspot = height - height * (spot - minp) / (maxp - minp)
+      yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
       return <g id="spotpointer">
-        <line x1={chart_mp_left} x2={mid} y1={sy} y2={sy}/>
+        <line x1={layout.chart_mp_left} x2={mid} y1={sy} y2={sy}/>
         <line x1={mid} y1={yspot} x2={mid} y2={sy}/>
         <line x1={mid} y1={yspot} x2={right} y2={yspot}/>
         <line x1={right} y1={yspot} x2={right-3} y2={yspot-3}/>
@@ -536,18 +574,18 @@ const buildOrderbookPremiums = props => {
     }
     
     // Spot
-    const sy = height - height * (spot - minp) / (maxp - minp)
+    const sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
     // Call
     if (premiums.indicatedCallPremium !== undefined) {
       const top = spot + premiums.indicatedCallPremium
-      var y2 = height - height * (top - minp) / (maxp - minp)
-      var call = <rect id="ordercall" className="premcall" x={chart_mp_left} y={y2} width={chart_mp_width} height={sy-y2}/>
+      var y2 = layout.height - layout.height * (top - minp) / (maxp - minp)
+      var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={y2} width={layout.chart_mp_width} height={sy-y2}/>
     }
     // Put
     if (premiums.indicatedPutPremium !== undefined) {
       const bottom = spot - parseFloat(premiums.indicatedPutPremium)
-      y2 = height - height * (bottom - minp) / (maxp - minp)
-      var put = <rect id="orderput" className="premput" x={chart_mp_left} y={sy} width={chart_mp_width} height={y2-sy}/>
+      y2 = layout.height - layout.height * (bottom - minp) / (maxp - minp)
+      var put = <rect id="orderput" className="premput" x={layout.chart_mp_left} y={sy} width={layout.chart_mp_width} height={y2-sy}/>
     }
     return <g id="selprem">
       {call}
@@ -556,69 +594,35 @@ const buildOrderbookPremiums = props => {
   }
 }
 
-const initDynamicView = props => {
-  const view = props.view
-  minp = view.minp
-  maxp = view.maxp
-  if (props.orderbook) {
-    if (props.mousestate === 1) {
-      // check quote heights
-      var spot = props.premiums.indicatedSpot
-      calls = props.orderbook.calls.quotes.map(quote => {
-        const top = spot + quote.premium - (spot - props.spot) / 2
-        if (top > maxp) maxp = top
-        return quote
-      })
-      puts = props.orderbook.puts.quotes.map(quote => {
-        const bottom = spot - quote.premium  - (spot - props.spot) / 2
-        if (bottom < minp) minp = bottom
-        return quote
-      })
-      // check top / bottom quote premiums
-      const upper = props.premiums.qs + props.premiums.prem
-      const lower = props.premiums.qs - props.premiums.prem
-      if (upper > maxp) maxp = upper
-      if (lower < minp) minp = lower
-    } else {
-      calls = props.orderbook.calls.quotes
-      puts = props.orderbook.puts.quotes
-    }
-  }
-  var height = maxp - minp
-  if (height === 0) height = 1
-  minp = minp - height * .05
-  maxp = maxp + height * .05
-}
-
 const buildOrderBook = props => {
   if (props.orderbook) {
     if (props.premiums.buy || props.mousestate !== 1) {
       var spot = props.spot
-      var sy = height - height * (spot - minp) / (maxp - minp)
+      var sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
       var callquoterects = calls.map((quote, id) => {
-        const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
-        const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur] 
+        const x1 = layout.chart_ob_left + quote.q1 * layout.chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const x2 = layout.chart_ob_left + quote.q2 * layout.chart_ob_width / props.orderbook.totalWeight[props.dur] 
         const top = parseFloat(spot) + quote.premium
-        const y2 = height - height * (top - minp) / (maxp - minp)
+        const y2 = layout.height - layout.height * (top - minp) / (maxp - minp)
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
       })
       var putquoterects = puts.map((quote, id) => {
-        const x1 = chart_ob_left + quote.q1 * chart_ob_width / props.orderbook.totalWeight[props.dur]
-        const x2 = chart_ob_left + quote.q2 * chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const x1 = layout.chart_ob_left + quote.q1 * layout.chart_ob_width / props.orderbook.totalWeight[props.dur]
+        const x2 = layout.chart_ob_left + quote.q2 * layout.chart_ob_width / props.orderbook.totalWeight[props.dur]
         const bottom = parseFloat(spot) - quote.premium
-        const y2 = height - height * (bottom - minp) / (maxp - minp)
+        const y2 = layout.height - layout.height * (bottom - minp) / (maxp - minp)
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
       })
     } else {
       spot = props.premiums.indicatedSpot
       if (spot === undefined) spot = props.spot
-      sy = height - height * (spot - minp) / (maxp - minp)
+      sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
       const totalWeight = parseFloat(props.orderbook.totalWeight[props.dur]) + dynamicWeight
-      const shift = chart_ob_width * dynamicWeight / totalWeight
-      var leftX = chart_ob_left
+      const shift = layout.chart_ob_width * dynamicWeight / totalWeight
+      var leftX = layout.chart_ob_left
       callquoterects = calls.map((quote, id) => {
-        var x1 = chart_ob_left + quote.q1 * chart_ob_width / totalWeight
-        var x2 = chart_ob_left + quote.q2 * chart_ob_width / totalWeight
+        var x1 = layout.chart_ob_left + quote.q1 * layout.chart_ob_width / totalWeight
+        var x2 = layout.chart_ob_left + quote.q2 * layout.chart_ob_width / totalWeight
         const callPremium = quote.premium - (spot - props.spot) / 2
         if (props.premiums.indicatedCallPremium < callPremium) {
           x1 += shift
@@ -627,17 +631,17 @@ const buildOrderBook = props => {
           leftX = x2
         }
         const top = parseFloat(spot) + callPremium
-        const y2 = height - height * (top - minp) / (maxp - minp)
+        const y2 = layout.height - layout.height * (top - minp) / (maxp - minp)
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
       })
       var quoteTop = spot
       if (props.premiums.indicatedCallPremium !== undefined) quoteTop += props.premiums.indicatedCallPremium
-      var y3 = height - height * (quoteTop - minp) / (maxp - minp)
+      var y3 = layout.height - layout.height * (quoteTop - minp) / (maxp - minp)
       callquoterects.push(<rect key="callquote" id="callquote" x={leftX} y={y3} width={shift} height={sy-y3}/>)
-      leftX = chart_ob_left
+      leftX = layout.chart_ob_left
       putquoterects = puts.map((quote, id) => {
-        var x1 = chart_ob_left + quote.q1 * chart_ob_width / totalWeight
-        var x2 = chart_ob_left + quote.q2 * chart_ob_width / totalWeight
+        var x1 = layout.chart_ob_left + quote.q1 * layout.chart_ob_width / totalWeight
+        var x2 = layout.chart_ob_left + quote.q2 * layout.chart_ob_width / totalWeight
         const putPremium = quote.premium + (spot - props.spot) / 2
         if (props.premiums.indicatedPutPremium < putPremium) {
           x1 += shift
@@ -646,67 +650,84 @@ const buildOrderBook = props => {
           leftX = x2
         }
         const bottom = parseFloat(spot) - putPremium
-        const y2 = height - height * (bottom - minp) / (maxp - minp)
+        const y2 = layout.height - layout.height * (bottom - minp) / (maxp - minp)
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
       })
       var quoteBottom = spot
       if (props.premiums.indicatedPutPremium !== undefined) quoteBottom -= props.premiums.indicatedPutPremium
-      y3 = height - height * (quoteBottom - minp) / (maxp - minp)
+      y3 = layout.height - layout.height * (quoteBottom - minp) / (maxp - minp)
       putquoterects.push(<rect key="putquote" id="putquote" x={leftX} y={sy} width={shift} height={y3-sy}/>)
     }
     return <g id="orderbook" viewBox="-10 -10 120 110">
       <g>{callquoterects}</g>
       <g>{putquoterects}</g>
-      <line className="spot" x1={chart_ob_left} x2={chart_ob_left+chart_ob_width} y1={sy} y2={sy}/>
+      <line className="spot" x1={layout.chart_ob_left} x2={layout.chart_ob_left+layout.chart_ob_width} y1={sy} y2={sy}/>
     </g>
   }
 }
 
-const Chart = props => {
-  //if (props.selected && props.spot !== undefined && maxp > minp) {
-  if (!props.loading) {
-    initDynamicView(props)
-    //console.log("build background")
-    const background = buildBackground(props)
-    //console.log("build time grid")
-    const timegrid = buildTimeGrid(props)
-    //console.log("build price grid")
-    const pricegrid = buildPriceGrid(props)
-    //console.log("build price overlay")
-    const data = buildPriceOverlay(props)
-    //console.log("build trades overlay")
-    const trades = buildTradesOverlay(props)
-    //console.log("build orderbook spot")
-    const spot = buildOrderbookSpot(props)
-    //console.log("build orderbook premiums")
-    const prems = buildOrderbookPremiums(props)
-    //console.log("build orderbook")
-    const orderbook = buildOrderBook(props)
-    //console.log("build foreground")
-    const foreground = buildForeground(props)
-    var chart =
-      <div>
-        <svg id="chart" width={chartwidth} height={height}>
-          {background}
-          {timegrid}
-          {pricegrid}
-          {trades}
-          {data}
-          {prems}
-          {orderbook}
-          {spot}
-          {foreground}
+class Chart extends React.Component {
+  
+  resize() {
+    this.forceUpdate()
+  }
+  
+  componentDidMount() {
+    window.addEventListener('resize', this.resize.bind(this))
+  }
+  
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.resize.bind(this))
+  }
+  
+  render() {
+    const props = this.props
+    
+    if (!props.loading) {
+      initDynamicView(props)
+      //console.log("build background")
+      const background = buildBackground(props)
+      //console.log("build time grid")
+      const timegrid = buildTimeGrid(props)
+      //console.log("build price grid")
+      const pricegrid = buildPriceGrid(props)
+      //console.log("build price overlay")
+      const data = buildPriceOverlay(props)
+      //console.log("build trades overlay")
+      const trades = buildTradesOverlay(props)
+      //console.log("build orderbook spot")
+      const spot = buildOrderbookSpot(props)
+      //console.log("build orderbook premiums")
+      const prems = buildOrderbookPremiums(props)
+      //console.log("build orderbook")
+      const orderbook = buildOrderBook(props)
+      //console.log("build foreground")
+      const foreground = buildForeground(props)
+      var chart =
+        <div id="chartwrap">
+          <svg id="chart" width="640" height="480">
+            {background}
+            {timegrid}
+            {pricegrid}
+            {trades}
+            {data}
+            {prems}
+            {orderbook}
+            {spot}
+            {foreground}
+          </svg>
+        </div>
+      return chart
+    }
+    if (props.selected) {
+      return <div id="chartwrap">
+        <svg id="chart" width="640" height="480">
         </svg>
       </div>
-    return chart
-  } else if (props.selected) {
-    return <div>
-      <svg id="chart" width={chartwidth} height={height}>
-        <text x={chartwidth/2-50} y={height/2} className="loading">Loading...</text>
-      </svg>
-    </div>
+    }
+    return null
   }
-  return null
+
 }
 
 const mapStateToProps = state => ({

@@ -12,7 +12,7 @@ export default (state = initialState, action) => {
   switch (action.type) {
     case MENU:
       globals.page = action.target
-      getLeaderboardData()
+      //getLeaderboardData()
       return state
     case LEADERBOARD:
       return {
@@ -26,6 +26,7 @@ export default (state = initialState, action) => {
 }
 
 const getLeaderboardData = async() => {
+  /*
   if (globals.page !== 'leaderboard') return
   const info = await api.getLeaderboardInfo()
   store.dispatch({
@@ -46,4 +47,5 @@ const getLeaderboardData = async() => {
       return t2 - t1
     }).slice(0,25)
   }) 
+  */
 }

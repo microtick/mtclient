@@ -12,6 +12,7 @@
 import React from 'react';
 import { bindActionCreators } from 'redux'
 
+import Leaderboard from '../leaderboard'
 import Trading from '../trading'
 import Status from '../status'
 import History from '../history'
@@ -285,8 +286,11 @@ const App = props => {
     </div>
   }
   switch (props.menu.selected) {
+    case 'leaderboard':
+      var page = <Leaderboard/>
+      break
     case 'trading':
-      var page = <Trading/>
+      page = <Trading/>
       break
     case 'status':
       page = <Status/>
@@ -300,6 +304,7 @@ const App = props => {
     default:
   }
   var menu = <div id="menu">
+      <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
       <div className={props.menu.selected === 'trading' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('trading')}>Trading</div>
       <div className={props.menu.selected === 'status' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('status')}>Status</div>
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>

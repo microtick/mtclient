@@ -379,10 +379,10 @@ class Home extends React.Component {
               {orderbook}
             </div>
             <div className="row">
-              <div>
+              <div id="chartdiv">
                 <Chart/>
               </div>
-              <div>
+              <div id="controldiv">
                 {spot}
                 {dialog}
               </div>

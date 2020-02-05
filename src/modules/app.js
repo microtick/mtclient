@@ -4,7 +4,7 @@ const MENU = 'app/menu'
 
 const initialState = {
   menu: {
-    selected: 'trading'
+    selected: 'leaderboard'
   },
   constants: {
     UNIT_PRECISION: -4,
