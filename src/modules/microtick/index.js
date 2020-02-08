@@ -259,7 +259,7 @@ function calcMinMax(obj) {
 }
 
 async function processTradeStart(trade) {
-  console.log("processTradeStart: " + trade.id)
+  //console.log("processTradeStart: " + trade.id)
   //console.log("processTrade=" + JSON.stringify(ev, null, 2))
   const end = new Date(trade.expiration)
   var active = true
@@ -303,8 +303,7 @@ async function processTradeStart(trade) {
 }
 
 async function processTradeEnd(trade) {
-  console.log("processTradeEnd: " + trade.id)
-  //console.log("Trade end: " + trade.id)
+  //console.log("processTradeEnd: " + trade.id)
   globals.trades = globals.trades.filter(async tr => {
     if (tr.id === trade.id) {
       tr.active = false
@@ -1273,7 +1272,7 @@ export const requestTokens = () => {
     console.log("Request tokens")
     const notId = createFaucetRequestNotification(dispatch, globals.account)
     try {
-      const res = await axios.get(process.env.MICROTICK_FAUCET + "/" + globals.account)
+      const res = await axios.get(process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
       console.log(JSON.stringify(res.data, null, 2))
       if (res.data !== "success") {
         if (res.data.startsWith("failure: ")) {

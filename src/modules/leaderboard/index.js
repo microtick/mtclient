@@ -1,51 +1,126 @@
 import store from '../../store'
+import axios from 'axios'
 import api from '../api'
+
+import {createRegisterNotification, 
+        createSuccessNotification,
+        createErrorNotification,
+        removeNotification} from '../notifications'
 
 const MENU = 'app/menu'
 const LEADERBOARD = 'leaderboard/info'
+const CHANGEADDRESS = "leaderboard/change"
 
 const globals = {}
 
-const initialState = {}
+const initialState = {
+  loading: true
+}
 
 export default (state = initialState, action) => {
   switch (action.type) {
     case MENU:
       globals.page = action.target
-      //getLeaderboardData()
-      return state
+      if (action.target === 'leaderboard') {
+        getLeaderboardData()
+      }
+      return {
+        ...state,
+        loading: true
+      }
     case LEADERBOARD:
       return {
         ...state,
-        commission: action.commission,
-        accounts: action.accounts
+        loading: false,
+        total: action.total,
+        reward: action.reward,
+        fee: action.fee,
+        endTime: action.endTime,
+        registeredAddress: action.registeredAddress,
+        leaders: action.leaders
+      }
+    case CHANGEADDRESS:
+      return {
+        ...state,
+        registeredAddress: null
       }
     default:
       return state
   }
 }
 
-const getLeaderboardData = async() => {
-  /*
-  if (globals.page !== 'leaderboard') return
-  const info = await api.getLeaderboardInfo()
-  store.dispatch({
-    type: LEADERBOARD,
-    commission: info.commission,
-    accounts: Object.keys(info.accounts).filter(key => {
-      if (info.accounts[key].balance < 5000) {
-        return true
+export const registerAccount = async memo => {
+  try {
+    const wallet = await api.getWallet()
+  
+    //console.log("registering with: " + JSON.stringify(info))
+  
+    //console.log("memo=" + memo)
+    const envelope = await api.postEnvelope()
+    const amount = ""  + (globals.endpoint.fee * 1000000)
+    
+    const registrationData = {
+      tx: {
+        msg: [
+          {
+            type: "cosmos-sdk/MsgSend",
+            value: {
+              from_address: wallet.acct,
+              to_address: globals.endpoint.leaderboardAccount,
+              amount: [
+                {
+                  amount: amount,
+                  denom: "kits"
+                }
+              ]
+            }
+          }
+        ],
+        fee: {
+          amount: [],
+          gas: "200000"
+        },
+        signatures: null,
+        memo: memo
       }
-      return false
-    }).map(key => {
-      const obj = info.accounts[key]
-      obj.name = key
-      return obj
-    }).sort((x1, x2) => {
-      const t1 = x1.balance + x1.quoteBacking + x1.tradeBacking
-      const t2 = x2.balance + x2.quoteBacking + x2.tradeBacking
-      return t2 - t1
-    }).slice(0,25)
-  }) 
-  */
+    }
+  
+    var notId = createRegisterNotification(store.dispatch, memo)
+    await api.postTx(Object.assign(registrationData, envelope))
+    //console.log("Result=" + JSON.stringify(tx, null, 2))
+    setTimeout(() => {
+      removeNotification(store.dispatch, notId)
+    }, 1500)
+    createSuccessNotification(store.dispatch, 1750, notId)
+    getLeaderboardData()
+  } catch (err) {
+    if (notId !== undefined) removeNotification(store.dispatch, notId)
+    console.log(err)
+    createErrorNotification(store.dispatch, err.message)
+  }
+}
+
+export const changeAddress = () => {
+  store.dispatch({
+    type: CHANGEADDRESS
+  })
+}
+
+const getLeaderboardData = async () => {
+  const wallet = await api.getWallet()
+  const endpoint = await axios.get(process.env.MICROTICK_LEADERBOARD + "/endpoint/" + wallet.acct)
+  globals.endpoint = endpoint.data
+  
+  const leaders = await axios.get(process.env.MICROTICK_LEADERBOARD + "/leaderboard/0")
+  //console.log("leaders: " + JSON.stringify(leaders.data))
+  const data = {
+    type: LEADERBOARD,
+    total: endpoint.data.totalAccounts,
+    reward: endpoint.data.reward,
+    fee: endpoint.data.fee,
+    endTime: endpoint.data.endTime,
+    registeredAddress: endpoint.data.current,
+    leaders: leaders.data
+  }
+  store.dispatch(data)
 }

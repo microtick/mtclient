@@ -677,7 +677,7 @@ class Chart extends React.Component {
   }
   
   componentWillUnmount() {
-    window.removeEventListener('resize', this.resize.bind(this))
+    window.removeEventListener('resize', this.resize)
   }
   
   render() {

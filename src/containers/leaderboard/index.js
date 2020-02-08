@@ -1,58 +1,73 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import { registerAccount, changeAddress } from '../../modules/leaderboard'
 
 import "./index.css"
 
 const Leaderboard = props => {
-  if (props.accounts !== undefined) {
-    var total = props.commission
-    const leaderboard = props.accounts.map((acct, id) => {
-      const sum = Math.round10(acct.balance + acct.quoteBacking + acct.tradeBacking, -6)
-      total = Math.round10(total + sum, -6)
-      const awardarr = ["1st", "2nd", "3rd" ]
-      const award = id < awardarr.length ? awardarr[id] : ""
-      return <tr key={id} className={(id%2)===0?'even':'odd'}>
-        <td>{id+1}</td>
-        <td>{award}</td>
-        <td className="num">{acct.name}</td>
-        <td className="num">{acct.balance} fox</td>
-        <td>{acct.numQuotes}</td>
-        <td>{acct.numTrades}</td>
-        <td className="num">{acct.quoteBacking} fox</td>
-        <td className="num">{acct.tradeBacking} fox</td>
-        <td className="num">{sum} fox</td>
-      </tr>
-    })
-    return <div id="background">
-      <div id="leaderboard">
-        <table>
-          <thead>
-            <tr>
-              <td>Rank</td>
-              <td>Prize</td>
-              <td>Account</td>
-              <td>Balance</td>
-              <td># Quotes</td>
-              <td># Trades</td>
-              <td>Quote Backing</td>
-              <td>Trade Backing</td>
-              <td>Total</td>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboard}
-          </tbody>
-        </table>
-      </div>
+  if (props.loading) {
+    return <div id="div-leaderboard">
+      <p>Loading...</p>
     </div>
   } else {
-    return <p>Loading...</p>
+    const url = "https://stargazer.certus.one/accounts/" + props.registeredAddress
+    if (props.registeredAddress !== undefined && props.registeredAddress !== null) {
+      var register = <p><b>Your mainnet reward address</b>: <a href={url} target="_blank">{props.registeredAddress}</a> <button onClick={() => changeAddress()}>Change</button></p>
+    } else {
+      register = <div>
+        <p>Register your Cosmos mainnet address where winnings should be sent: <input id="mainnet" size="80"></input></p>
+        <p><b>Fee to register</b>: {props.fee} fox</p>
+        <button onClick={() => registerAccount(document.getElementById("mainnet").value)}>Register</button>
+      </div>
+    }
+    if (props.leaders !== undefined) {
+      var leaders = props.leaders.map((leader, i) => {
+        return <tr key={i} className={i%2===0?"even":"odd"}>
+          <td className="rank">{i+1}</td>
+          <td className="leftjust">{leader.account}</td>
+          <td>{Math.round10(leader.starting, -6)} fox</td>
+          <td>{leader.numQuotes}</td>
+          <td>{leader.numTrades}</td>
+          <td>{Math.round10(leader.ending, -6)} fox</td>
+          <td>{Math.round10(leader.percent, -2)}%</td>
+        </tr>
+      })
+    }
+    return <div id="div-leaderboard">
+      <h2>Active contest</h2>
+      <p><b>Reward</b>: {props.reward}</p>
+      <p><b>Contest ends</b>: {props.endTime}</p>
+      {register}
+      <h2>Current leaders</h2>
+      <p>Total accounts: {props.total}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Testnet Account</th>
+            <th>Starting Balance</th>
+            <th>Num Quotes</th>
+            <th>Num Trades</th>
+            <th>Ending Balance</th>
+            <th>Percentage Gain (Loss)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {leaders}
+        </tbody>
+      </table>
+    </div>
   }
 }
 
 const mapStateToProps = state => ({
-  commission: state.leaderboard.commission,
-  accounts: state.leaderboard.accounts
+  loading: state.leaderboard.loading,
+  total: state.leaderboard.total,
+  reward: state.leaderboard.reward,
+  fee: state.leaderboard.fee,
+  endTime: state.leaderboard.endTime,
+  registeredAddress: state.leaderboard.registeredAddress,
+  leaders: state.leaderboard.leaders
 })
 
 export default connect(

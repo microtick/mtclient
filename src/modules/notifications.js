@@ -11,6 +11,7 @@ const NOTIFY_ERROR = "notifications/error"
 const NOTIFY_REMOVE = "notifications/remove"
 const NOTIFY_FAUCET_REQUEST = "notifications/faucetrequest"
 const NOTIFY_FAUCET_LIMIT = "notifications/fauceterror"
+const NOTIFY_REGISTER = "notifications/register"
 
 var uuid = 1
 
@@ -147,6 +148,21 @@ export default (state = initialState, action) => {
     return {
       list: newdata
     }
+  case NOTIFY_REGISTER:
+    newdata = state.list.reduce((res, el) => {
+      res.push({
+        ...el
+      })
+      return res
+    }, [])
+    newdata.push({
+      type: 'register',
+      id: action.id,
+      mainnet: action.mainnet
+    })
+    return {
+      list: newdata
+    }
   case NOTIFY_SETTLE:
     newdata = state.list.reduce((res, el) => {
       res.push({
@@ -183,6 +199,9 @@ export default (state = initialState, action) => {
         }
         if (el.type === 'faucet') {
           msg = "Account funded"
+        }
+        if (el.type === 'register') {
+          msg = "Account registered"
         }
       }
       return null
@@ -396,6 +415,16 @@ export const createFaucetLimitNotification = (dispatch) => {
   dispatch({
     type: NOTIFY_FAUCET_LIMIT,
     id: uid
+  })
+  return uid
+}
+
+export const createRegisterNotification = (dispatch, mainnet) => {
+  const uid = uuid++
+  dispatch({
+    type: NOTIFY_REGISTER,
+    id: uid,
+    mainnet: mainnet
   })
   return uid
 }

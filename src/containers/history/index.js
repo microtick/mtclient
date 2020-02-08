@@ -110,6 +110,18 @@ function buildPageAccountHistory(props) {
           <td>{c.credit} fox</td>
           <td>{balance} fox</td>
         </tr>
+      case 'withdraw':
+        return <tr key={n} className={n%2?'even':'odd'}>
+          {ct}
+          <td>{c.height}</td>
+          <td>Send</td>
+          <td colSpan={3}></td>
+          <td>{amount} fox</td>
+          <td>---</td>
+          <td>{c.debit} fox</td>
+          <td>---</td>
+          <td>{balance} fox</td>
+        </tr>
       case 'quote.create':
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}

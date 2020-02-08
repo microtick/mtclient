@@ -172,6 +172,15 @@ const App = props => {
         </div>
       </div>
     }
+    if (not.type === 'register') {
+      return <div key={id} className={"outer register"}>
+        <div className="inner">
+          <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
+          <h3>Registering for leaderboard</h3>
+          <p className="footnote">Reward address: {not.mainnet}</p>
+        </div>
+      </div>
+    }
     if (not.type === 'settle') {
       return <div key={id} className={"outer settle"}>
         <div className="inner">
@@ -191,7 +200,11 @@ const App = props => {
       </div>
     }
     if (not.type === 'error') {
-      if (not.msg.includes("Insufficient funds") || not.msg.includes("No such address")) {
+      var message = not.msg
+      if (not.msg.includes("Insufficient funds") || 
+          not.msg.includes("insufficient account funds") ||
+          not.msg.includes("No such address")) {
+        message = "Insufficient account funds"
         var button = <button id="requestbutton" onClick={() => {
           props.closeNotification(not.id)
           props.requestTokens()
@@ -201,7 +214,7 @@ const App = props => {
         <div className="inner">
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
           <h3>Error</h3>
-          <p className="message">{not.msg} {button}</p>
+          <p className="message">{message} {button}</p>
         </div>
       </div>
     }

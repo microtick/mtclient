@@ -312,6 +312,11 @@ main {
   background: #448;
 }
 
+#notifications div.register {
+  color: #000;
+  background: #448;
+}
+
 #notifications div.cancel {
   color: #000;
   background: #fd0;
