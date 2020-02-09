@@ -1,4 +1,4 @@
-import API from 'mtapi'
+import API from 'microtick'
 
 const config = {
   ws: process.env.MICROTICK_WEBSOCKET,

@@ -12,7 +12,7 @@ const Leaderboard = props => {
   } else {
     const url = "https://stargazer.certus.one/accounts/" + props.registeredAddress
     if (props.registeredAddress !== undefined && props.registeredAddress !== null) {
-      var register = <p><b>Your mainnet reward address</b>: <a href={url} target="_blank">{props.registeredAddress}</a> <button onClick={() => changeAddress()}>Change</button></p>
+      var register = <p><b>Your mainnet reward address</b>: <a href={url} target="_blank" rel="noopener noreferrer">{props.registeredAddress}</a> <button onClick={() => changeAddress()}>Change</button></p>
     } else {
       register = <div>
         <p>Register your Cosmos mainnet address where winnings should be sent: <input id="mainnet" size="80"></input></p>
