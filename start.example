@@ -1,8 +1,14 @@
 #!/bin/sh
 
-export MICROTICK_WEBSOCKET=ws://localhost:1320
-export MICROTICK_FAUCET=http://localhost:8888
-export MICROTICK_LEADERBOARD=http://localhost:8889
+IP=localhost
+
+export MICROTICK_WEBSOCKET=ws://$IP:1320
+export MICROTICK_FAUCET=http://$IP:8888
+export MICROTICK_LEADERBOARD=http://$IP:8889
+
+echo websocket=$MICROTICK_WEBSOCKET
+echo faucet=$MICROTICK_FAUCET
+echo leader=$MICROTICK_LEADERBOARD
 
 npm run start
 

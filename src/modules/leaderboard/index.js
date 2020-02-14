@@ -11,7 +11,7 @@ const MENU = 'app/menu'
 const LEADERBOARD = 'leaderboard/info'
 const CHANGEADDRESS = "leaderboard/change"
 
-const globals = {}
+const globals = { }
 
 const initialState = {
   loading: true
@@ -22,7 +22,7 @@ export default (state = initialState, action) => {
     case MENU:
       globals.page = action.target
       if (action.target === 'leaderboard') {
-        getLeaderboardData()
+        getLeaderboardData(0)
       }
       return {
         ...state,
@@ -33,11 +33,13 @@ export default (state = initialState, action) => {
         ...state,
         loading: false,
         total: action.total,
+        pages: action.totalPages,
         reward: action.reward,
         fee: action.fee,
         endTime: action.endTime,
         registeredAddress: action.registeredAddress,
-        leaders: action.leaders
+        leaders: action.leaders,
+        page: action.page
       }
     case CHANGEADDRESS:
       return {
@@ -92,7 +94,7 @@ export const registerAccount = async memo => {
       removeNotification(store.dispatch, notId)
     }, 1500)
     createSuccessNotification(store.dispatch, 1750, notId)
-    getLeaderboardData()
+    getLeaderboardData(0)
   } catch (err) {
     if (notId !== undefined) removeNotification(store.dispatch, notId)
     console.log(err)
@@ -106,21 +108,23 @@ export const changeAddress = () => {
   })
 }
 
-const getLeaderboardData = async () => {
+export const getLeaderboardData = async page => {
   const wallet = await api.getWallet()
   const endpoint = await axios.get(process.env.MICROTICK_LEADERBOARD + "/endpoint/" + wallet.acct)
   globals.endpoint = endpoint.data
   
-  const leaders = await axios.get(process.env.MICROTICK_LEADERBOARD + "/leaderboard/0")
+  const leaders = await axios.get(process.env.MICROTICK_LEADERBOARD + "/leaderboard/" + page)
   //console.log("leaders: " + JSON.stringify(leaders.data))
   const data = {
     type: LEADERBOARD,
     total: endpoint.data.totalAccounts,
+    totalPages: endpoint.data.totalPages,
     reward: endpoint.data.reward,
     fee: endpoint.data.fee,
     endTime: endpoint.data.endTime,
     registeredAddress: endpoint.data.current,
-    leaders: leaders.data
+    leaders: leaders.data,
+    page: page
   }
   store.dispatch(data)
 }

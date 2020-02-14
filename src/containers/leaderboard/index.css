@@ -24,9 +24,15 @@
     line-height: 24px;
 }
 
+#div-leaderboard .nav {
+    margin-bottom: 10px;
+}
+
 #div-leaderboard table {
+    table-layout: fixed;
     padding: 10px;
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
     width: 90%;
     border: 2px solid #eec;
     border-radius: 5px;
@@ -47,6 +53,9 @@
     font-weight: bold;
 }
 
+#div-leaderboard tr {
+}
+
 #div-leaderboard td {
     height: 20px;
     padding: 5px;
@@ -58,11 +67,16 @@
 }
 
 #div-leaderboard tr.even {
-  background: #fff;
+    background: #fff;
 }
 
 #div-leaderboard tr.odd {
-  background: #ddd;
+    background: #ddd;
+}
+
+#div-leaderboard tr.myaccount {
+    background: #666;
+    color: #fd0;
 }
 
 #div-leaderboard .leftjust {
