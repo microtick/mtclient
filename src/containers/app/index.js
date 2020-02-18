@@ -294,7 +294,7 @@ const App = props => {
     })
     const total = props.status.quoteBacking + props.status.tradeBacking + long - short
     var acctInfo = <div>
-      <p>Token balance = {Math.round10(props.balance, -6)} fox</p>
+      <p>Available balance = {Math.round10(props.balance, -6)} fox</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} fox</span></p>
     </div>
   }

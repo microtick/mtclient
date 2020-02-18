@@ -11,8 +11,23 @@
 }
 
 #div-leaderboard h2 {
+    display: inline-block;
+    margin-left: auto;
+    margin-right: auto;
     margin-top: 10px;
-    margin-bottom: 20px
+    margin-bottom: 20px;
+    color: #333;
+    text-decoration: underline;
+}
+
+#div-leaderboard button {
+    margin-top: 10px;
+    margin-left: 5px;
+    margin-bottom: 5px;
+}
+
+#div-leaderboard input {
+    margin: 5px;
 }
 
 #div-leaderboard a {
@@ -21,11 +36,27 @@
 }
 
 #div-leaderboard p {
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 20px;
 }
 
 #div-leaderboard .nav {
     margin-bottom: 10px;
+}
+
+#div-leaderboard .ul {
+    text-decoration: underline;
+}
+
+#registration {
+    margin-left: auto;
+    margin-right: auto;
+    width: 70%;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    background: #fff;
+    margin-bottom: 20px;
 }
 
 #div-leaderboard table {
@@ -34,9 +65,10 @@
     margin-left: auto;
     margin-right: auto;
     width: 90%;
-    border: 2px solid #eec;
+    background: #edc;
     border-radius: 5px;
-    box-shadow: 10px 20px 20px #333;
+    box-shadow: 5px 5px 5px #666;
+    margin-bottom: 20px;
 }
 
 #div-leaderboard thead {
@@ -83,4 +115,9 @@
     text-align: left;
     padding-left: 20px;
     padding-right: 20px;
+}
+
+#div-leaderboard .pagenav {
+    width: 100%;
+    text-align: center;
 }

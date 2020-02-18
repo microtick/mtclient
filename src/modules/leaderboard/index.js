@@ -14,7 +14,8 @@ const CHANGEADDRESS = "leaderboard/change"
 const globals = { }
 
 const initialState = {
-  loading: true
+  loading: true,
+  active: false
 }
 
 export default (state = initialState, action) => {
@@ -32,11 +33,14 @@ export default (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        active: action.active,
         total: action.total,
         pages: action.totalPages,
         reward: action.reward,
         fee: action.fee,
+        startTime: action.startTime,
         endTime: action.endTime,
+        updateInterval: action.updateInterval,
         registeredAddress: action.registeredAddress,
         leaders: action.leaders,
         page: action.page
@@ -109,22 +113,49 @@ export const changeAddress = () => {
 }
 
 export const getLeaderboardData = async page => {
-  const wallet = await api.getWallet()
-  const endpoint = await axios.get(process.env.MICROTICK_LEADERBOARD + "/endpoint/" + wallet.acct)
-  globals.endpoint = endpoint.data
-  
-  const leaders = await axios.get(process.env.MICROTICK_LEADERBOARD + "/leaderboard/" + page)
-  //console.log("leaders: " + JSON.stringify(leaders.data))
-  const data = {
-    type: LEADERBOARD,
-    total: endpoint.data.totalAccounts,
-    totalPages: endpoint.data.totalPages,
-    reward: endpoint.data.reward,
-    fee: endpoint.data.fee,
-    endTime: endpoint.data.endTime,
-    registeredAddress: endpoint.data.current,
-    leaders: leaders.data,
-    page: page
+    
+  const update = async () => {
+    try {
+      const wallet = await api.getWallet()
+      const endpoint = await axios.get(process.env.MICROTICK_LEADERBOARD + "/endpoint/" + wallet.acct)
+      globals.endpoint = endpoint.data
+    
+      const leaders = await axios.get(process.env.MICROTICK_LEADERBOARD + "/leaderboard/" + page)
+      //console.log("leaders: " + JSON.stringify(leaders.data))
+      const startTime = new Date(globals.endpoint.startTime)
+      const startTimeString = startTime.toLocaleDateString() + " " + startTime.toLocaleTimeString() 
+      const endTime = new Date(globals.endpoint.endTime)
+      const endTimeString = endTime.toLocaleDateString() + " " + endTime.toLocaleTimeString() 
+      const data = {
+        type: LEADERBOARD,
+        active: globals.endpoint.active,
+        total: globals.endpoint.totalAccounts,
+        totalPages: globals.endpoint.totalPages,
+        reward: globals.endpoint.reward,
+        fee: globals.endpoint.fee,
+        startTime: startTimeString,
+        endTime: endTimeString,
+        updateInterval: globals.endpoint.updateInterval,
+        registeredAddress: globals.endpoint.current,
+        leaders: leaders.data,
+        page: page
+      }
+      store.dispatch(data)
+    } catch (err) {
+      console.log(err)
+      store.dispatch({
+        type: LEADERBOARD,
+        active: false
+      })
+    }
+    
+    globals.updater = setTimeout(update, globals.endpoint.updateInterval * 1000)
   }
-  store.dispatch(data)
+  
+  if (globals.updater !== undefined) {
+    clearTimeout(globals.updater)
+    delete globals.updater
+  }
+  
+  update()
 }

@@ -37,6 +37,11 @@ var calls
 var puts
 var dynamicWeight = 0
 
+const MOUSESTATE_NONE = 0
+const MOUSESTATE_QUOTE = 1
+const MOUSESTATE_CALL = 2
+const MOUSESTATE_PUT = 3
+
 const initDynamicView = props => {
   // get layout
   const elem = document.getElementById('chart')
@@ -54,7 +59,7 @@ const initDynamicView = props => {
   minp = view.minp
   maxp = view.maxp
   if (props.orderbook) {
-    if (props.mousestate === 1) {
+    if (props.mousestate === MOUSESTATE_QUOTE) {
       // check quote heights
       var spot = props.premiums.indicatedSpot
       calls = props.orderbook.calls.quotes.map(quote => {
@@ -227,11 +232,11 @@ const buildBackground = props => {
   if (props.orderbook) {
     const chMouseEnter = event => {
       if (props.dialog.showinline) return
-      props.mouseState(1)
+      props.mouseState(MOUSESTATE_QUOTE)
     }
     const chMouseLeave = event => {
       if (props.dialog.showinline) return
-      props.mouseState(0)
+      props.mouseState(MOUSESTATE_NONE)
     }
     const chMouseMove = event => {
       if (props.dialog.showinline) return
@@ -295,14 +300,14 @@ const buildBackground = props => {
       const y = event.clientY - bounds.top
       const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
       if (y <= sy) {
-        props.mouseState(2)
+        props.mouseState(MOUSESTATE_CALL)
       } else {
-        props.mouseState(3)
+        props.mouseState(MOUSESTATE_PUT)
       }
     }
     const obMouseLeave = event => {
       if (props.dialog.showinline) return
-      props.mouseState(0)
+      props.mouseState(MOUSESTATE_NONE)
     }
     const obMouseMove = event => {
       if (props.dialog.showinline) return
@@ -314,10 +319,10 @@ const buildBackground = props => {
       const callprice = props.orderbook.calls.price(qty)
       const putprice = props.orderbook.puts.price(qty)
       if (y <= sy) {
-        props.mouseState(2)
+        props.mouseState(MOUSESTATE_CALL)
         props.orderbook.setBuyPremium(qty, true)
       } else {
-        props.mouseState(3)
+        props.mouseState(MOUSESTATE_PUT)
         props.orderbook.setBuyPremium(qty, false)
       }
       orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], parseFloat(props.spot), y <= sy, y <= sy ? callprice : putprice, 
@@ -514,7 +519,7 @@ const buildTradesOverlay = props => {
 }
 
 const buildForeground = props => {
-  if (props.mousestate === 1) {
+  if (props.mousestate === MOUSESTATE_QUOTE) {
     var ret = <g>
       <line id="quotecursor" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <line id="qctop" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
@@ -524,7 +529,7 @@ const buildForeground = props => {
       <text id="negprem" className="ordertip" x={0} y={0}></text>
     </g>
   }
-  if (props.mousestate === 2 || props.mousestate === 3) {
+  if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {
     ret = <g>
       <line id="cursorx" className="cursor" x1={layout.chart_ob_left} y1={0} x2={layout.chart_ob_left} y2={layout.height}/>
       <line id="cursory" className="cursor" x1={layout.chart_ob_left} y1={0} x2={layout.chart_ob_left + layout.chart_ob_width -1} y2={0}/>
@@ -541,7 +546,7 @@ const buildOrderbookSpot = props => {
   const mid = layout.chart_mp_left + layout.chart_mp_width / 2
   const right = layout.chart_mp_left + layout.chart_mp_width
   if (props.premiums) {
-    if (props.premiums.buy || props.mousestate !== 1) {
+    if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
       var spot = parseFloat(props.spot)
       var yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
       return <g id="spotpointer">
@@ -566,7 +571,7 @@ const buildOrderbookSpot = props => {
 
 const buildOrderbookPremiums = props => {
   const premiums = props.premiums
-  if (premiums && props.mousestate > 1) {
+  if (premiums && (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT)) {
     if (premiums.buy) {
       var spot = props.spot
     } else {
@@ -576,16 +581,22 @@ const buildOrderbookPremiums = props => {
     // Spot
     const sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
     // Call
-    if (premiums.indicatedCallPremium !== undefined) {
+    if (props.mousestate === MOUSESTATE_CALL && premiums.indicatedCallPremium !== undefined) {
       const top = spot + premiums.indicatedCallPremium
       var y2 = layout.height - layout.height * (top - minp) / (maxp - minp)
-      var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={y2} width={layout.chart_mp_width} height={sy-y2}/>
+      var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={y2} 
+        width={layout.chart_mp_width} height={sy-y2}/>
+      //var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={0} 
+        //width={layout.chart_mp_width} height={y2}/>
     }
     // Put
-    if (premiums.indicatedPutPremium !== undefined) {
+    if (props.mousestate === MOUSESTATE_PUT && premiums.indicatedPutPremium !== undefined) {
       const bottom = spot - parseFloat(premiums.indicatedPutPremium)
       y2 = layout.height - layout.height * (bottom - minp) / (maxp - minp)
-      var put = <rect id="orderput" className="premput" x={layout.chart_mp_left} y={sy} width={layout.chart_mp_width} height={y2-sy}/>
+      var put = <rect id="orderput" className="premput" x={layout.chart_mp_left} y={sy} 
+        width={layout.chart_mp_width} height={y2-sy}/>
+      //var put = <rect id="orderput" className="premput" x={layout.chart_mp_left} y={y2} 
+        //width={layout.chart_mp_width} height={layout.height-y2}/>
     }
     return <g id="selprem">
       {call}
@@ -596,7 +607,7 @@ const buildOrderbookPremiums = props => {
 
 const buildOrderBook = props => {
   if (props.orderbook) {
-    if (props.premiums.buy || props.mousestate !== 1) {
+    if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
       var spot = props.spot
       var sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
       var callquoterects = calls.map((quote, id) => {
