@@ -935,7 +935,7 @@ export const buyCall = () => {
       })
     } catch (err) {
       removeNotification(dispatch, notId)
-      createErrorNotification(dispatch, err.message)
+      if (err !== undefined) createErrorNotification(dispatch, err.message)
     }
   }
 }
