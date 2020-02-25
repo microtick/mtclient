@@ -149,7 +149,9 @@ export const getLeaderboardData = async page => {
       })
     }
     
-    globals.updater = setTimeout(update, globals.endpoint.updateInterval * 1000)
+    if (globals.endpoint !== undefined) {
+      globals.updater = setTimeout(update, globals.endpoint.updateInterval * 1000)
+    }
   }
   
   if (globals.updater !== undefined) {
