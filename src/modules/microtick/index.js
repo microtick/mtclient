@@ -54,7 +54,7 @@ const globals = {
     size: DEFAULTCHARTSIZE
   },
   quote: {
-    backing: 100
+    backing: 10
   },
   quotes: []
 }
@@ -121,7 +121,7 @@ const initialState = {
     list: []
   },
   quote: {
-    backing: 100,
+    backing: 10,
     list: []
   }
 }
