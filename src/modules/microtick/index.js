@@ -178,6 +178,10 @@ api.addAccountHandler(async (key, data) => {
       store.dispatch({
         type: TRADELIST
       })
+      const dir = key.slice(6)
+      if (dir === "short") {
+        await fetchActiveQuotes()
+      }
     }
     if (key.startsWith("settle")) {
       await processTradeEnd(data)
@@ -186,7 +190,7 @@ api.addAccountHandler(async (key, data) => {
       })
     }
     //if (key.startsWith("quote")) {
-      //await fetchActive()
+      //await fetchActiveQuotes()
       //await fetchOrderBook()
     //}
   })
@@ -724,7 +728,7 @@ const selectAccount = async () => {
   if (startBlock < 0) startBlock = 0
   api.accountSync(startBlock, globals.blockNumber)
   
-  fetchActive()
+  fetchActiveQuotes()
 
   store.dispatch({
     type: ACCOUNTSELECT,
@@ -871,7 +875,7 @@ async function fetchOrderBook() {
   })
 }
 
-async function fetchActive() {
+async function fetchActiveQuotes() {
   // Get current quotes
   //console.log("Fetching quotes for account " + globals.account)
   const quotes = []
@@ -1090,7 +1094,7 @@ export const placeQuote = () => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
       createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-      fetchActive()
+      fetchActiveQuotes()
       fetchOrderBook()
       const accountInfo = await api.getAccountInfo(globals.account)
       dispatch({
@@ -1115,7 +1119,7 @@ export const cancelQuote = async (dispatch, id) => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-    fetchActive()
+    fetchActiveQuotes()
     fetchOrderBook()
     const accountInfo = await api.getAccountInfo(globals.account)
     dispatch({
@@ -1139,7 +1143,7 @@ export const backQuote = async (dispatch, id, amount) => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-    fetchActive()
+    fetchActiveQuotes()
     fetchOrderBook()
     const accountInfo = await api.getAccountInfo(globals.account)
     dispatch({
@@ -1163,7 +1167,7 @@ export const updateSpot = async (dispatch, id, newspot) => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-    fetchActive()
+    fetchActiveQuotes()
     fetchOrderBook()
   } catch (err) {
     removeNotification(dispatch, notId)
@@ -1181,7 +1185,7 @@ export const updatePremium = async (dispatch, id, newpremium) => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-    fetchActive()
+    fetchActiveQuotes()
     fetchOrderBook()
   } catch (err) {
     removeNotification(dispatch, notId)
