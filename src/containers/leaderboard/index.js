@@ -90,7 +90,7 @@ const Leaderboard = props => {
       var title = <h2>Active Contest</h2>
       var notice = <p>(updates every {props.updateInterval} seconds, earnings are not counted until a trade ends)</p>
     } else {
-      title = <h2>Contest Ended</h2>
+      title = <h2>Contest not active</h2>
     }
     if (props.pages > 1) {
       const prev = props.page > 0 ? props.page - 1 : 0
@@ -109,8 +109,8 @@ const Leaderboard = props => {
       {register}
       {title}
       <p><b>Reward</b>: {props.reward}</p>
-      <p><b>Contest start time</b>: {props.startTime}</p>
-      <p><b>Contest end time</b>: {props.endTime}</p>
+      <p><b>Contest start time</b>: {props.startTime} UTC</p>
+      <p><b>Contest end time</b>: {props.endTime} UTC</p>
       <h2>Leaderboard</h2>
       {page}
       {leaderboard}

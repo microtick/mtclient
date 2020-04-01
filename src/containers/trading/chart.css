@@ -80,7 +80,6 @@ svg .loading {
 svg#chart {
   display: block;
   width: 100%;
-  height: auto;
   margin: auto;
 }
 

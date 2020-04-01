@@ -290,8 +290,8 @@ const computeQuotePrices = async info => {
 
 const getQuoteData = async id => {
   const info = await api.blockInfo()
-  if (info.block > 250) {
-    var startBlock = info.block - 250
+  if (info.block > 1000) {
+    var startBlock = info.block - 1000
   } else {
     startBlock = 0
   }
