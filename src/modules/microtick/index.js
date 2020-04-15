@@ -267,9 +267,12 @@ async function processTradeStart(trade) {
   //console.log("processTrade=" + JSON.stringify(ev, null, 2))
   const end = new Date(trade.expiration)
   var active = true
-  if (Date.parse(end) < Date.now()) {
+  if (!globals.accountInfo.activeTrades.includes(trade.id)) {
     active = false
   }
+  //if (Date.parse(end) < Date.now()) {
+    //active = false
+  //}
   const dir = trade.long === globals.account ? 'long' : 'short'
   const id = trade.id
   //console.log("Trade start: " + id)
@@ -713,7 +716,7 @@ export const selectDur = choice => {
 const selectAccount = async () => {
   const block = await api.blockInfo()
   globals.blockNumber = block.block
-  const accountInfo = await api.getAccountInfo(globals.account)
+  globals.accountInfo = await api.getAccountInfo(globals.account)
   
   globals.trades = []
   
@@ -737,7 +740,7 @@ const selectAccount = async () => {
   store.dispatch({
     type: ACCOUNT,
     acct: globals.account,
-    balance: accountInfo.balance,
+    balance: globals.accountInfo.balance,
   })
 }
 
