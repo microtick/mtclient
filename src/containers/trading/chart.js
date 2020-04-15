@@ -42,6 +42,10 @@ const MOUSESTATE_QUOTE = 1
 const MOUSESTATE_CALL = 2
 const MOUSESTATE_PUT = 3
 
+const isNumber = n => {
+  return typeof n === 'number' && !isNaN(n-n)
+}
+
 const initDynamicView = props => {
   // get layout
   const elem = document.getElementById('chart')
@@ -556,7 +560,7 @@ const buildOrderbookSpot = props => {
       </g>
     } else {
       spot = props.premiums.indicatedSpot
-      if (spot === undefined) spot = props.spot
+      if (!isNumber(spot)) spot = props.spot
       yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
       return <g id="spotpointer">
         <line x1={layout.chart_mp_left} x2={mid} y1={sy} y2={sy}/>
@@ -581,7 +585,7 @@ const buildOrderbookPremiums = props => {
     // Spot
     const sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
     // Call
-    if (props.mousestate === MOUSESTATE_CALL && premiums.indicatedCallPremium !== undefined) {
+    if (props.mousestate === MOUSESTATE_CALL && isNumber(premiums.indicatedCallPremium)) {
       const top = spot + premiums.indicatedCallPremium
       var y2 = layout.height - layout.height * (top - minp) / (maxp - minp)
       var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={y2} 
@@ -590,7 +594,7 @@ const buildOrderbookPremiums = props => {
         //width={layout.chart_mp_width} height={y2}/>
     }
     // Put
-    if (props.mousestate === MOUSESTATE_PUT && premiums.indicatedPutPremium !== undefined) {
+    if (props.mousestate === MOUSESTATE_PUT && isNumber(premiums.indicatedPutPremium)) {
       const bottom = spot - parseFloat(premiums.indicatedPutPremium)
       y2 = layout.height - layout.height * (bottom - minp) / (maxp - minp)
       var put = <rect id="orderput" className="premput" x={layout.chart_mp_left} y={sy} 
@@ -606,7 +610,7 @@ const buildOrderbookPremiums = props => {
 }
 
 const buildOrderBook = props => {
-  if (props.orderbook) {
+  if (props.orderbook && props.orderbook.totalWeight[props.dur] > 0) {
     if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
       var spot = props.spot
       var sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
@@ -626,10 +630,11 @@ const buildOrderBook = props => {
       })
     } else {
       spot = props.premiums.indicatedSpot
-      if (spot === undefined) spot = props.spot
+      if (!isNumber(spot)) spot = props.spot
       sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
       const totalWeight = parseFloat(props.orderbook.totalWeight[props.dur]) + dynamicWeight
-      const shift = layout.chart_ob_width * dynamicWeight / totalWeight
+      var shift = layout.chart_ob_width * dynamicWeight / totalWeight
+      if (!isNumber(shift)) shift = 0
       var leftX = layout.chart_ob_left
       callquoterects = calls.map((quote, id) => {
         var x1 = layout.chart_ob_left + quote.q1 * layout.chart_ob_width / totalWeight
@@ -646,7 +651,7 @@ const buildOrderBook = props => {
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={y2} width={x2-x1} height={sy-y2}/>
       })
       var quoteTop = spot
-      if (props.premiums.indicatedCallPremium !== undefined) quoteTop += props.premiums.indicatedCallPremium
+      if (isNumber(props.premiums.indicatedCallPremium)) quoteTop += props.premiums.indicatedCallPremium
       var y3 = layout.height - layout.height * (quoteTop - minp) / (maxp - minp)
       callquoterects.push(<rect key="callquote" id="callquote" x={leftX} y={y3} width={shift} height={sy-y3}/>)
       leftX = layout.chart_ob_left
@@ -665,7 +670,7 @@ const buildOrderBook = props => {
         return <rect key={id} className={"quote" + (quote.color % 8)} x={x1} y={sy} width={x2-x1} height={y2-sy}/>
       })
       var quoteBottom = spot
-      if (props.premiums.indicatedPutPremium !== undefined) quoteBottom -= props.premiums.indicatedPutPremium
+      if (isNumber(props.premiums.indicatedPutPremium)) quoteBottom -= props.premiums.indicatedPutPremium
       y3 = layout.height - layout.height * (quoteBottom - minp) / (maxp - minp)
       putquoterects.push(<rect key="putquote" id="putquote" x={leftX} y={sy} width={shift} height={y3-sy}/>)
     }

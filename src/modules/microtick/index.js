@@ -166,11 +166,11 @@ api.addAccountHandler(async (key, data) => {
   accountQueue.push(async () => {
     //console.log("key=" + key + " " + data.height)
     if (key === "deposit" || key === "withdraw") {
-      const accountInfo = await api.getAccountInfo(globals.account)
+      globals.accountInfo = await api.getAccountInfo(globals.account)
       store.dispatch({
         type: ACCOUNT,
         acct: globals.account, 
-        balance: accountInfo.balance,
+        balance: globals.accountInfo.balance,
       })
     }
     if (key.startsWith("trade")) {
@@ -270,9 +270,9 @@ async function processTradeStart(trade) {
   if (!globals.accountInfo.activeTrades.includes(trade.id)) {
     active = false
   }
-  //if (Date.parse(end) < Date.now()) {
-    //active = false
-  //}
+  if (Date.parse(end) > Date.now()) {
+    active = true
+  }
   const dir = trade.long === globals.account ? 'long' : 'short'
   const id = trade.id
   //console.log("Trade start: " + id)
@@ -320,11 +320,11 @@ async function processTradeEnd(trade) {
       if ((tr.type === Call && final > tr.strike) || (tr.type === Put && final < tr.strike)) {
         tr.final = final
       }
-      const accountInfo = await api.getAccountInfo(globals.account)
+      globals.accountInfo = await api.getAccountInfo(globals.account)
       store.dispatch({
         type: ACCOUNT,
         acct: globals.account, 
-        balance: accountInfo.balance,
+        balance: globals.accountInfo.balance,
       })
       await api.unsubscribe(globals.accountSubscriptions[trade.id])
       delete globals.accountSubscriptions[trade.id]
@@ -601,7 +601,10 @@ async function updateHistory() {
   var min = Number.MAX_VALUE, max = 0
   const currentSpot = await api.getMarketSpot(globals.market)
   const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.block, 100)
-  const history = rawHistory.map(hist => {
+  const startTime = Date.now() - globals.chart.size * 1000
+  const history = rawHistory.filter(hist => {
+    return hist.time > startTime
+  }).map(hist => {
     const value = hist.consensus
     if (min > value) min = value
     if (max < value) max = value
@@ -883,8 +886,8 @@ async function fetchActiveQuotes() {
   //console.log("Fetching quotes for account " + globals.account)
   const quotes = []
   //const quoteInfo = await api.getAccountQuotes(globals.account)
-  var accountInfo = await api.getAccountInfo(globals.account)
-  const quoteInfo = accountInfo.activeQuotes
+  globals.accountInfo = await api.getAccountInfo(globals.account)
+  const quoteInfo = globals.accountInfo.activeQuotes
   for (var i=0; i<quoteInfo.length; i++) {
     const quoteId = quoteInfo[i]
     //console.log("Quote=" + quoteId)
@@ -934,11 +937,11 @@ export const buyCall = () => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
       createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-      const accountInfo = await api.getAccountInfo(globals.account)
+      globals.accountInfo = await api.getAccountInfo(globals.account)
       dispatch({
         type: ACCOUNT,
         acct: globals.account, 
-        balance: accountInfo.balance
+        balance: globals.accountInfo.balance
       })
     } catch (err) {
       removeNotification(dispatch, notId)
@@ -964,11 +967,11 @@ export const buyPut = () => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
       createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-      const accountInfo = await api.getAccountInfo(globals.account)
+      globals.accountInfo = await api.getAccountInfo(globals.account)
       dispatch({
         type: ACCOUNT,
         acct: globals.account, 
-        balance: accountInfo.balance
+        balance: globals.accountInfo.balance
       })
     } catch (err) {
       removeNotification(dispatch, notId)
@@ -1099,11 +1102,11 @@ export const placeQuote = () => {
       createSuccessNotification(dispatch, DIALOG_TIME2, notId)
       fetchActiveQuotes()
       fetchOrderBook()
-      const accountInfo = await api.getAccountInfo(globals.account)
+      globals.accountInfo = await api.getAccountInfo(globals.account)
       dispatch({
         type: ACCOUNT,
         acct: globals.account, 
-        balance: accountInfo.balance,
+        balance: globals.accountInfo.balance,
       })
     } catch (err) {
       removeNotification(dispatch, notId)
@@ -1124,11 +1127,11 @@ export const cancelQuote = async (dispatch, id) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActiveQuotes()
     fetchOrderBook()
-    const accountInfo = await api.getAccountInfo(globals.account)
+    globals.accountInfo = await api.getAccountInfo(globals.account)
     dispatch({
       type: ACCOUNT,
       acct: globals.account, 
-      balance: accountInfo.balance
+      balance: globals.accountInfo.balance
     })
   } catch (err) {
     removeNotification(dispatch, notId)
@@ -1148,11 +1151,11 @@ export const backQuote = async (dispatch, id, amount) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActiveQuotes()
     fetchOrderBook()
-    const accountInfo = await api.getAccountInfo(globals.account)
+    globals.accountInfo = await api.getAccountInfo(globals.account)
     dispatch({
       type: ACCOUNT,
       acct: globals.account, 
-      balance: accountInfo.balance,
+      balance: globals.accountInfo.balance,
     })
   } catch (err) {
     removeNotification(dispatch, notId)
