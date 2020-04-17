@@ -198,6 +198,7 @@ api.addAccountHandler(async (key, data) => {
     
 
 function calcMinMax(obj) {
+  var mint = obj.chart.ticks.mint
   var minb = obj.chart.ticks.minb
   var maxb = obj.chart.ticks.maxb
   var minp = obj.chart.ticks.minp
@@ -226,7 +227,8 @@ function calcMinMax(obj) {
     if (minp > put) minp = put
   }
   obj.trade.list.map(tr => {
-    if ((tr.market === globals.market) && (tr.endBlock === undefined || tr.endBlock >= minb)) {
+    if ((tr.market === globals.market) && (tr.endBlock === undefined || tr.endBlock >= minb) && 
+      (Date.parse(tr.end) >= mint)) {
       if (tr.type === BuyCall) {
         const min = tr.strike
         if (minp > min) minp = min
@@ -263,7 +265,7 @@ function calcMinMax(obj) {
 }
 
 async function processTradeStart(trade) {
-  console.log("processTradeStart: " + trade.id)
+  //console.log("processTradeStart: " + trade.id)
   //console.log("processTrade=" + JSON.stringify(ev, null, 2))
   const end = new Date(trade.expiration)
   var active = true
@@ -310,7 +312,7 @@ async function processTradeStart(trade) {
 }
 
 async function processTradeEnd(trade) {
-  console.log("processTradeEnd: " + trade.id)
+  //console.log("processTradeEnd: " + trade.id)
   globals.trades = globals.trades.filter(async tr => {
     if (tr.id === trade.id) {
       tr.active = false
@@ -463,6 +465,7 @@ export default (state = initialState, action) => {
           ...state.chart,
           ticks: {
             data: action.data,
+            mint: action.mint,
             minb: action.minb,
             maxb: action.maxb,
             minp: action.minp,
@@ -631,6 +634,7 @@ async function updateHistory() {
   store.dispatch({
     type: HISTORY,
     data: history,
+    mint: startTime,
     minb: startBlock,
     maxb: currentBlock.block,
     minp: minp,
@@ -1220,6 +1224,8 @@ export const settleTrade = async (dispatch, id) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
   } catch (err) {
     removeNotification(dispatch, notId)
+    console.log(err)
+    createErrorNotification(dispatch, err.message)
   }
 }
 
