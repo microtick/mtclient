@@ -2,6 +2,7 @@
 
 IP=localhost
 
+export MICROTICK_PROD=true
 export MICROTICK_WEBSOCKET=ws://$IP:1320
 export MICROTICK_FAUCET=http://$IP:8888
 export MICROTICK_LEADERBOARD=http://$IP:8889
