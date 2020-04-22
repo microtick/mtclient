@@ -41,7 +41,7 @@ const ActiveQuotes = props => {
         <td>@{Math.round10(q.spot, props.constants.SPOT_PRECISION)}</td>
         <td>⚖ {Math.round10(q.quantity, props.constants.UNIT_PRECISION)}</td>
         <td>⇕ {Math.round10(q.premium, props.constants.SPOT_PRECISION)}</td>
-        <td>{Math.round10(q.backing, props.constants.TOKEN_PRECISION)} fox</td>
+        <td>{Math.round10(q.backing, props.constants.TOKEN_PRECISION)} {props.token}</td>
         <td>{Math.round10(props.timestamp - modified, 0)} seconds</td>
         {actions}
       </tr>

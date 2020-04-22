@@ -31,7 +31,7 @@ const Status = props => {
       <div id="balances">
         <div className="rowbox">
           <h5>Token Balance</h5>
-          <div><div className="balance">{Math.round10(props.balance, props.constants.TOKEN_PRECISION)} fox</div></div>
+          <div><div className="balance">{Math.round10(props.balance, props.constants.TOKEN_PRECISION)} {props.token}</div></div>
         </div>
         <div className="rowbox">
           <h5>+ Unrealized Gains / Escrowed Backing</h5>
@@ -47,35 +47,35 @@ const Status = props => {
               <tr>
                 <td>Quotes</td>
                 <td>---</td>
-                <td>{Math.round10(data.quoteBacking, props.constants.TOKEN_PRECISION)} fox</td>
+                <td>{Math.round10(data.quoteBacking, props.constants.TOKEN_PRECISION)} {props.token}</td>
               </tr>
               <tr>
                 <td>Trades (long)</td>
-                <td>{long}</td>
+                <td>{long} {props.token}</td>
                 <td>---</td>
               </tr>
               <tr>
                 <td>Trades (short)</td>
-                <td>{-short}</td>
-                <td>{Math.round10(data.tradeBacking, props.constants.TOKEN_PRECISION)} fox</td>
+                <td>{-short} {props.token}</td>
+                <td>{Math.round10(data.tradeBacking, props.constants.TOKEN_PRECISION)} {props.token}</td>
               </tr>
             </tbody>
             <tfoot>
               <tr>
                 <td></td>
-                <td><div className="balance">{Math.round10(long - short, props.constants.TOKEN_PRECISION)} fox</div></td>
-                <td><div className="balance">{Math.round10(data.quoteBacking + data.tradeBacking, props.constants.TOKEN_PRECISION)} fox</div></td>
+                <td><div className="balance">{Math.round10(long - short, props.constants.TOKEN_PRECISION)} {props.token}</div></td>
+                <td><div className="balance">{Math.round10(data.quoteBacking + data.tradeBacking, props.constants.TOKEN_PRECISION)} {props.token}</div></td>
               </tr>
             </tfoot>
           </table>
         </div>
         <div className="rowbox">
           <h5>= Total Account Value</h5>
-          <div><div className="balance">{Math.round10(total, props.constants.TOKEN_PRECISION)} fox</div></div>
+          <div><div className="balance">{Math.round10(total, props.constants.TOKEN_PRECISION)} {props.token}</div></div>
         </div>
       </div>
-      <ActiveQuotes/>
-      <ActiveTrades/>
+      <ActiveQuotes token={props.token}/>
+      <ActiveTrades token={props.token}/>
     </div>
   }
   return <div id="div-status">

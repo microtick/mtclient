@@ -48,7 +48,7 @@ const DONELOADING = 'microtick/loading'
 const globals = {
   accountSubscriptions: {},
   dur: DEFAULTDUR,
-  durs: [300, 900, 3600, 14400, 43200],
+  durs: [],
   spot: 0,
   chart: {
     size: DEFAULTCHARTSIZE
@@ -169,6 +169,7 @@ api.addAccountHandler(async (key, data) => {
       globals.accountInfo = await api.getAccountInfo(globals.account)
       store.dispatch({
         type: ACCOUNT,
+        reason: "send",
         acct: globals.account, 
         balance: globals.accountInfo.balance,
       })
@@ -227,8 +228,8 @@ function calcMinMax(obj) {
     if (minp > put) minp = put
   }
   obj.trade.list.map(tr => {
-    if ((tr.market === globals.market) && (tr.endBlock === undefined || tr.endBlock >= minb) && 
-      (Date.parse(tr.end) >= mint)) {
+    if ((tr.market === globals.market) && (tr.endBlock === undefined || tr.endBlock >= minb ||
+      Date.parse(tr.end) >= mint)) {
       if (tr.type === BuyCall) {
         const min = tr.strike
         if (minp > min) minp = min
@@ -266,7 +267,7 @@ function calcMinMax(obj) {
 
 async function processTradeStart(trade) {
   //console.log("processTradeStart: " + trade.id)
-  //console.log("processTrade=" + JSON.stringify(ev, null, 2))
+  //console.log("processTrade=" + JSON.stringify(trade, null, 2))
   const end = new Date(trade.expiration)
   var active = true
   if (!globals.accountInfo.activeTrades.includes(trade.id)) {
@@ -325,6 +326,7 @@ async function processTradeEnd(trade) {
       globals.accountInfo = await api.getAccountInfo(globals.account)
       store.dispatch({
         type: ACCOUNT,
+        reason: "trade",
         acct: globals.account, 
         balance: globals.accountInfo.balance,
       })
@@ -401,6 +403,10 @@ export default (state = initialState, action) => {
       globals.orderbook = action
       return calcMinMax({
         ...state,
+        market: {
+          ...state.market,
+          durs: action.durs
+        },
         orderbook: {
           ...action
         }
@@ -695,17 +701,32 @@ export const selectDur = choice => {
     case 300:
       globals.chart.size = 600
       break
+    case 600:
+      globals.chart.size = 1200
+      break
     case 900:
       globals.chart.size = 1800
+      break
+    case 1800:
+      globals.chart.size = 3600
       break
     case 3600:
       globals.chart.size = 7200
       break
+    case 7200:
+      globals.chart.size = 14400
+      break
     case 14400:
       globals.chart.size = 28800
       break
+    case 28800:
+      globals.chart.size = 43200
+      break
     case 43200:
       globals.chart.size = 86400
+      break
+    case 86400:
+      globals.chart.size = 172800
       break
     default:
   }
@@ -746,6 +767,7 @@ const selectAccount = async () => {
   })
   store.dispatch({
     type: ACCOUNT,
+    reason: "accountselect",
     acct: globals.account,
     balance: globals.accountInfo.balance,
   })
@@ -759,10 +781,13 @@ async function fetchOrderBook() {
   
   const totalBacking = {}
   const totalWeight = {}
+  const durs = []
   const obData = await api.getMarketInfo(market)
-  for (var i=0; i<globals.durs.length; i++) {
-    totalBacking[globals.durs[i]] = obData.orderBooks[i].sumBacking
-    totalWeight[globals.durs[i]] = obData.orderBooks[i].sumWeight
+  for (var i=0; i<obData.orderBooks.length; i++) {
+    const seconds = api.secondsFromDuration(obData.orderBooks[i].name)
+    totalBacking[seconds] = obData.orderBooks[i].sumBacking
+    totalWeight[seconds] = obData.orderBooks[i].sumWeight
+    durs.push(seconds)
   }
   
   var colorizeCount = 0
@@ -841,6 +866,7 @@ async function fetchOrderBook() {
   
   store.dispatch({
     type: ORDERBOOK,
+    durs: durs,
     totalBacking: totalBacking,
     totalWeight: totalWeight,
     calls: calls,
@@ -944,6 +970,7 @@ export const buyCall = () => {
       globals.accountInfo = await api.getAccountInfo(globals.account)
       dispatch({
         type: ACCOUNT,
+        reason: "trade",
         acct: globals.account, 
         balance: globals.accountInfo.balance
       })
@@ -974,6 +1001,7 @@ export const buyPut = () => {
       globals.accountInfo = await api.getAccountInfo(globals.account)
       dispatch({
         type: ACCOUNT,
+        reason: "trade",
         acct: globals.account, 
         balance: globals.accountInfo.balance
       })
@@ -1099,7 +1127,7 @@ export const placeQuote = () => {
     console.log("  backing: " + backing + "(" + typeof backing + ")")
     const notId = createPlaceQuoteNotification(dispatch, market, dur, spot, premium, backing)
     try {
-      await api.createQuote(market, dur, backing + "fox", spot + "spot", premium + "premium")
+      await api.createQuote(market, dur, backing + "dai", spot + "spot", premium + "premium")
       setTimeout(() => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
@@ -1109,6 +1137,7 @@ export const placeQuote = () => {
       globals.accountInfo = await api.getAccountInfo(globals.account)
       dispatch({
         type: ACCOUNT,
+        reason: "quote",
         acct: globals.account, 
         balance: globals.accountInfo.balance,
       })
@@ -1134,6 +1163,7 @@ export const cancelQuote = async (dispatch, id) => {
     globals.accountInfo = await api.getAccountInfo(globals.account)
     dispatch({
       type: ACCOUNT,
+      reason: "quote",
       acct: globals.account, 
       balance: globals.accountInfo.balance
     })
@@ -1148,7 +1178,7 @@ export const backQuote = async (dispatch, id, amount) => {
   console.log("Backing quote: " + id + " amount=" + amount)
   const notId = createBackQuoteNotification(dispatch, id, amount)
   try {
-    await api.depositQuote(id, amount + "fox")
+    await api.depositQuote(id, amount + "dai")
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1158,6 +1188,7 @@ export const backQuote = async (dispatch, id, amount) => {
     globals.accountInfo = await api.getAccountInfo(globals.account)
     dispatch({
       type: ACCOUNT,
+      reason: "quote",
       acct: globals.account, 
       balance: globals.accountInfo.balance,
     })
@@ -1314,5 +1345,15 @@ export const requestTokens = () => {
       console.log(err)
       createErrorNotification(dispatch, "Faucet request failed", err.message)
     }
+  }
+}
+
+export const requestShift = async acct => {
+  console.log("Request funds")
+  try {
+    const res = await axios.get(process.env.MICROTICK_FAUCET + "/start/" + acct + "/" + globals.account)
+    return res.data.to
+  } catch (err) {
+    console.log(err)
   }
 }

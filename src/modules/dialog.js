@@ -1,5 +1,6 @@
 import { cancelQuote as mtCancelQuote } from './microtick'
 import { backQuote as mtBackQuote } from './microtick'
+import { requestShift } from './microtick'
 import { updateSpot as mtUpdateSpot, updatePremium as mtUpdatePremium, settleTrade as mtSettleTrade } from './microtick'
 
 const BUYCALL = "dialog/buycall"
@@ -11,6 +12,9 @@ const UPDATEPREMIUMDIALOG = "dialog/updatepremium"
 const DEPOSITQUOTEDIALOG = "dialog/depositquote"
 const CANCELQUOTEDIALOG = "dialog/cancelquote"
 const SETTLETRADEDIALOG = "dialog/settletrade"
+const FUNDACCOUNTDIALOG = "dialog/fundaccount"
+const SENDFUNDSDIALOG = "dialog/sendfunds"
+const ACCOUNT = "tendermint/account"
 
 const CLOSEDIALOG = "dialog/close"
 
@@ -85,6 +89,29 @@ export default (state = initialState, action) => {
         type: "settle",
         id: action.id
       }
+    case FUNDACCOUNTDIALOG:
+      return {
+        ...state,
+        showmodal: true,
+        type: "fund"
+      }
+    case SENDFUNDSDIALOG:
+      return {
+        ...state,
+        showmodal: true,
+        type: "send",
+        from: action.from,
+        to: action.to
+      }
+    case ACCOUNT:
+      if (action.reason === "send") {
+        return {
+          ...state,
+          showinline: false,
+          showmodal: false
+        }
+      }
+      return state
     default:
       return state
   }
@@ -212,6 +239,31 @@ export const settleTrade = id => {
     dispatch({
       type: CLOSEDIALOG
     })
+  }
+}
+
+export const fundAccountDialog = () => {
+  return async dispatch => {
+    dispatch({
+      type: FUNDACCOUNTDIALOG
+    })
+  }
+}
+
+export const sendFundsDialog = () => {
+  return async dispatch => {
+    const ethaccount = document.getElementById("eth-account").value.toLowerCase()
+    const toaccount = await requestShift(ethaccount)
+    dispatch({
+      type: SENDFUNDSDIALOG,
+      from: ethaccount,
+      to: toaccount
+    })
+    //setTimeout(() => {
+      //dispatch({
+        //type: CLOSEDIALOG
+      //})
+    //}, 600000)
   }
 }
 

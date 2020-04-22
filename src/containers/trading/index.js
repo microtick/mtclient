@@ -19,8 +19,9 @@ require('./misc.js')
 
 const commonName = {
   300: "5 minute",
+  600: "10 minute",
   900: "15 minute",
-  1800: "1/2 hour",
+  1800: "30 minute",
   3600: "1 hour",
   7200: "2 hour",
   14400: "4 hour",
@@ -84,7 +85,7 @@ class Home extends React.Component {
                 <tr>
                   <td data-tip={tooltip_cost}>Cost</td>
                   <td></td>
-                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} fox</span></td>
+                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -136,7 +137,7 @@ class Home extends React.Component {
                 <tr>
                   <td data-tip={tooltip_cost}>Cost</td>
                   <td></td>
-                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} fox</span></td>
+                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -181,7 +182,7 @@ class Home extends React.Component {
                 <tr>
                   <td>Backing</td>
                   <td></td>
-                  <td>{Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} fox</td>
+                  <td>{Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} {props.token}</td>
                 </tr>
                 <tr>
                   <td data-tip="Observed spot">Spot</td>
@@ -296,7 +297,7 @@ class Home extends React.Component {
         const prem = wt === 0 ? 0 : back / (props.constants.LEVERAGE * wt)
         res.premiums.push(<td className={col} key={n}>⇕ {Math.round10(prem, props.constants.UNIT_PRECISION)}</td>)
         res.weights.push(<td className={"weight " + col} key={n}>⚖ {Math.round10(wt, props.constants.UNIT_PRECISION)}</td>)
-        res.backing.push(<td className={col} key={n}>{Math.round10(back, props.constants.UNIT_PRECISION)} fox</td>)
+        res.backing.push(<td className={col} key={n}>{Math.round10(back, props.constants.UNIT_PRECISION)} {props.token}</td>)
         return res
       },{
         buttons: [],
@@ -338,10 +339,10 @@ class Home extends React.Component {
       var spot = <div id="spot">
         <ReactToolTip/>
         <p id="spottext" className="actual">Consensus = @{Math.round10(props.spot, props.constants.SPOT_PRECISION)}</p>
-        <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} fox</p>
+        <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} {props.token}</p>
         <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
         <p id="movemarket">At the current market weight, a quote with backing of <input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backing}/> 
-          fox can move this market {Math.round10(props.quote.backing / (5 * props.weight), -6)} (at most)
+        &nbsp;{props.token} can move this market {Math.round10(props.quote.backing / (5 * props.weight), -6)} (at most)
         </p>
       </div>
     }
@@ -380,7 +381,7 @@ class Home extends React.Component {
             </div>
             <div className="row">
               <div id="chartdiv">
-                <Chart/>
+                <Chart token={props.token}/>
               </div>
               <div id="controldiv">
                 {spot}
@@ -389,8 +390,8 @@ class Home extends React.Component {
             </div>
           </div>
         </div>
-        <ActiveTrades/>
-        <ActiveQuotes/>
+        <ActiveTrades token={props.token}/>
+        <ActiveQuotes token={props.token}/>
         <div className="row">
           {instructions}
         </div>

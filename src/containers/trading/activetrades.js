@@ -6,20 +6,32 @@ import { selectMarket, selectDur } from '../../modules/microtick'
 import { viewTrade } from '../../modules/history'
 import { settleTradeDialog } from '../../modules/dialog'
 
+/*
 const commonName = {
-  '5minute': "5 minutes",
-  '15minute': "15 minutes",
-  '1hour': "1 hour",
-  '4hour': "4 hours",
-  '12hour': "12 hours"
+  300: "5 minutes",
+  600: "10 minutes",
+  900: "15 minutes",
+  1800: "30 minutes",
+  3600: "1 hour",
+  7200: "2 hours",
+  14400: "4 hours",
+  28800: "8 hours",
+  43200: "12 hours",
+  86400: "1 day"
 }
+*/
 
 const durIntVal = {
   '5minute': 300,
+  '10minute': 600,
   '15minute': 900,
+  '30minute': 1800,
   '1hour': 3600,
+  '2hour': 7200,
   '4hour': 14400,
-  '12hour': 43200
+  '8hour': 28800,
+  '12hour': 43200,
+  '1day': 86400
 }
 
 const ActiveTrades = props => {
@@ -60,17 +72,17 @@ const ActiveTrades = props => {
       <td>{tr.dir === 'long' ? 'Long' : 'Short'}</td>
       <td>{tr.type === 0 ? "Call" : "Put"}</td>
       <td><button onClick={() => { props.selectMarket(tr.market); props.selectDur(durIntVal[tr.dur]) }}>{tr.market}</button></td>
-      <td>{commonName[tr.dur]}</td>
+      <td>{tr.dur}</td>
       <td>{tr.start.toLocaleTimeString()}</td>
       <td>{tr.end.toLocaleTimeString()}</td>
       {remain}
       <td>@{Math.round10(tr.spot, props.constants.SPOT_PRECISION)}</td>
       <td>@{Math.round10(tr.strike, props.constants.SPOT_PRECISION)}</td>
       <td>⚖ {Math.round10(tr.qty, props.constants.UNIT_PRECISION)}</td>
-      <td>{Math.round10(tr.backing, props.constants.TOKEN_PRECISION)} fox</td>
-      <td><span>{Math.round10(tr.premium, props.constants.TOKEN_PRECISION)} fox</span></td>
-      <td><span>{Math.round10(tr.current, props.constants.TOKEN_PRECISION)} fox</span></td>
-      <td><span className={cl}>{Math.round10(tr.profit, props.constants.TOKEN_PRECISION)} fox</span></td>
+      <td>{Math.round10(tr.backing, props.constants.TOKEN_PRECISION)} {props.token}</td>
+      <td><span>{Math.round10(tr.premium, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+      <td><span>{Math.round10(tr.current, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+      <td><span className={cl}>{Math.round10(tr.profit, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
     </tr>
   })
   if (list.length > 0) {
@@ -109,9 +121,9 @@ const ActiveTrades = props => {
         <tfoot>
           <tr>
             <td colSpan={13}><span className="right">Total:</span></td>
-            <td><span>{Math.round10(totalPremium, props.constants.TOKEN_PRECISION)} fox</span></td>
-            <td><span>{Math.round10(totalCurrent, props.constants.TOKEN_PRECISION)} fox</span></td>
-            <td><span className={totalCl}>{Math.round10(totalProfit, props.constants.TOKEN_PRECISION)} fox</span></td>
+            <td><span>{Math.round10(totalPremium, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+            <td><span>{Math.round10(totalCurrent, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+            <td><span className={totalCl}>{Math.round10(totalProfit, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
           </tr>
         </tfoot>
       </table>

@@ -46,7 +46,12 @@ const isNumber = n => {
   return typeof n === 'number' && !isNaN(n-n)
 }
 
+var tokenType = ""
+
 const initDynamicView = props => {
+  // HACK - gotta save token type into hacky variable because innerHTML can't
+  // contain a <span>
+  tokenType = props.token
   // get layout
   const elem = document.getElementById('chart')
   if (elem === null) return false
@@ -205,7 +210,7 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
     if (iscall) {
       const cp = parseFloat(spot) + price
       const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
-      costamt.innerHTML = Math.round10(qty * price, -4) + " fox"
+      costamt.innerHTML = Math.round10(qty * price, -4) + " " + tokenType
       const textProps = costamt.getBoundingClientRect()
       if (cx + textProps.width / 2 > layout.chartwidth) {
         costamt.setAttribute('x', cx - textProps.width - 5)
@@ -218,7 +223,7 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
     } else {
       const pp = parseFloat(spot - price)
       const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
-      costamt.innerHTML = Math.round10(qty * price, -4) + " fox"
+      costamt.innerHTML = Math.round10(qty * price, -4) + " " + tokenType
       const textProps = costamt.getBoundingClientRect()
       if (cx + textProps.width / 2 > layout.chartwidth) {
         costamt.setAttribute('x', cx - textProps.width - 5)
@@ -359,6 +364,8 @@ const buildTimeGrid = props => {
   const view = props.view
   if (props.chartsize === 600) {
     var grids = [ 300, 600 ]
+  } else if (props.chartsize === 1200) {
+    grids = [ 300, 600, 900, 1200 ]
   } else if (props.chartsize === 1800) {
     grids = [ 300, 600, 900, 1200, 1500, 1800 ]
   } else if (props.chartsize === 3600) {
@@ -369,8 +376,12 @@ const buildTimeGrid = props => {
     grids = [ 3600, 7200, 10800, 14400 ]
   } else if (props.chartsize === 28800) {
     grids = [ 7200, 14400, 21600, 28800 ]
+  } else if (props.chartsize === 43200) {
+    grids = [ 10800, 21600, 32400, 43200 ]
   } else if (props.chartsize === 86400) {
     grids = [ 21600, 43200, 64800, 86400 ]
+  } else if (props.chartsize === 172800) {
+    grids = [ 43200, 86400, 129600, 172800 ]
   } else {
     grids = [ 5000, 10000, 15000 ]
   }

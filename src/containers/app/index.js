@@ -1,6 +1,6 @@
 /*
  * Units
- * fox - token amount - unicode 3bc + 3c4
+ * dai - token amount - unicode 3bc + 3c4
  * ■ - block time or dur - unicode 25a0
  * @ - observed price
  * ⇕ - premium - unicode 21d5
@@ -20,7 +20,8 @@ import About from '../about'
 
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
-import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, closeDialog } from '../../modules/dialog'
+import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, 
+    fundAccountDialog, sendFundsDialog, closeDialog } from '../../modules/dialog'
 import { choosePassword, enterPassword, newAccount, requestTokens } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
@@ -55,6 +56,9 @@ const App = props => {
       }
       const keys = JSON.parse(checkAccount[0])
       /*eslint-disable no-script-url*/
+      if (props.token === "mt") {
+        var newaccount = <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
+      }
       password = <div className="fullscreen">
         <div className="password">
           <div className="content">
@@ -62,7 +66,7 @@ const App = props => {
             <div className="form">
               <p><input type="password" maxLength="40" id="password"/></p>
               {err}
-              <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
+              {newaccount}
               <button className="button" onClick={() => props.enterPassword()}>Done</button>
             </div>
           </div>
@@ -76,7 +80,7 @@ const App = props => {
         <div className="inner">
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
           <h3>Depositing Test Tokens</h3>
-          <p>Amount: {not.amt} fox</p>
+          <p>Amount: {not.amt} {props.token}</p>
           <p className="footnote">Waiting on blockchain confirmation...</p>
         </div>
       </div>
@@ -108,7 +112,7 @@ const App = props => {
           <p>Spot: <span className="info">@{not.spot}</span></p>
           <p>Market: <span className="info">{not.market}</span></p>
           <p>Duration: <span className="info">{not.dur}</span></p>
-          <p>Backing: <span className="info">{not.backing} fox</span></p>
+          <p>Backing: <span className="info">{not.backing} {props.token}</span></p>
           <p>Premium: <span className="info">⇕ {Math.round10(not.premium, -4)}</span></p>
           <p className="footnote">Waiting on blockchain confirmation...</p>
         </div>
@@ -128,7 +132,7 @@ const App = props => {
         <div className="inner">
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
           <h3>Backing Quote #{not.quote}</h3>
-          <p>Deposit amount = {not.amount} fox</p>
+          <p>Deposit amount = {not.amount} {props.token}</p>
           <p className="footnote">Waiting on blockchain confirmation...</p>
         </div>
       </div>
@@ -201,14 +205,16 @@ const App = props => {
     }
     if (not.type === 'error') {
       var message = not.msg
-      if (not.msg.includes("Insufficient funds") || 
-          not.msg.includes("insufficient account funds") ||
-          not.msg.includes("No such address")) {
-        message = "Insufficient account funds"
-        var button = <button id="requestbutton" onClick={() => {
-          props.closeNotification(not.id)
-          props.requestTokens()
-        }}>Request more tokens</button>
+      if (props.token === "mt") {
+        if (not.msg.includes("Insufficient funds") || 
+            not.msg.includes("insufficient account funds") ||
+            not.msg.includes("No such address")) {
+          message = "Insufficient account funds"
+          var button = <button id="requestbutton" onClick={() => {
+            props.closeNotification(not.id)
+            props.requestTokens()
+          }}>Request tokens</button>
+        }
       }
       return <div key={id} className="outer error">
         <div className="inner">
@@ -246,7 +252,7 @@ const App = props => {
         <div className="title">Deposit Backing?</div>
         <div className="content">
           <p>Quote ID: {props.dialog.id}</p>
-          <p>Amount: <input type="number" id="quote-backing" defaultValue={0} step={1}/> fox</p>
+          <p>Amount: <input type="number" id="quote-backing" defaultValue={0} step={1}/> {props.token}</p>
         </div>
       </div>
       action = <button className="button" onClick={() => props.depositBacking(props.dialog.id)}>Execute Tx</button>
@@ -268,6 +274,29 @@ const App = props => {
         </div>
       </div>
       action = <button className="button" onClick={() => props.settleTrade(props.dialog.id)}>Execute Tx</button>
+    }
+    if (props.dialog.type === "fund") {
+      header = <div className="header">
+        <div className="title">Deposit DAI</div>
+        <div className="content">
+          <p><b>Step 1</b></p>
+          <p>Enter the Ethereum address you will be sending DAI from: <input type="string" size={42} id="eth-account"/></p>
+        </div>
+      </div>
+      action = <button className="button" onClick={() => props.sendFundsDialog()}>Submit</button>
+    }
+    if (props.dialog.type === "send") {
+      header = <div className="header">
+        <div className="title">Send Funds</div>
+        <div className="content">
+          <p><b>Step 2</b></p>
+          <p>Send some DAI from your account:</p>
+          <p>{props.dialog.from}</p>
+          <p>To Microtick at:</p>
+          <p>{props.dialog.to}</p>
+          <p>(this transfer address will expire in 10 minutes)</p>
+        </div>
+      </div>
     }
     var dialog = <div id="fullscreen">
       <div id="modal" className={props.dialog.type}>
@@ -294,22 +323,22 @@ const App = props => {
     })
     const total = props.status.quoteBacking + props.status.tradeBacking + long - short
     var acctInfo = <div>
-      <p>Available balance = {Math.round10(props.balance, -6)} fox</p>
-      <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} fox</span></p>
+      <p>Available balance = {Math.round10(props.balance, -6)} {props.token}</p>
+      <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} {props.token}</span></p>
     </div>
   }
   switch (props.menu.selected) {
     case 'leaderboard':
-      var page = <Leaderboard/>
+      var page = <Leaderboard token={props.token}/>
       break
     case 'trading':
-      page = <Trading/>
+      page = <Trading token={props.token}/>
       break
     case 'status':
-      page = <Status/>
+      page = <Status token={props.token}/>
       break
     case 'history':
-      page = <History/>
+      page = <History token={props.token}/>
       break
     case 'about':
       page = <About/>
@@ -323,22 +352,11 @@ const App = props => {
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>
       <div className={props.menu.selected === 'about' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('about')}>About</div>
     </div>
-    /*
-  if (props.provider !== undefined) {
-    var provider = props.provider.url
-    if (props.provider.edit) {
-      var providerWidget = <input id="providerInput" 
-        defaultValue={provider} 
-        onBlur={() => setProvider(false)} 
-        onKeyPress={e => {return (e.key === 'Enter' ? setProvider(false) : null)}} 
-        autoFocus></input>
-    } else {
-      providerWidget = <span onClick={() => setProvider(true)}>{provider}</span>
-    }
+  if (props.token === "mt") {
+    var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
   } else {
-    provider = "not connected"
+    fund = <button id="requestbutton" onClick={() => props.fundAccountDialog()}>Fund Account</button>
   }
-  */
   return <div>
     <section id="ui"> 
       <div id="notifications">
@@ -365,7 +383,7 @@ const App = props => {
       </div>
       <div id="div-account">
         <h3>Account Information</h3>
-        <button id="requestbutton" onClick={() => props.requestTokens()}>Request more tokens</button>
+        {fund}
         <p>Address = {props.account}</p>
         {acctInfo}
       </div>
@@ -417,6 +435,8 @@ const mapDispatchToProps = dispatch => {
     cancelQuote,
     closeDialog,
     settleTrade,
+    fundAccountDialog,
+    sendFundsDialog,
     menuSelected
   }, dispatch)
 }

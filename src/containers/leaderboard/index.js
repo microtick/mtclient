@@ -15,9 +15,9 @@ const Leaderboard = props => {
         rowClass = "odd"
       }
       if (leader.gain < 0) {
-        var gainstr = "(" + Math.round10(leader.gain, -6) + " fox)"
+        var gainstr = "(" + Math.round10(leader.gain, -6) + " " + props.token + ")"
       } else {
-        gainstr = Math.round10(leader.gain, -6) + " fox"
+        gainstr = Math.round10(leader.gain, -6) + " " + props.token
       }
       if (leader.debit !== 0) {
         if (leader.gain < 0) {
@@ -32,8 +32,8 @@ const Leaderboard = props => {
         <td className="rank">{leader.rank}</td>
         <td className="leftjust">{leader.account}</td>
         <td>{leader.trades}</td>
-        <td>{Math.round10(leader.debit, -6)} fox</td>
-        <td>{Math.round10(leader.credit, -6)} fox</td>
+        <td>{Math.round10(leader.debit, -6)} {props.token}</td>
+        <td>{Math.round10(leader.credit, -6)} {props.token}</td>
         <td>{gainstr}</td>
         <td>{percent}</td>
       </tr>
@@ -82,7 +82,7 @@ const Leaderboard = props => {
         const cancel = props.registeredAddress === undefined ? "" : <button onClick={() => getLeaderboardData(props.page)}>Cancel</button>
         register = <div id="registration">
           <p>Register for this contest with the <span className="warn">Cosmos mainnet address</span> where winnings should be sent: <input id="mainnet" size="80"></input></p>
-          <p><b>Fee to register</b>: {props.fee} fox</p>
+          <p><b>Fee to register</b>: {props.fee} {props.token}</p>
           <button onClick={() => registerAccount(document.getElementById("mainnet").value)}>Register</button>
           {cancel}
         </div>

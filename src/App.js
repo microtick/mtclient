@@ -5,11 +5,11 @@ import store, { history } from './store'
 
 import App from './containers/app'
 
-export default () => (
+export default props => (
   <Provider store={store}>
     <ConnectedRouter history={history}>
       <div>
-        <App/>
+        <App token={props.token}/>
       </div>
     </ConnectedRouter>
   </Provider>

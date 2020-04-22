@@ -21,10 +21,15 @@ const commonName = {
 
 const durValue = {
   "5minute": 300,
+  "10minute": 600,
   "15minute": 900,
+  "30minute": 1800,
   "1hour": 3600,
+  "2hour": 7200,
   "4hour": 14400,
+  "8hour": 28800,
   "12hour": 43200,
+  "1day": 86400
 }
 
 function buildPageAccountHistory(props) {
@@ -52,11 +57,11 @@ function buildPageAccountHistory(props) {
           {viewTrade}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.duration]}</td>
-          <td>{amount} fox</td>
-          <td>{c.commission} fox</td>
-          <td>{Math.round10(c.debit, -6)} fox</td>
+          <td>{amount} {props.token}</td>
+          <td>{c.commission} {props.token}</td>
+          <td>{Math.round10(c.debit, -6)} {props.token}</td>
           <td>---</td>
-          <td>{balance} fox</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'trade.short':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -66,11 +71,11 @@ function buildPageAccountHistory(props) {
           {viewTrade}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.duration]}</td>
-          <td>{amount} fox</td>
+          <td>{amount} {props.token}</td>
           <td>---</td>
           <td>---</td>
-          <td>{Math.round10(c.credit, -6)} fox</td>
-          <td>{balance} fox</td>
+          <td>{Math.round10(c.credit, -6)} {props.token}</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'settle.long':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -79,11 +84,11 @@ function buildPageAccountHistory(props) {
           <td>Settle long</td>
           {viewTrade}
           <td colSpan={2}></td>
-          <td>{amount} fox</td>
-          <td>{c.commission !== 0 ? Math.round10(c.commission, -6) + " fox" : "---"}</td>
+          <td>{amount} {props.token}</td>
+          <td>{c.commission !== 0 ? Math.round10(c.commission, -6) + " " + props.token : "---"}</td>
           <td>---</td>
-          <td>{Math.round10(c.credit, -6)} fox</td>
-          <td>{balance} fox</td>
+          <td>{Math.round10(c.credit, -6)} {props.token}</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'settle.short':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -92,11 +97,11 @@ function buildPageAccountHistory(props) {
           <td>Settle refund</td>
           {viewTrade}
           <td colSpan={2}></td>
-          <td>{amount} fox</td>
-          <td>{c.commission !== 0 ? Math.round10(c.commission, -6) + " fox" : "---"}</td>
+          <td>{amount} {props.token}</td>
+          <td>{c.commission !== 0 ? Math.round10(c.commission, -6) + " " + props.token : "---"}</td>
           <td>---</td>
-          <td>{Math.round10(c.credit, -6)} fox</td>
-          <td>{balance} fox</td>
+          <td>{Math.round10(c.credit, -6)} {props.token}</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'deposit':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -104,11 +109,11 @@ function buildPageAccountHistory(props) {
           <td>{c.height}</td>
           <td>Deposit</td>
           <td colSpan={3}></td>
-          <td>{amount} fox</td>
+          <td>{amount} {props.token}</td>
           <td>---</td>
           <td>---</td>
-          <td>{c.credit} fox</td>
-          <td>{balance} fox</td>
+          <td>{c.credit} {props.token}</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'withdraw':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -116,11 +121,11 @@ function buildPageAccountHistory(props) {
           <td>{c.height}</td>
           <td>Send</td>
           <td colSpan={3}></td>
-          <td>{amount} fox</td>
+          <td>{amount} {props.token}</td>
           <td>---</td>
-          <td>{c.debit} fox</td>
+          <td>{c.debit} {props.token}</td>
           <td>---</td>
-          <td>{balance} fox</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'quote.create':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -130,11 +135,11 @@ function buildPageAccountHistory(props) {
           {viewQuote}
           <td><button onClick={() => props.selectMarket(c.market)}>{c.market}</button></td>
           <td>{commonName[c.duration]}</td>
-          <td>{amount} fox</td>
-          <td>{c.commission} fox</td>
-          <td>{c.debit} fox</td>
+          <td>{amount} {props.token}</td>
+          <td>{c.commission} {props.token}</td>
+          <td>{c.debit} {props.token}</td>
           <td>---</td>
-          <td>{balance} fox</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'quote.deposit':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -143,11 +148,11 @@ function buildPageAccountHistory(props) {
           <td>Deposit backing</td>
           {viewQuote}
           <td colSpan={2}></td>
-          <td>{amount} fox</td>
-          <td>{c.commission} fox</td>
-          <td>{c.debit} fox</td>
+          <td>{amount} {props.token}</td>
+          <td>{c.commission} {props.token}</td>
+          <td>{c.debit} {props.token}</td>
           <td>---</td>
-          <td>{balance} fox</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'quote.update':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -157,10 +162,10 @@ function buildPageAccountHistory(props) {
           {viewQuote}
           <td colSpan={2}></td>
           <td>---</td>
-          <td>{c.commission} fox</td>
-          <td>{c.debit} fox</td>
+          <td>{c.commission} {props.token}</td>
+          <td>{c.debit} {props.token}</td>
           <td>---</td>
-          <td>{balance} fox</td>
+          <td>{balance} {props.token}</td>
         </tr>
       case 'quote.cancel':
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -169,11 +174,11 @@ function buildPageAccountHistory(props) {
           <td>Cancel quote</td>
           {viewQuote}
           <td colSpan={2}></td>
-          <td>{amount} fox</td>
+          <td>{amount} {props.token}</td>
           <td>---</td>
           <td>---</td>
-          <td>{c.credit} fox</td>
-          <td>{balance} fox</td>
+          <td>{c.credit} {props.token}</td>
+          <td>{balance} {props.token}</td>
         </tr>
       default:
         return <tr key={n} className={n%2?'even':'odd'}>
@@ -203,12 +208,12 @@ function buildPageAccountHistory(props) {
       <tbody>
         <tr className="even">
           <td colSpan={10}></td>
-          <td><b>{Math.round10(startingBalance,-6)} fox</b></td>
+          <td><b>{Math.round10(startingBalance,-6)} {props.token}</b></td>
         </tr>
         {list}
         <tr className={data.list.length%2?'even':'odd'}>
           <td colSpan={10}></td>
-          <td><b>{Math.round10(endingBalance,-6)} fox</b></td>
+          <td><b>{Math.round10(endingBalance,-6)} {props.token}</b></td>
         </tr>
       </tbody>
     </table>
@@ -257,7 +262,7 @@ function buildPageTradeHistory(props) {
       return Math.round10(sum + cp.backing, -6)
     }, 0)
     const maxpayout = Math.round10(backing / premium, -2)
-    var cost = <span className="highlight padright">{Math.round10(premium, -6)} fox</span>
+    var cost = <span className="highlight padright">{Math.round10(premium, -6)} {props.token}</span>
     if (data.endBlock !== -1) {
       var settle = data.trade.final
       var profit = data.trade.settle
@@ -265,14 +270,14 @@ function buildPageTradeHistory(props) {
         return acc + cp.settle
       }, 0)
       var net = Math.round10(profit - premium, -6)
-      var fv = <span className="highlight padright">{Math.round10(profit, -6)} fox</span>
-      var np = <span className="highlight padright">{Math.round10(net, -6)} fox</span>
+      var fv = <span className="highlight padright">{Math.round10(profit, -6)} {props.token}</span>
+      var np = <span className="highlight padright">{Math.round10(net, -6)} {props.token}</span>
       var settlePrice = <tr>
         <td className="rowlabel">Settle price:</td>
         <td className="spacer"></td>
         <td className="rowvalue">@{Math.round10(settle, -6)}</td>
       </tr>
-      var backingrefund = <p>Backing Refunded: {Math.round10(refund, -6)} fox</p>
+      var backingrefund = <p>Backing Refunded: {Math.round10(refund, -6)} {props.token}</p>
     } else {
       fv = <span className="padright">(in progress)</span>
       np = <span className="padright">(in progress)</span>
@@ -329,7 +334,7 @@ function buildPageTradeHistory(props) {
       </div>
       <div className="statsblock">
         <h5>Backing</h5>
-        <p>Trade Backing: {backing} fox</p>
+        <p>Trade Backing: {backing} {props.token}</p>
         <p>Max Payout: {maxpayout} : 1</p>
         {backingrefund}
       </div>
@@ -355,7 +360,7 @@ function buildPageTradeHistory(props) {
       max: data.trade.quantity * (maxp - data.trade.strike)
     }
     const timeGrid = buildTimeGrid(LEFT, durValue[data.trade.duration], WIDTH, HEIGHT)
-    const priceGrid = buildPriceGrid(LEFT + WIDTH, TOP, transform.min, transform.max, data.trade.type)
+    const priceGrid = buildPriceGrid(props.token, LEFT + WIDTH, TOP, transform.min, transform.max, data.trade.type)
     const tradeEnd = data.end === -1 ? data.start + durValue[data.trade.duration] * 1000 : data.end
     const hist = buildTradeHistoryChart(data, x => {
       return 5 + LEFT + (WIDTH - 10) * (x - data.start) / (tradeEnd - data.start)
@@ -405,7 +410,7 @@ function buildPageTradeHistory(props) {
         <td className="col4">⇕ {Math.round10(prem, -6)}</td>
         {discount}
         <td className="col4 section-right">{data.trade.type ? "⇓" : "⇑"} ={mprem}</td>
-        <td className="col5">{Math.round10(cprem, -6)} fox</td>
+        <td className="col5">{Math.round10(cprem, -6)} {props.token}</td>
       </tr>
     })
     const costbreakdown = <table>
@@ -452,7 +457,7 @@ function buildPageTradeHistory(props) {
           <td className="col2 total">⚖ {qty}</td>
           <td colSpan={4}></td>
           <td>Total Cost</td>
-          <td className="col5 total">{Math.round10(premium, -6)} fox</td>
+          <td className="col5 total">{Math.round10(premium, -6)} {props.token}</td>
         </tr>
       </tfoot>
     </table>
@@ -460,7 +465,7 @@ function buildPageTradeHistory(props) {
     // P/L Summary
 
     if (data.endBlock !== -1) {
-      var totalpayout = <td className="col6 total">{Math.round10(profit, -6)} fox</td>
+      var totalpayout = <td className="col6 total">{Math.round10(profit, -6)} {props.token}</td>
     } else {
       totalpayout = <td className="col6 total">in progress</td>
     }
@@ -482,8 +487,8 @@ function buildPageTradeHistory(props) {
       const longpl = 100 * (qsettle - cprem) / cprem
       const shortpl = 100 * (cprem - qsettle) / qbacking
       if (data.endBlock !== -1) {
-        var cprefund = <td className="col6">{Math.round10(qrefund, -6)} fox</td>
-        var cppayout = <td className="col6 section-right">{Math.round10(qsettle, -6)} fox</td>
+        var cprefund = <td className="col6">{Math.round10(qrefund, -6)} {props.token}</td>
+        var cppayout = <td className="col6 section-right">{Math.round10(qsettle, -6)} {props.token}</td>
         var cplongpl = <td className="col7">{Math.round10(longpl, -2)} %</td>
         var cpshortpl = <td className="col7 section-right">{Math.round10(shortpl, -2)} %</td>
       } else {
@@ -496,8 +501,8 @@ function buildPageTradeHistory(props) {
         <td className="col1 section-right"><button onClick={() => props.viewQuote(cp.quoted.id)}>Q-{cp.quoted.id}</button></td>
         <td className="col2">⚖ {Math.round10(qty, -6)}</td>
         <td className="col2 section-right">⚖ {Math.round10(mqty, -6)}</td>
-        <td className="col5 section-right">{Math.round10(cprem, -6)} fox</td>
-        <td className="col6">{Math.round10(qbacking, -6)} fox</td>
+        <td className="col5 section-right">{Math.round10(cprem, -6)} {props.token}</td>
+        <td className="col6">{Math.round10(qbacking, -6)} {props.token}</td>
         {cprefund}
         {cppayout}
         {cplongpl}
@@ -579,7 +584,7 @@ function buildPageQuoteHistory(props) {
   const HEIGHT = 600
   const TOP = 580
   const timeGrid = buildTimeScale(data.start, data.end, WIDTH, HEIGHT)
-  const priceGrid = buildPriceGrid(LEFT + WIDTH, TOP, data.minp, data.maxp)
+  const priceGrid = buildPriceGrid(props.token, LEFT + WIDTH, TOP, data.minp, data.maxp)
   const hist = buildQuoteHistoryChart(data, props.history.data.view, x => {
     return 5 + LEFT + WIDTH * (x - data.range.startHeight) / (data.range.endHeight - data.range.startHeight)
   }, y => {
@@ -711,7 +716,8 @@ const gridName = {
   10800: "3 hours",
   14400: "4 hours",
   28800: "8 hours",
-  43200: "12 hours"
+  43200: "12 hours",
+  86400: "1 day"
 }
 
 const buildTimeGrid = (left, dur, width, height) => {
@@ -779,7 +785,7 @@ const buildTimeScale = (left, right, width, height) => {
   </g>
 }
 
-const buildPriceGrid = (width, height, minp, maxp, ttype) => {
+const buildPriceGrid = (token, width, height, minp, maxp, ttype) => {
   //console.log("minp=" + minp)
   //console.log("maxp=" + maxp)
   var div = height / 40
@@ -805,7 +811,7 @@ const buildPriceGrid = (width, height, minp, maxp, ttype) => {
     const y = height - height * (tic - minp) / (maxp - minp)
     var ticDisplay = ttype ? tic * -1 : tic
     if (ticDisplay >= 0) {
-      ticDisplay += " fox"
+      ticDisplay += " " + token
     } else {
       ticDisplay = ""
     }
