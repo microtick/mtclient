@@ -6,7 +6,7 @@ import App from './App'
 const target = document.querySelector('#root')
 
 if (process.env.MICROTICK_PROD === 'true') {
-  var token = "dai"
+  var token = "mtDAI"
 } else {
   token = "mt"
 }

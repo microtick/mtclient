@@ -26,12 +26,22 @@ h4 {
   background: #3ae;
   color: #fff;
   padding: 10px;
+  font-size: 14px;
+}
+
+#div-active button {
+  font-size: 12px;
 }
 
 #div-quotes {
   background: #093;
   color: #fff;
   padding: 10px;
+  font-size: 14px;
+}
+
+#div-quotes button {
+  font-size: 12px;
 }
 
 #div-market {
