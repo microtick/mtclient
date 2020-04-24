@@ -1423,7 +1423,6 @@ export const requestShift = acct => {
     }
     
     client.onclose = () => {
-      console.log("HERE " + JSON.stringify(shiftParams, null, 2))
       if (shiftParams.confirmations >= shiftParams.required && shiftParams.confirmations > 0) {
         dispatch({
           type: SHIFTSTATUS,
