@@ -1423,13 +1423,20 @@ export const requestShift = acct => {
     }
     
     client.onclose = () => {
-      dispatch({
-        type: SHIFTSTATUS,
-        amount: shiftParams.amount,
-        confirmations: shiftParams.confirmations,
-        required: shiftParams.required,
-        complete: true
-      })
+      console.log("HERE " + JSON.stringify(shiftParams, null, 2))
+      if (shiftParams.confirmations >= shiftParams.required && shiftParams.confirmations > 0) {
+        dispatch({
+          type: SHIFTSTATUS,
+          amount: shiftParams.amount,
+          confirmations: shiftParams.confirmations,
+          required: shiftParams.required,
+          complete: true
+        })
+      } else {
+        dispatch({
+          type: CLOSEDIALOG
+        })
+      }
     }
   }
 }
