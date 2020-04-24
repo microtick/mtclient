@@ -1,6 +1,5 @@
 import { cancelQuote as mtCancelQuote } from './microtick'
 import { backQuote as mtBackQuote } from './microtick'
-import { requestShift } from './microtick'
 import { updateSpot as mtUpdateSpot, updatePremium as mtUpdatePremium, settleTrade as mtSettleTrade } from './microtick'
 
 const BUYCALL = "dialog/buycall"
@@ -13,14 +12,21 @@ const DEPOSITQUOTEDIALOG = "dialog/depositquote"
 const CANCELQUOTEDIALOG = "dialog/cancelquote"
 const SETTLETRADEDIALOG = "dialog/settletrade"
 const FUNDACCOUNTDIALOG = "dialog/fundaccount"
-const SENDFUNDSDIALOG = "dialog/sendfunds"
+const WITHDRAWACCOUNTDIALOG = "dialog/withdrawaccount"
+const CONFIRMWITHDRAW = "dialog/confirmwithdraw"
+const SHIFTSTART = "shift/start"
+const SHIFTSTATUS = "shift/status"
+const WAITWITHDRAW = "shift/waitwithdraw"
+const WITHDRAWCOMPLETE = "shift/withdrawcomplete"
 const ACCOUNT = "tendermint/account"
 
 const CLOSEDIALOG = "dialog/close"
 
 const initialState = {
   showinline: false,
-  showmodal: false
+  showmodal: false,
+  showshift: false,
+  showconfirm: false
 }
 
 export default (state = initialState, action) => {
@@ -29,30 +35,44 @@ export default (state = initialState, action) => {
       return {
         ...state,
         showinline: true,
+        showmodal: false,
+        showshift: false,
+        showconfirm: false,
         type: "call"
       }
     case BUYPUT:
       return {
         ...state,
         showinline: true,
+        showmodal: false,
+        showshift: false,
+        showconfirm: false,
         type: "put"
       }
     case PLACEQUOTE:
       return {
         ...state,
         showinline: true,
+        showmodal: false,
+        showshift: false,
+        showconfirm: false,
         type: "quote"
       }
     case CLOSEDIALOG:
       return {
         ...state,
         showinline: false,
-        showmodal: false
+        showmodal: false,
+        showshift: false,
+        showconfirm: false
       }
     case UPDATESPOTDIALOG:
       return {
         ...state,
+        showinline: false,
         showmodal: true,
+        showshift: false,
+        showconfirm: false,
         type: "spot",
         id: action.id,
         defaultspot: action.defaultspot,
@@ -61,7 +81,10 @@ export default (state = initialState, action) => {
     case UPDATEPREMIUMDIALOG:
       return {
         ...state,
+        showinline: false,
         showmodal: true,
+        showshift: false,
+        showconfirm: false,
         type: "premium",
         id: action.id,
         spot: action.spot,
@@ -70,7 +93,10 @@ export default (state = initialState, action) => {
     case DEPOSITQUOTEDIALOG:
       return {
         ...state,
+        showinline: false,
         showmodal: true,
+        showshift: false,
+        showconfirm: false,
         type: "deposit",
         id: action.id,
         backing: 0
@@ -78,37 +104,111 @@ export default (state = initialState, action) => {
     case CANCELQUOTEDIALOG:
       return {
         ...state,
+        showinline: false,
         showmodal: true,
+        showshift: false,
+        showconfirm: false,
         type: "cancel",
         id: action.id
       }
     case SETTLETRADEDIALOG:
       return {
         ...state,
+        showinline: false,
         showmodal: true,
+        showshift: false,
+        showconfirm: false,
         type: "settle",
         id: action.id
       }
     case FUNDACCOUNTDIALOG:
       return {
         ...state,
+        showinline: false,
         showmodal: true,
+        showshift: false,
+        showconfirm: false,
+        account: action.account,
         type: "fund"
       }
-    case SENDFUNDSDIALOG:
+    case WITHDRAWACCOUNTDIALOG:
       return {
         ...state,
+        showinline: false,
         showmodal: true,
-        type: "send",
+        showshift: false,
+        showconfirm: false,
+        type: "withdraw",
+        max: action.max,
+        submit: action.submit
+      }
+    case SHIFTSTART:
+      return {
+        ...state,
+        showinline: false,
+        showmodal: false,
+        showshift: true,
+        showconfirm: false,
+        type: "start",
         from: action.from,
-        to: action.to
+        to: action.to,
+        account: action.account,
+        close: action.close
+      }
+    case SHIFTSTATUS:
+      return {
+        ...state,
+        showinline: false,
+        showmodal: false,
+        showshift: false,
+        showconfirm: true,
+        type: "shiftstatus",
+        amount: action.amount,
+        confirmations: action.confirmations,
+        required: action.required,
+        complete: action.complete
+      }
+    case CONFIRMWITHDRAW:
+      return {
+        ...state,
+        showinline: false,
+        showmodal: false,
+        showshift: true,
+        showconfirm: false,
+        type: "confirm",
+        amount: action.amount,
+        account: action.account,
+        close: action.close,
+        confirm: action.confirm
+      }
+    case WAITWITHDRAW:
+      return {
+        ...state,
+        showinline: false,
+        showmodal: false,
+        showshift: false,
+        showconfirm: true,
+        type: "waitwithdraw"
+      }
+    case WITHDRAWCOMPLETE:
+      return {
+        ...state,
+        showinline: false,
+        showmodal: false,
+        showshift: false,
+        showconfirm: true,
+        type: "withdrawcomplete",
+        hash: action.hash,
+        close: action.close
       }
     case ACCOUNT:
-      if (action.reason === "send") {
+      if (action.reason === "receive") {
         return {
           ...state,
           showinline: false,
-          showmodal: false
+          showmodal: false,
+          showshift: false,
+          showconfirm: false
         }
       }
       return state
@@ -247,23 +347,6 @@ export const fundAccountDialog = () => {
     dispatch({
       type: FUNDACCOUNTDIALOG
     })
-  }
-}
-
-export const sendFundsDialog = () => {
-  return async dispatch => {
-    const ethaccount = document.getElementById("eth-account").value.toLowerCase()
-    const toaccount = await requestShift(ethaccount)
-    dispatch({
-      type: SENDFUNDSDIALOG,
-      from: ethaccount,
-      to: toaccount
-    })
-    //setTimeout(() => {
-      //dispatch({
-        //type: CLOSEDIALOG
-      //})
-    //}, 600000)
   }
 }
 

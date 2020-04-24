@@ -20,11 +20,12 @@ import About from '../about'
 
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
-import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, 
-    fundAccountDialog, sendFundsDialog, closeDialog } from '../../modules/dialog'
-import { choosePassword, enterPassword, newAccount, requestTokens } from '../../modules/microtick'
+import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, fundAccountDialog, closeDialog } from '../../modules/dialog'
+import { choosePassword, enterPassword, newAccount, requestTokens, requestShift, withdrawAccount } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
+import ClipBoard from 'react-copy-to-clipboard'
+import ClipImage from './Clipboard.svg'
 import logo from './mtlogo-sm.png'
 import "./index.css"
 
@@ -45,7 +46,7 @@ const App = props => {
             <div className="form">
               <p><input type="password" maxLength="40" id="password"/></p>
               <p>Make sure to remember this password. It can not be recovered.</p>
-              <button className="button" onClick={() => props.choosePassword()}>Done</button>
+              <button className="button" onClick={() => props.choosePassword()}>Submit</button>
             </div>
           </div>
         </div>
@@ -60,14 +61,14 @@ const App = props => {
         var newaccount = <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
       }
       password = <div className="fullscreen">
-        <div className="password">
+        <div className="password"> 
           <div className="content">
-            <div className="title">Unlock account {keys.acct}</div>
+            <div className="title">Unlock Microtick account {keys.acct}</div>
             <div className="form">
               <p><input type="password" maxLength="40" id="password"/></p>
               {err}
               {newaccount}
-              <button className="button" onClick={() => props.enterPassword()}>Done</button>
+              <button className="button" onClick={() => props.enterPassword()}>Unlock</button>
             </div>
           </div>
         </div>
@@ -277,26 +278,23 @@ const App = props => {
     }
     if (props.dialog.type === "fund") {
       header = <div className="header">
-        <div className="title">Deposit DAI</div>
+        <div className="title">Deposit Ethereum ERC-20 DAI to Microtick</div>
         <div className="content">
           <p><b>Step 1</b></p>
           <p>Enter the Ethereum address you will be sending DAI from: <input type="string" size={42} id="eth-account"/></p>
         </div>
       </div>
-      action = <button className="button" onClick={() => props.sendFundsDialog()}>Submit</button>
+      action = <button className="button" onClick={() => props.requestShift()}>Submit</button>
     }
-    if (props.dialog.type === "send") {
+    if (props.dialog.type === "withdraw") {
       header = <div className="header">
-        <div className="title">Send Funds</div>
+        <div className="title">Withdraw Microtick DAI to Ethereum ERC-20 DAI</div>
         <div className="content">
-          <p><b>Step 2</b></p>
-          <p>Send some DAI from your account:</p>
-          <p>{props.dialog.from}</p>
-          <p>To Microtick at:</p>
-          <p>{props.dialog.to}</p>
-          <p>(this transfer address will expire in 10 minutes)</p>
+          <p>Ethereum address to receive DAI: <input type="string" size={42} id="eth-account"/></p>
+          <p>Amount to withdraw: <input id="dai-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
         </div>
       </div>
+      action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
     }
     var dialog = <div id="fullscreen">
       <div id="modal" className={props.dialog.type}>
@@ -304,6 +302,85 @@ const App = props => {
         <div className="buttons">
           {action}
           <button className="button" onClick={() => props.closeDialog()}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  }
+  if (props.dialog.showshift) {
+    if (props.dialog.type === "start") {
+      header = <div className="header">
+        <div className="title">Send ERC-20 DAI</div>
+        <div className="content">
+          <p><b>Step 2</b></p>
+          <p>Send ERC-20 DAI to the following Ethereum address:</p>
+          <p id="sendprompt">
+            <input size={40} value={props.dialog.to} readOnly disabled="disabled"/>
+            <ClipBoard text={props.dialog.to}>
+              <button><img src={ClipImage} alt="clipboard"/></button>
+            </ClipBoard>
+          </p>
+          <p>Funds will be deposited to Microtick account: {props.dialog.account}</p>
+          <p>In order to correctly receive the funds, make sure they are sent from: {props.dialog.from}</p>
+        </div>
+      </div>
+    }
+    if (props.dialog.type === "confirm") {
+      header = <div className="header">
+        <div className="title">Confirm Withdrawal</div>
+        <div className="content">
+          <p>Withdraw: {props.dialog.amount} dai</p>
+          <p>To Ethereum account: {props.dialog.account} ?</p>
+        </div>
+      </div>
+      action = <button className="button" onClick={() => props.dialog.confirm()}>Submit</button>
+    }
+    dialog = <div id="fullscreen">
+      <div id="modal" className={props.dialog.type}>
+        {header}
+        <div className="buttons">
+          {action}
+          <button className="button" onClick={() => props.dialog.close()}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  }
+  if (props.dialog.showconfirm) {
+    if (props.dialog.type === "shiftstatus") {
+      if (props.dialog.complete) {
+        var wait = <p>Transfer received, sending Microtick DAI</p>
+      } else {
+        wait = <p>Waiting for confirmations: {props.dialog.confirmations} / {props.dialog.required}</p>
+      }
+      header = <div className="header">
+        <div className="title">Ethereum ERC-20 DAI Received</div>
+        <div className="content">
+          <p>Amount received: {props.dialog.amount} dai</p>
+          {wait}
+        </div>
+      </div>
+    }
+    if (props.dialog.type === "waitwithdraw") {
+      header = <div className="header">
+        <div className="title">Withdrawal in progress...</div>
+        <div className="content">
+          <p>Waiting for outgoing blockchain confirmation...</p>
+        </div>
+      </div>
+    }
+    if (props.dialog.type === "withdrawcomplete") {
+      header = <div className="header">
+        <div className="title">Withdrawal Complete</div>
+        <div className="content">
+          <p>Ethereum confirmation: <a target="_blank" href={"https://goerli.etherscan.io/tx/" + props.dialog.hash} rel="noopener noreferrer">{props.dialog.hash}</a></p>
+        </div>
+      </div>
+      action = <button className="button" onClick={() => props.dialog.close()}>Dismiss</button>
+    }
+    dialog = <div id="fullscreen">
+      <div id="modal" className={props.dialog.type}>
+        {header}
+        <div className="buttons">
+          {action}
         </div>
       </div>
     </div>
@@ -356,6 +433,7 @@ const App = props => {
     var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
   } else {
     fund = <button id="requestbutton" onClick={() => props.fundAccountDialog()}>Fund Account</button>
+    var withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
   }
   return <div>
     <section id="ui"> 
@@ -383,7 +461,10 @@ const App = props => {
       </div>
       <div id="div-account">
         <h3>Account Information</h3>
-        {fund}
+        <div id="transact">
+          {fund}
+          {withdraw}
+        </div>
         <p>Address = {props.account}</p>
         {acctInfo}
       </div>
@@ -428,6 +509,7 @@ const mapDispatchToProps = dispatch => {
     enterPassword,
     newAccount,
     requestTokens,
+    requestShift,
     closeNotification,
     updateSpot,
     updatePremium,
@@ -436,7 +518,7 @@ const mapDispatchToProps = dispatch => {
     closeDialog,
     settleTrade,
     fundAccountDialog,
-    sendFundsDialog,
+    withdrawAccount,
     menuSelected
   }, dispatch)
 }

@@ -26,7 +26,7 @@ main {
 
 .password {
   width: 40%;
-  height: 35%;
+  height: 30%;
   margin: 200px auto;
   background: #fff;
   border: 4px solid #888;
@@ -153,8 +153,20 @@ main {
   cursor: pointer;
 }
 
+#transact {
+  float: right;
+  width: 140px;
+}
+
 #requestbutton {
   float: right;
+  width: 120px;
+  margin-bottom: 5px;
+}
+
+#withdrawbutton {
+  float: right;
+  width: 120px;
 }
 
 .funding {
@@ -184,7 +196,7 @@ main {
   background: #cba;
 }
 
-#menu div.selected:hover {
+#menu div.selected:/over {
   background: #cba;
 }
 
@@ -442,4 +454,29 @@ main {
 #modal .button {
   padding: 10px;
   margin-left: 5px;
+}
+
+#modal a {
+  color: #158;
+  text-decoration: none;
+}
+
+#sendprompt {
+  display: grid;
+  grid-template-rows: 2em;
+  grid-template-columns: 1fr auto;
+  width: 80%;
+  margin: auto;
+}
+
+#sendprompt input {
+  border-width: 0px;
+  background: transparent;
+  text-align: center;
+  padding: 5px;
+}
+
+#sendprompt button {
+  border-width: 0px;
+  cursor: pointer;
 }

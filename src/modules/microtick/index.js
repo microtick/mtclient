@@ -16,6 +16,7 @@ import api from '../api'
 import { init } from '../chain/tendermint'
 import { SequentialTaskQueue } from 'sequential-task-queue'
 import axios from 'axios'
+import { w3cwebsocket } from 'websocket'
 
 const BLOCKTIME = 5
 
@@ -44,6 +45,13 @@ const TRADELIST = 'microtick/trade/list'
 const QUOTEPARAMS= 'microtick/quote/params'
 const MOUSESTATE = 'microtick/update'
 const DONELOADING = 'microtick/loading'
+const SHIFTSTART = 'shift/start'
+const SHIFTSTATUS = 'shift/status'
+const WITHDRAWACCOUNT = 'dialog/withdrawaccount'
+const CONFIRMWITHDRAW = 'dialog/confirmwithdraw'
+const WAITWITHDRAW = 'shift/waitwithdraw'
+const WITHDRAWCOMPLETE = 'shift/withdrawcomplete'
+const CLOSEDIALOG = 'dialog/close'
 
 const globals = {
   accountSubscriptions: {},
@@ -169,7 +177,7 @@ api.addAccountHandler(async (key, data) => {
       globals.accountInfo = await api.getAccountInfo(globals.account)
       store.dispatch({
         type: ACCOUNT,
-        reason: "send",
+        reason: key === "deposit" ? "receive" : "send",
         acct: globals.account, 
         balance: globals.accountInfo.balance,
       })
@@ -1318,7 +1326,7 @@ export const requestTokens = () => {
     console.log("Request tokens")
     const notId = createFaucetRequestNotification(dispatch, globals.account)
     try {
-      const res = await axios.get(process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
+      const res = await axios.get("http://" + process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
       console.log(JSON.stringify(res.data, null, 2))
       if (res.data !== "success") {
         if (res.data.startsWith("failure: ")) {
@@ -1348,12 +1356,180 @@ export const requestTokens = () => {
   }
 }
 
-export const requestShift = async acct => {
-  console.log("Request funds")
-  try {
-    const res = await axios.get(process.env.MICROTICK_FAUCET + "/start/" + acct + "/" + globals.account)
-    return res.data.to
-  } catch (err) {
-    console.log(err)
+export const requestShift = acct => {
+  return async dispatch => {
+    
+    const ethaccount = document.getElementById("eth-account").value.toLowerCase()
+    const shiftParams = {
+      received: false,
+      amount: 0,
+      startBlock: 0,
+      required: 0,
+      confirmations: 0
+    }
+    
+    // connect to server
+    const client = new w3cwebsocket("ws://" + process.env.MICROTICK_FAUCET)
+    
+    const close = () => {
+      client.close()
+    }
+    
+    client.onopen = () => {
+      client.send(JSON.stringify({
+        type: "deposit",
+        from: ethaccount,
+        dest: globals.account,
+        close: close
+      }))
+    }
+    
+    client.onmessage = msg => {
+      const obj = JSON.parse(msg.data)
+      if (obj.type === "start") {
+        dispatch({
+          type: SHIFTSTART,
+          account: globals.account,
+          from: ethaccount,
+          to: obj.to,
+          close: close
+        })
+      }
+      if (obj.type === "received") {
+        shiftParams.received = true
+        shiftParams.block = obj.block
+        shiftParams.amount = obj.amount
+        shiftParams.confirmations = 0
+        shiftParams.required = obj.confirmations
+        dispatch({
+          type: SHIFTSTATUS,
+          amount: shiftParams.amount,
+          confirmations: 0,
+          required: shiftParams.required
+        })
+      }
+      if (obj.type === "update") {
+        if (shiftParams.received) {
+          shiftParams.confirmations = obj.block > shiftParams.block ? obj.block - shiftParams.block : 0
+          dispatch({
+            type: SHIFTSTATUS,
+            amount: shiftParams.amount,
+            confirmations: shiftParams.confirmations,
+            required: shiftParams.required,
+            complete: false
+          })
+        }
+      }
+    }
+    
+    client.onclose = () => {
+      dispatch({
+        type: SHIFTSTATUS,
+        amount: shiftParams.amount,
+        confirmations: shiftParams.confirmations,
+        required: shiftParams.required,
+        complete: true
+      })
+    }
+  }
+}
+
+export const withdrawAccount = () => {
+  return async dispatch => {
+    dispatch({
+      type: WITHDRAWACCOUNT,
+      max: globals.accountInfo.balance,
+      submit: () => {
+        const ethaccount = document.getElementById("eth-account").value.toLowerCase()
+        const dai = document.getElementById("dai-amount").value
+        
+        // connect to server
+        const client = new w3cwebsocket("ws://" + process.env.MICROTICK_FAUCET)
+        
+        const close = () => {
+          dispatch({
+            type: CLOSEDIALOG
+          })
+          client.close()
+        }
+    
+        client.onopen = () => {
+          client.send(JSON.stringify({
+            type: "withdraw",
+            from: globals.account,
+            to: ethaccount,
+            amount: dai,
+          }))
+        }
+        
+        client.onmessage = msg => {
+          //console.log(msg.data)
+          const obj = JSON.parse(msg.data)
+          
+          if (obj.type === "startwithdraw") {
+            const sendTo = obj.sendTo
+            dispatch({
+              type: CONFIRMWITHDRAW,
+              amount: dai,
+              account: ethaccount,
+              close: close,
+              confirm: async () => {
+                try {
+                  const envelope = await api.postEnvelope()
+                  const data = {
+                    tx: {
+                      msg: [
+                        {
+                          type: "cosmos-sdk/MsgSend",
+                          value: {
+                            from_address: globals.account,
+                            to_address: sendTo,
+                            amount: [
+                              {
+                                amount: obj.amount,
+                                denom: "udai"
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      fee: {
+                        amount: [],
+                        gas: "200000"
+                      },
+                      signatures: null,
+                      memo: obj.id
+                    }
+                  }
+                  api.postTx(Object.assign(data, envelope))
+                  dispatch({
+                    type: WAITWITHDRAW
+                  })
+                } catch (err) {
+                  console.log("err=" + err)
+                }
+              }
+            })
+          }
+          
+          if (obj.type === "withdrawcomplete") {
+            client.close()
+            dispatch({
+              type: WITHDRAWCOMPLETE,
+              hash: obj.hash,
+              close: () => {
+                dispatch({
+                  type: CLOSEDIALOG
+                })
+              }
+            })
+          }
+        }
+        
+        client.onclose = () => {
+          console.log("shift closed")
+        }
+      }
+    })
   }
 }
