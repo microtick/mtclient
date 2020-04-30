@@ -21,7 +21,7 @@ import About from '../about'
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
 import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, fundAccountDialog, closeDialog } from '../../modules/dialog'
-import { choosePassword, enterPassword, newAccount, requestTokens, requestShift, withdrawAccount } from '../../modules/microtick'
+import { choosePassword, enterPassword, newAccount, requestTokens, sendTokens, requestShift, withdrawAccount } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
 import ClipBoard from 'react-copy-to-clipboard'
@@ -286,6 +286,16 @@ const App = props => {
       </div>
       action = <button className="button" onClick={() => props.requestShift()}>Submit</button>
     }
+    if (props.dialog.type === "send") {
+      header = <div className="header">
+        <div className="title">Send Tokens</div>
+        <div className="content">
+          <p>Send to (cosmos address): <input type="string" size={42} id="cosmos-account"/></p>
+          <p>Amount to withdraw: <input id="token-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
+        </div>
+      </div>
+      action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
+    }    
     if (props.dialog.type === "withdraw") {
       header = <div className="header">
         <div className="title">Withdraw Microtick DAI to Ethereum ERC-20 DAI</div>
@@ -431,9 +441,10 @@ const App = props => {
     </div>
   if (props.token === "mt") {
     var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
+    var withdraw = <button id="withdrawbutton" onClick={() => props.sendTokens()}>Send Tokens</button>
   } else {
     fund = <button id="requestbutton" onClick={() => props.fundAccountDialog()}>Fund Account</button>
-    var withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
+    withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
   }
   return <div>
     <section id="ui"> 
@@ -518,6 +529,7 @@ const mapDispatchToProps = dispatch => {
     closeDialog,
     settleTrade,
     fundAccountDialog,
+    sendTokens,
     withdrawAccount,
     menuSelected
   }, dispatch)
