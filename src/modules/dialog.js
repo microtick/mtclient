@@ -12,6 +12,7 @@ const DEPOSITQUOTEDIALOG = "dialog/depositquote"
 const CANCELQUOTEDIALOG = "dialog/cancelquote"
 const SETTLETRADEDIALOG = "dialog/settletrade"
 const FUNDACCOUNTDIALOG = "dialog/fundaccount"
+const SENDTOKENSDIALOG = "dialog/sendtokens"
 const WITHDRAWACCOUNTDIALOG = "dialog/withdrawaccount"
 const CONFIRMWITHDRAW = "dialog/confirmwithdraw"
 const SHIFTSTART = "shift/start"
@@ -139,6 +140,17 @@ export default (state = initialState, action) => {
         showshift: false,
         showconfirm: false,
         type: "withdraw",
+        max: action.max,
+        submit: action.submit
+      }
+    case SENDTOKENSDIALOG:
+      return {
+        ...state,
+        showinline: false,
+        showmodal: true,
+        showshift: false,
+        showconfirm: false,
+        type: "send",
         max: action.max,
         submit: action.submit
       }

@@ -45,6 +45,7 @@ const TRADELIST = 'microtick/trade/list'
 const QUOTEPARAMS= 'microtick/quote/params'
 const MOUSESTATE = 'microtick/update'
 const DONELOADING = 'microtick/loading'
+const SENDTOKENS = 'dialog/sendtokens'
 const SHIFTSTART = 'shift/start'
 const SHIFTSTATUS = 'shift/status'
 const WITHDRAWACCOUNT = 'dialog/withdrawaccount'
@@ -1353,6 +1354,56 @@ export const requestTokens = () => {
       console.log(err)
       createErrorNotification(dispatch, "Faucet request failed", err.message)
     }
+  }
+}
+
+export const sendTokens = () => {
+  return async dispatch => {
+    dispatch({
+      type: SENDTOKENS,
+      max: globals.accountInfo.balance,
+      submit: async () => {
+        const cosmosaccount = document.getElementById("cosmos-account").value.toLowerCase()
+        const tokens = document.getElementById("token-amount").value
+        
+        dispatch({
+          type: CLOSEDIALOG
+        })
+    
+        try {
+          const envelope = await api.postEnvelope()
+          const amount = "" + Math.floor(tokens * 1000000)
+          const data = {
+            tx: {
+              msg: [
+                {
+                  type: "cosmos-sdk/MsgSend",
+                  value: {
+                    from_address: globals.account,
+                    to_address: cosmosaccount,
+                    amount: [
+                      {
+                        amount: amount,
+                        denom: "udai"
+                      }
+                    ]
+                  }
+                }
+              ],
+              fee: {
+                amount: [],
+                gas: "200000"
+              },
+              signatures: null,
+              memo: ""
+            }
+          }
+          const res = await api.postTx(Object.assign(data, envelope))
+        } catch (err) {
+          console.log("send err=" + err)
+        }
+      }
+    })
   }
 }
 

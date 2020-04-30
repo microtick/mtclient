@@ -8,7 +8,7 @@ const target = document.querySelector('#root')
 if (process.env.MICROTICK_PROD === 'true') {
   var token = "mtDAI"
 } else {
-  token = "mt"
+  token = "dai"
 }
 
 render(

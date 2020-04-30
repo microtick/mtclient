@@ -21,7 +21,7 @@ import About from '../about'
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
 import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, fundAccountDialog, closeDialog } from '../../modules/dialog'
-import { choosePassword, enterPassword, newAccount, requestTokens, requestShift, withdrawAccount } from '../../modules/microtick'
+import { choosePassword, enterPassword, newAccount, requestTokens, sendTokens, requestShift, withdrawAccount } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
 import ClipBoard from 'react-copy-to-clipboard'
@@ -57,7 +57,7 @@ const App = props => {
       }
       const keys = JSON.parse(checkAccount[0])
       /*eslint-disable no-script-url*/
-      if (props.token === "mt") {
+      if (props.token === "dai") {
         var newaccount = <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
       }
       password = <div className="fullscreen">
@@ -206,7 +206,7 @@ const App = props => {
     }
     if (not.type === 'error') {
       var message = not.msg
-      if (props.token === "mt") {
+      if (props.token === "dai") {
         if (not.msg.includes("Insufficient funds") || 
             not.msg.includes("insufficient account funds") ||
             not.msg.includes("No such address")) {
@@ -285,6 +285,16 @@ const App = props => {
         </div>
       </div>
       action = <button className="button" onClick={() => props.requestShift()}>Submit</button>
+    }
+    if (props.dialog.type === "send") {
+      header = <div className="header">
+        <div className="title">Send Tokens</div>
+        <div className="content">
+          <p>Send to (cosmos address): <input type="string" size={42} id="cosmos-account"/></p>
+          <p>Amount to withdraw: <input id="token-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
+        </div>
+      </div>
+      action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
     }
     if (props.dialog.type === "withdraw") {
       header = <div className="header">
@@ -422,18 +432,19 @@ const App = props => {
       break
     default:
   }
+      //<div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
   var menu = <div id="menu">
-      <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
       <div className={props.menu.selected === 'trading' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('trading')}>Trading</div>
       <div className={props.menu.selected === 'status' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('status')}>Status</div>
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>
       <div className={props.menu.selected === 'about' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('about')}>About</div>
     </div>
-  if (props.token === "mt") {
+  if (props.token === "dai") {
     var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
+    var withdraw = <button id="withdrawbutton" onClick={() => props.sendTokens()}>Send Tokens</button>
   } else {
     fund = <button id="requestbutton" onClick={() => props.fundAccountDialog()}>Fund Account</button>
-    var withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
+    withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
   }
   return <div>
     <section id="ui"> 
@@ -444,13 +455,6 @@ const App = props => {
     {dialog}
     <div id="page-header">
       <a href="http://microtick.com" alt="Microtick"><img src={logo} alt={"logo"}/></a>
-      <nav role="navigation">
-        <a href="http://microtick.com">Home</a>
-        <a href="http://microtick.com/background-information.html">Learn More</a>
-        <a href="http://microtick.com/how-to-table-of-contents.html">How To</a>
-        <span className="current">Try the Testnet</span>
-        <a href="http://microtick.com/contact.html">Contact</a>
-      </nav>
     </div>
     <div id="page-subheader">
       <div id="div-chain">
@@ -518,6 +522,7 @@ const mapDispatchToProps = dispatch => {
     closeDialog,
     settleTrade,
     fundAccountDialog,
+    sendTokens,
     withdrawAccount,
     menuSelected
   }, dispatch)
