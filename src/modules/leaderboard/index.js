@@ -117,10 +117,10 @@ export const getLeaderboardData = async page => {
   const update = async () => {
     try {
       const wallet = await api.getWallet()
-      const endpoint = await axios.get(process.env.MICROTICK_LEADERBOARD + "/endpoint/" + wallet.acct)
+      const endpoint = await axios.get("http://" + process.env.MICROTICK_LEADERBOARD + "/endpoint/" + wallet.acct)
       globals.endpoint = endpoint.data
     
-      const leaders = await axios.get(process.env.MICROTICK_LEADERBOARD + "/leaderboard/" + page)
+      const leaders = await axios.get("http://" + process.env.MICROTICK_LEADERBOARD + "/leaderboard/" + page)
       //console.log("leaders: " + JSON.stringify(leaders.data))
       const startTime = new Date(globals.endpoint.startTime)
       const startTimeString = startTime.toLocaleDateString() + " " + startTime.toLocaleTimeString() 
