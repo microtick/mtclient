@@ -61,7 +61,7 @@ const App = props => {
         var newaccount = <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
       }
       password = <div className="fullscreen">
-        <div className="password"> 
+        <div className="password">
           <div className="content">
             <div className="title">Unlock Microtick account {keys.acct}</div>
             <div className="form">
