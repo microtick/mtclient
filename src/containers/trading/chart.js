@@ -36,6 +36,7 @@ var maxp = 0
 var calls
 var puts
 var dynamicWeight = 0
+var randomWalk = []
 
 const MOUSESTATE_NONE = 0
 const MOUSESTATE_QUOTE = 1
@@ -52,45 +53,70 @@ const initDynamicView = props => {
   // HACK - gotta save token type into hacky variable because innerHTML can't
   // contain a <span>
   tokenType = props.token
+  
   // get layout
   const elem = document.getElementById('chart')
   if (elem === null) return false
   const bounds = elem.getBoundingClientRect()
   layout.chartwidth = bounds.width
-  layout.width = layout.chartwidth * 0.75
   layout.height = bounds.height
-  layout.chart_mp_left = layout.width
-  layout.chart_mp_width = 10
-  layout.chart_ob_left = layout.chart_mp_left + 10
-  layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
   
   const view = props.view
   minp = view.minp
   maxp = view.maxp
-  if (props.orderbook) {
-    if (props.mousestate === MOUSESTATE_QUOTE) {
-      // check quote heights
-      var spot = props.premiums.indicatedSpot
-      calls = props.orderbook.calls.quotes.map(quote => {
-        const top = spot + quote.premium - (spot - props.spot) / 2
-        if (top > maxp) maxp = top
-        return quote
-      })
-      puts = props.orderbook.puts.quotes.map(quote => {
-        const bottom = spot - quote.premium  - (spot - props.spot) / 2
-        if (bottom < minp) minp = bottom
-        return quote
-      })
-      // check top / bottom quote premiums
-      const upper = props.premiums.qs + props.premiums.prem
-      const lower = props.premiums.qs - props.premiums.prem
-      if (upper > maxp) maxp = upper
-      if (lower < minp) minp = lower
-    } else {
-      calls = props.orderbook.calls.quotes
-      puts = props.orderbook.puts.quotes
+  
+  if (props.mousestate === MOUSESTATE_NONE) {
+      
+    layout.width = layout.chartwidth * 0.75
+    layout.chart_mp_left = layout.width
+    layout.chart_mp_width = 10
+    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+    
+    calls = props.orderbook.calls.quotes
+    puts = props.orderbook.puts.quotes
+      
+  } else if (props.mousestate === MOUSESTATE_QUOTE) {
+      
+    layout.width = layout.chartwidth * 0.5
+    layout.chart_mp_left = layout.width
+    layout.chart_mp_width = 10
+    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+      
+    // check quote heights
+    var spot = props.premiums.indicatedSpot
+    calls = props.orderbook.calls.quotes.map(quote => {
+      const top = spot + quote.premium - (spot - props.spot) / 2
+      if (top > maxp) maxp = top
+      return quote
+    })
+    puts = props.orderbook.puts.quotes.map(quote => {
+      const bottom = spot - quote.premium  - (spot - props.spot) / 2
+      if (bottom < minp) minp = bottom
+      return quote
+    })
+    // check top / bottom quote premiums
+    const upper = props.premiums.qs + props.premiums.prem
+    const lower = props.premiums.qs - props.premiums.prem
+    if (upper > maxp) maxp = upper
+    if (lower < minp) minp = lower
+    layout.calcX = x => {
+      return 
     }
+      
+  } else {
+      
+    layout.width = layout.chartwidth * 0.5
+    layout.chart_mp_left = layout.chartwidth * 0.75
+    layout.chart_mp_width = 10
+    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+      
+    calls = props.orderbook.calls.quotes
+    puts = props.orderbook.puts.quotes
   }
+  
   var height = maxp - minp
   if (height === 0) height = 1
   minp = minp - height * .05
@@ -238,126 +264,155 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
 }
 
 const buildBackground = props => {
-  if (props.orderbook) {
-    const chMouseEnter = event => {
-      if (props.dialog.showinline) return
-      props.mouseState(MOUSESTATE_QUOTE)
-    }
-    const chMouseLeave = event => {
-      if (props.dialog.showinline) return
-      props.mouseState(MOUSESTATE_NONE)
-    }
-    const chMouseMove = event => {
-      if (props.dialog.showinline) return
-      
-      //const sy = height - height * (props.spot - props.minp) / (props.maxp - props.minp)
-      var bounds = event.target.getBoundingClientRect()
-      var delta = (bounds.width - event.clientX + bounds.left + 1) / 4
-      var y = event.clientY - bounds.top
-      
-      const backing = props.quote.backing
-      var price = minp - (y - layout.height) * (maxp - minp) / layout.height
-      var prem = delta * (maxp - minp) / layout.height
-      
-      const back = isNaN(props.orderbook.totalBacking[props.dur]) ? 0 : props.orderbook.totalBacking[props.dur]
-      const wt = isNaN(props.orderbook.totalWeight[props.dur]) ? 0 : props.orderbook.totalWeight[props.dur]
-      const partialprem = wt === 0 ? 0 : back / (props.constants.LEVERAGE * wt)      
-      
-      if (prem > partialprem * 2) {
-        prem = partialprem * 2
-      }
-      
-      const qty = backing / (props.constants.LEVERAGE * prem)
-      const weight = qty
-      var newspot = (props.spot * props.weight + price * weight) / (weight + props.weight)
-      
-      if (price > newspot + 2 * prem) {
-        newspot = props.spot + 2 * backing / (props.constants.LEVERAGE * props.weight)
-        price = newspot + 2 * prem
-      }
-      if (price < newspot - 2 * prem) {
-        newspot = props.spot - 2 * backing / (props.constants.LEVERAGE * props.weight)
-        price = newspot - 2 * prem
-      }
-      
-      //console.log("spot=" + props.spot)
-      //console.log("newspot=" + newspot)
-      //console.log("prem=" + prem)
-      
-      //console.log("backing= " + backing)
-      //console.log("price=" + price)
-      //console.log("weight=" + weight)
-      //console.log("market weight=" + props.weight)
-      
-      var call = prem + (price - newspot) / 2
-      if (call < 0) call = 0
-      var put = prem - (price - newspot) / 2
-      if (put < 0) put = 0
-      
-      dynamicWeight = weight
-      props.orderbook.setQuotePremiums(qty, price, prem, weight, newspot, call, put)
-      chartCursorPos(qty, price, prem, newspot, minp)
-    }
-    const chMouseClick = event => {
-      if (props.dialog.showinline) return
-      props.placeQuoteDialog()
+  
+  const chMouseMove = event => {
+    //const sy = height - height * (props.spot - props.minp) / (props.maxp - props.minp)
+    var bounds = event.target.getBoundingClientRect()
+    var x = event.clientX - bounds.left 
+    if (x > layout.width) x = layout.width
+    var delta = (layout.width - x + 2)
+    var y = event.clientY - bounds.top
+    
+    const backing = props.quote.backing
+    var price = minp - (y - layout.height) * (maxp - minp) / layout.height
+    var prem = delta * (maxp - minp) / layout.height
+    
+    const back = isNaN(props.orderbook.totalBacking[props.dur]) ? 0 : props.orderbook.totalBacking[props.dur]
+    const wt = isNaN(props.orderbook.totalWeight[props.dur]) ? 0 : props.orderbook.totalWeight[props.dur]
+    const partialprem = wt === 0 ? 0 : back / (props.constants.LEVERAGE * wt)      
+    
+    if (prem > partialprem * 2) {
+      prem = partialprem * 2
     }
     
-    const obMouseEnter = event => {
-      if (props.dialog.showinline) return
-      var bounds = event.target.getBoundingClientRect()
-      const y = event.clientY - bounds.top
-      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
-      if (y <= sy) {
-        props.mouseState(MOUSESTATE_CALL)
-      } else {
-        props.mouseState(MOUSESTATE_PUT)
-      }
+    const qty = backing / (props.constants.LEVERAGE * prem)
+    const weight = qty
+    var newspot = (props.spot * props.weight + price * weight) / (weight + props.weight)
+    
+    if (price > newspot + 2 * prem) {
+      newspot = props.spot + 2 * backing / (props.constants.LEVERAGE * props.weight)
+      price = newspot + 2 * prem
     }
-    const obMouseLeave = event => {
-      if (props.dialog.showinline) return
-      props.mouseState(MOUSESTATE_NONE)
-    }
-    const obMouseMove = event => {
-      if (props.dialog.showinline) return
-      var bounds = event.target.getBoundingClientRect()
-      const x = event.clientX - bounds.left + layout.chart_ob_left
-      const y = event.clientY - bounds.top
-      const qty = (x - layout.chart_ob_left) * props.orderbook.totalWeight[props.dur] / layout.chart_ob_width
-      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
-      const callprice = props.orderbook.calls.price(qty)
-      const putprice = props.orderbook.puts.price(qty)
-      if (y <= sy) {
-        props.mouseState(MOUSESTATE_CALL)
-        props.orderbook.setBuyPremium(qty, true)
-      } else {
-        props.mouseState(MOUSESTATE_PUT)
-        props.orderbook.setBuyPremium(qty, false)
-      }
-      orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], parseFloat(props.spot), y <= sy, y <= sy ? callprice : putprice, 
-        maxp, minp)
-    }
-    const obMouseClick = event => {
-      if (props.dialog.showinline) return
-      var bounds = event.target.getBoundingClientRect()
-      const y = event.clientY - bounds.top
-      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
-      if (y <= sy) {
-        props.buyCallDialog()
-      } else {
-        props.buyPutDialog()
-      }
+    if (price < newspot - 2 * prem) {
+      newspot = props.spot - 2 * backing / (props.constants.LEVERAGE * props.weight)
+      price = newspot - 2 * prem
     }
     
-    return <g>
-      <rect id="chartback" x={0} width={layout.width} y={0} height={layout.height}
-        onMouseEnter={chMouseEnter} onMouseLeave={chMouseLeave} 
-        onMouseMove={chMouseMove} onClick={chMouseClick}/>
-      <rect id="obback" x={layout.chart_ob_left} y={0} width={layout.chart_ob_width} height={layout.height}
-        onMouseEnter={obMouseEnter} onMouseLeave={obMouseLeave} 
-        onMouseMove={obMouseMove} onClick={obMouseClick}/>
-    </g>
+    //console.log("spot=" + props.spot)
+    //console.log("newspot=" + newspot)
+    //console.log("prem=" + prem)
+    
+    //console.log("backing= " + backing)
+    //console.log("price=" + price)
+    //console.log("weight=" + weight)
+    //console.log("market weight=" + props.weight)
+    
+    var call = prem + (price - newspot) / 2
+    if (call < 0) call = 0
+    var put = prem - (price - newspot) / 2
+    if (put < 0) put = 0
+    
+    dynamicWeight = weight
+    props.orderbook.setQuotePremiums(qty, price, prem, weight, newspot, call, put)
+    chartCursorPos(qty, price, prem, newspot, minp)
   }
+  
+  const obMouseMove = event => {
+    var bounds = event.target.getBoundingClientRect()
+    var x = event.clientX - bounds.left 
+    if (x < layout.chart_ob_left) x = layout.chart_ob_left
+    const y = event.clientY - bounds.top
+    const qty = (x - layout.chart_ob_left) * props.orderbook.totalWeight[props.dur] / layout.chart_ob_width
+    const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
+    const callprice = props.orderbook.calls.price(qty)
+    const putprice = props.orderbook.puts.price(qty)
+    if (props.mousestate === MOUSESTATE_CALL) {
+      props.orderbook.setBuyPremium(qty, true)
+    } 
+    if (props.mousestate === MOUSESTATE_PUT) {
+      props.orderbook.setBuyPremium(qty, false)
+    }
+    orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], parseFloat(props.spot), y <= sy, y <= sy ? callprice : putprice, 
+      maxp, minp)
+  }
+  
+  const chMouseClick = event => {
+    if (props.dialog.showinline) return
+    props.placeQuoteDialog()
+  }
+  
+  const obMouseClick = event => {
+    if (props.dialog.showinline) return
+    var bounds = event.target.getBoundingClientRect()
+    const y = event.clientY - bounds.top
+    const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
+    if (y <= sy) {
+      props.buyCallDialog()
+    } else {
+      props.buyPutDialog()
+    }
+  }
+  
+  const mouseEnter = event => {
+    if (props.dialog.showinline) return
+    
+    const bounds = event.target.getBoundingClientRect()
+    const x = event.clientX - bounds.left
+    const y = event.clientY - bounds.top
+    
+    if (x <= layout.width) {
+      props.mouseState(MOUSESTATE_QUOTE)
+    } 
+    if (x >= layout.chart_ob_left) {
+      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
+      if (y <= sy) {
+        props.mouseState(MOUSESTATE_CALL)
+      } else {
+        props.mouseState(MOUSESTATE_PUT)
+      }
+    }
+  }
+  
+  const mouseLeave = event => {
+    if (props.dialog.showinline) return
+    props.mouseState(MOUSESTATE_NONE)
+  }
+  
+  const mouseMove = event => {
+    if (props.dialog.showinline) return
+    
+    const bounds = event.target.getBoundingClientRect()
+    const x = event.clientX - bounds.left
+    const y = event.clientY - bounds.top
+    
+    if (x <= layout.width) {
+      props.mouseState(MOUSESTATE_QUOTE)
+    } 
+    if (x >= layout.chart_ob_left) {
+      const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
+      if (y <= sy) {
+        props.mouseState(MOUSESTATE_CALL)
+      } else {
+        props.mouseState(MOUSESTATE_PUT)
+      }
+    }
+    
+    if (props.mousestate === MOUSESTATE_QUOTE) {
+      chMouseMove(event)
+    } else {
+      obMouseMove(event)
+    }
+  }
+  const mouseClick = event => {
+    if (props.dialog.showinline) return
+    props.placeQuoteDialog()
+  }
+  
+  return <g>
+    <rect id="chartback" x={0} width={layout.chartwidth} y={0} height={layout.height}
+      onMouseEnter={mouseEnter} onMouseLeave={mouseLeave} 
+      onMouseMove={mouseMove} onClick={mouseClick}/>
+  </g>
 }
 
 const buildTimeGrid = props => {
@@ -621,7 +676,7 @@ const buildOrderbookPremiums = props => {
 }
 
 const buildOrderBook = props => {
-  if (props.orderbook && props.orderbook.totalWeight[props.dur] > 0) {
+  if (props.orderbook.totalWeight[props.dur] > 0) {
     if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
       var spot = props.spot
       var sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
@@ -710,7 +765,7 @@ class Chart extends React.Component {
   render() {
     const props = this.props
     
-    if (!props.loading) {
+    if (!props.loading && props.orderbook) {
       initDynamicView(props)
       //console.log("build background")
       const background = buildBackground(props)

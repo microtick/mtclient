@@ -157,14 +157,6 @@ svg#chart circle.put {
   pointer-events: auto;
 }
 
-#obback {
-  pointer-events: auto;
-}
-
-#obback {
-  fill: #333;
-}
-
 #orderbook rect.quote15 {
   fill: #2264a3;
 }
