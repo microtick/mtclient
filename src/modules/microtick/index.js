@@ -810,7 +810,7 @@ async function fetchOrderBook() {
   
   var colorizeCount = 0
   const colormap = {}
-  
+    
   const computePricing = async type => {
     const obj = {}
     obj.maxPrem = 0
@@ -882,7 +882,7 @@ async function fetchOrderBook() {
   const calls = await computePricing(CallAsk)
   const puts = await computePricing(PutAsk)
   
-  store.dispatch({
+  const dispatch = {
     type: ORDERBOOK,
     durs: durs,
     totalBacking: totalBacking,
@@ -926,7 +926,16 @@ async function fetchOrderBook() {
         indicatedPutPremium: p
       })
     }
-  })
+  }
+  
+  store.dispatch(dispatch)
+  
+  // Dynamically update cursor which is not managed by react for speed
+  if (globals.mouseState === 2 || globals.mouseState === 3) { // MOUSESTATE_CALL || MOUSESTATE_PUT
+    orderBookCursorPos(globals.qty, globals.orderbook.totalWeight[globals.dur], globals.spot, 
+      globals.mouseState === 2, 
+      globals.mouseState === 2 ? calls.price(globals.qty) : puts.price(globals.qty))
+  }
 }
 
 async function fetchActiveQuotes() {
@@ -1076,6 +1085,7 @@ export const changeQtyCall = event => {
 export const changeQtyPut = event => {
   var qty = parseFloat(event.target.value)
   if (qty < 0 || isNaN(qty)) qty = 0
+  if (qty > globals.orderbook.totalWeight[globals.dur]) qty = globals.orderbook.totalWeight[globals.dur]
   return async dispatch => {
     globals.orderbook.setBuyPremium(qty, false)
     orderBookCursorPos(qty, globals.orderbook.totalWeight[globals.dur], globals.spot, false, globals.orderbook.puts.price(qty))
@@ -1254,6 +1264,7 @@ export const updatePremium = async (dispatch, id, newpremium) => {
 }
 
 export const mouseState = mouseState => {
+  globals.mouseState = mouseState
   return async dispatch => {
     dispatch({
       type: MOUSESTATE,

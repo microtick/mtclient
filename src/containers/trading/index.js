@@ -80,12 +80,12 @@ class Home extends React.Component {
                 <tr>
                   <td data-tip={tooltip_averprem}>Avg Premium</td>
                   <td></td>
-                  <td>⇑ {Math.round10(props.premiums.prem, props.constants.TOKEN_PRECISION)}</td>
+                  <td>⇑ <span id="avg-prem">{Math.round10(props.premiums.prem, props.constants.UNIT_PRECISION)}</span></td>
                 </tr>
                 <tr>
                   <td data-tip={tooltip_cost}>Cost</td>
                   <td></td>
-                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+                  <td><span id="buy-cost" className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -132,12 +132,12 @@ class Home extends React.Component {
                 <tr>
                   <td data-tip={tooltip_averprem}>Avg Premium</td>
                   <td></td>
-                  <td>⇓ {Math.round10(props.premiums.prem, props.constants.TOKEN_PRECISION)}</td>
+                  <td>⇓ <span id="avg-prem">{Math.round10(props.premiums.prem, props.constants.UNIT_PRECISION)}</span></td>
                 </tr>
                 <tr>
                   <td data-tip={tooltip_cost}>Cost</td>
                   <td></td>
-                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+                  <td><span id="buy-cost" className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
                 </tr>
               </tbody>
             </table>

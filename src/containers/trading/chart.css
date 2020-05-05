@@ -162,6 +162,7 @@ svg#chart circle.put {
 }
 
 #info line.spot {
+  stroke: #ffc;
   stroke-dasharray: 2,4;
   stroke-width: 2px !important;
 }
@@ -237,6 +238,10 @@ svg#chart circle.put {
 #orderbook line.spot {
   stroke: #333;
   stroke-width: 0.5px !important;
+}
+
+text.reward {
+  fill: #ffc;
 }
 
 line.ordertip {

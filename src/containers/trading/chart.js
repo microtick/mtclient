@@ -62,126 +62,6 @@ const randn_bm = () => {
   return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v )
 }
 
-const initDynamicView = props => {
-  // HACK - gotta save token type into hacky variable because innerHTML can't
-  // contain a <span>
-  tokenType = props.token
-  
-  // get layout
-  const elem = document.getElementById('chart')
-  if (elem === null) return false
-  const bounds = elem.getBoundingClientRect()
-  layout.chartwidth = bounds.width
-  layout.height = bounds.height
-  layout.info_left = 0
-  layout.info_width = 0
-  
-  const view = props.view
-  minp = view.minp
-  maxp = view.maxp
-  
-  if (props.mousestate === MOUSESTATE_NONE) {
-      
-    layout.width = layout.chartwidth * 0.75
-    layout.chart_mp_left = layout.width
-    layout.chart_mp_width = 10
-    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
-    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
-    
-    calls = props.orderbook.calls.quotes
-    puts = props.orderbook.puts.quotes
-      
-  } else if (props.mousestate === MOUSESTATE_QUOTE) {
-      
-    if (props.dialog.showinline) {
-      layout.width = layout.chartwidth * 0.5
-      layout.info_left = layout.width + 10
-      layout.info_width = layout.chart_ob_left - layout.info_left
-      
-      const qcspot = document.getElementById('qcspot')
-      var textProps = qcspot.getBoundingClientRect()
-      qcspot.setAttribute('x', layout.width - textProps.width-10)
-      
-      const posprem = document.getElementById('posprem')
-      textProps = posprem.getBoundingClientRect()
-      posprem.setAttribute('x', layout.width - textProps.width-10)
-      
-      const negprem = document.getElementById('negprem')
-      textProps = negprem.getBoundingClientRect()
-      negprem.setAttribute('x', layout.width - textProps.width-10)
-    } else {
-      layout.width = layout.chartwidth * 0.75
-    }
-      
-    layout.chart_mp_left = layout.width
-    layout.chart_mp_width = 10
-    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
-    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
-    
-    // check quote heights
-    var spot = props.premiums.indicatedSpot
-    calls = props.orderbook.calls.quotes.map(quote => {
-      const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
-      if (top > maxp) maxp = top
-      return quote
-    })
-    puts = props.orderbook.puts.quotes.map(quote => {
-      const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
-      if (bottom < minp) minp = bottom
-      return quote
-    })
-    
-    /*
-    // check top / bottom quote premiums
-    const upper = props.premiums.qs + 2 * props.premiums.prem
-    const lower = props.premiums.qs - 2 * props.premiums.prem
-    if (upper > maxp) maxp = upper
-    if (lower < minp) minp = lower
-    */
-      
-  } else {
-      
-    if (props.dialog.showinline) {
-      layout.width = layout.chartwidth * 0.5
-      layout.info_left = layout.width
-      layout.info_width = layout.chart_mp_left - layout.info_left
-    } else {
-      layout.width = layout.chartwidth * 0.75
-    }
-      
-    layout.chart_mp_left = layout.chartwidth * 0.75
-    layout.chart_mp_width = 10
-    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
-    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
-    
-    if (props.dialog.showinline) {
-      // check quote heights
-      var spot = props.premiums.indicatedSpot
-      calls = props.orderbook.calls.quotes.map(quote => {
-        const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
-        if (top > maxp) maxp = top
-        return quote
-      })
-      puts = props.orderbook.puts.quotes.map(quote => {
-        const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
-        if (bottom < minp) minp = bottom
-        return quote
-      })
-    }
-  }
-  
-  //if (randomWalk.length === 0) {
-    //generateRW()
-  //}
-  
-  var height = maxp - minp
-  if (height === 0) height = 1
-  minp = minp - height * .05
-  maxp = maxp + height * .05
-  
-  return true
-}
-
 export const chartCursorPos = function(qty, spot, prem, newspot) {
   if (typeof spot === 'string') spot = parseFloat(spot)
   if (typeof prem === 'string') prem = parseFloat(prem)
@@ -293,7 +173,7 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
     if (iscall) {
       const cp = parseFloat(spot) + price
       const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
-      costamt.innerHTML = Math.round10(qty * price, -4) + " " + tokenType
+      costamt.innerHTML = Math.round10(qty * price, -6) + " " + tokenType
       const textProps = costamt.getBoundingClientRect()
       if (cx + textProps.width / 2 > layout.chartwidth) {
         costamt.setAttribute('x', cx - textProps.width - 5)
@@ -306,7 +186,7 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
     } else {
       const pp = parseFloat(spot - price)
       const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
-      costamt.innerHTML = Math.round10(qty * price, -4) + " " + tokenType
+      costamt.innerHTML = Math.round10(qty * price, -6) + " " + tokenType
       const textProps = costamt.getBoundingClientRect()
       if (cx + textProps.width / 2 > layout.chartwidth) {
         costamt.setAttribute('x', cx - textProps.width - 5)
@@ -317,6 +197,73 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
       }
       costamt.setAttribute('y', py + 14)
     }
+  }
+  const reward2x = document.getElementById('2x')
+  if (reward2x) {
+    if (iscall) {
+      const cp = parseFloat(spot) + 2 * price
+      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
+      reward2x.setAttribute('x', cx - 8)
+      reward2x.setAttribute('y', cy)
+    } else {
+      const pp = parseFloat(spot) - 2 * price
+      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
+      reward2x.setAttribute('x', cx - 8)
+      reward2x.setAttribute('y', py)
+    }
+  }
+  const reward3x = document.getElementById('3x')
+  if (reward3x) {
+    if (iscall) {
+      const cp = parseFloat(spot) + 3 * price
+      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
+      reward3x.setAttribute('x', cx - 8)
+      reward3x.setAttribute('y', cy)
+    } else {
+      const pp = parseFloat(spot) - 3 * price
+      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
+      reward3x.setAttribute('x', cx - 8)
+      reward3x.setAttribute('y', py)
+    }
+  }
+  const reward4x = document.getElementById('4x')
+  if (reward4x) {
+    if (iscall) {
+      const cp = parseFloat(spot) + 4 * price
+      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
+      reward4x.setAttribute('x', cx - 8)
+      reward4x.setAttribute('y', cy)
+    } else {
+      const pp = parseFloat(spot) - 4 * price
+      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
+      reward4x.setAttribute('x', cx - 8)
+      reward4x.setAttribute('y', py)
+    }
+  }
+  const avgprem = document.getElementById('avg-prem')
+  if (avgprem) {
+    avgprem.innerHTML = Math.round10(price, -4)
+  }
+  const buycost = document.getElementById('buy-cost')
+  if (buycost) {
+    buycost.innerHTML = Math.round10(qty * price, -6) + " " + tokenType
+  }
+  const ordercall = document.getElementById('ordercall')
+  if (ordercall) {
+    const sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
+    const top = spot + price
+    var y2 = layout.height - layout.height * (top - minp) / (maxp - minp)
+    ordercall.setAttribute('y', y2)
+    ordercall.setAttribute('height', sy - y2)
+    //var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={y2} 
+  }
+  const orderput = document.getElementById('orderput')
+  if (orderput) {
+    const sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
+    const bottom = spot - price
+    y2 = layout.height - layout.height * (bottom - minp) / (maxp - minp)
+    orderput.setAttribute('y', sy)
+    orderput.setAttribute('height', y2 - sy)
   }
   info_cost = qty * price
   info_qty = qty
@@ -339,6 +286,111 @@ const generateRW = () => {
     }
     randomWalk.push(0)
   }
+}
+
+const initDynamicView = props => {
+  // HACK - gotta save token type into hacky variable because innerHTML can't
+  // contain a <span>
+  tokenType = props.token
+  
+  // get layout
+  const elem = document.getElementById('chart')
+  if (elem === null) return false
+  const bounds = elem.getBoundingClientRect()
+  layout.chartwidth = bounds.width
+  layout.height = bounds.height
+  layout.info_left = 0
+  layout.info_width = 0
+  
+  const view = props.view
+  minp = view.minp
+  maxp = view.maxp
+  
+  if (props.mousestate === MOUSESTATE_NONE) {
+      
+    layout.width = layout.chartwidth * 0.75
+    layout.chart_mp_left = layout.width
+    layout.chart_mp_width = 10
+    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+    
+    calls = props.orderbook.calls.quotes
+    puts = props.orderbook.puts.quotes
+      
+  } else if (props.mousestate === MOUSESTATE_QUOTE) {
+      
+    if (props.dialog.showinline) {
+      layout.width = layout.chartwidth * 0.5
+      layout.info_left = layout.width + 10
+      layout.info_width = layout.chart_ob_left - layout.info_left
+      
+      const qcspot = document.getElementById('qcspot')
+      var textProps = qcspot.getBoundingClientRect()
+      qcspot.setAttribute('x', layout.width - textProps.width-10)
+      
+      const posprem = document.getElementById('posprem')
+      textProps = posprem.getBoundingClientRect()
+      posprem.setAttribute('x', layout.width - textProps.width-10)
+      
+      const negprem = document.getElementById('negprem')
+      textProps = negprem.getBoundingClientRect()
+      negprem.setAttribute('x', layout.width - textProps.width-10)
+    } else {
+      layout.width = layout.chartwidth * 0.75
+    }
+      
+    layout.chart_mp_left = layout.width
+    layout.chart_mp_width = 10
+    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+    
+    // check quote heights
+    var spot = props.premiums.indicatedSpot
+    calls = props.orderbook.calls.quotes.map(quote => {
+      const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
+      if (top > maxp) maxp = top
+      return quote
+    })
+    puts = props.orderbook.puts.quotes.map(quote => {
+      const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
+      if (bottom < minp) minp = bottom
+      return quote
+    })
+    
+  } else {
+      
+    if (props.dialog.showinline) {
+      layout.width = layout.chartwidth * 0.5
+      layout.info_left = layout.width
+      layout.info_width = layout.chart_mp_left - layout.info_left
+    } else {
+      layout.width = layout.chartwidth * 0.75
+    }
+      
+    layout.chart_mp_left = layout.chartwidth * 0.75
+    layout.chart_mp_width = 10
+    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+    
+    var spot = props.premiums.indicatedSpot
+    calls = props.orderbook.calls.quotes.map(quote => {
+      const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
+      if (top > maxp) maxp = top
+      return quote
+    })
+    puts = props.orderbook.puts.quotes.map(quote => {
+      const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
+      if (bottom < minp) minp = bottom
+      return quote
+    })
+  }
+  
+  var height = maxp - minp
+  if (height === 0) height = 1
+  minp = minp - height * .05
+  maxp = maxp + height * .05
+  
+  return true
 }
 
 const buildBackground = props => {
@@ -415,8 +467,7 @@ const buildBackground = props => {
     if (props.mousestate === MOUSESTATE_PUT) {
       props.orderbook.setBuyPremium(qty, false)
     }
-    orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], parseFloat(props.spot), y <= sy, y <= sy ? callprice : putprice, 
-      maxp, minp)
+    orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], props.spot, y <= sy, y <= sy ? callprice : putprice)
   }
   
   const obMouseClick = event => {
@@ -667,16 +718,29 @@ const buildInfoOverlay = props => {
       return tmp
     })
     
-    const ret = (settle_price-strike_price)*info_qty
+    if (props.mousestate === MOUSESTATE_CALL) {
+      if (settle_price > strike_price) {
+        var ret = (settle_price - strike_price) * info_qty
+      } else {
+        ret = 0
+      }
+    } else if (props.mousestate === MOUSESTATE_PUT) {
+      if (strike_price > settle_price) {
+        ret = (strike_price - settle_price) * info_qty
+      } else {
+        ret = 0
+      }
+    }
     return <g id="info">
       <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
       {info}
       <line className="spot" x1={movx+RANDOM_INC} x2={layout.info_left + layout.info_width} y1={movy} y2={movy}/>
       <text id="infostrike" x={layout.info_left+25} y={tmpy1}>strike={Math.round10(strike_price,-2)}</text>
       <text id="infosettle" x={layout.info_left+layout.info_width-125} y={tmpy2}>settle={Math.round10(settle_price,-2)}</text>
-      <text id="infocost" x={layout.info_left+5} y={20}>Cost={Math.round10(info_cost,-2)}</text>
-      <text id="inforeturn" x={layout.info_left+5} y={40}>Payout={Math.round10(ret,-2)}</text>
-      <text id="infoprofit" x={layout.info_left+5} y={60}>Net Profit={Math.round10(ret-info_cost,-2)}</text>
+      <text id="infocost" x={layout.info_left+100} y={20}>Outcome Projector</text>
+      <text id="infocost" x={layout.info_left+5} y={50}>Position Cost = {Math.round10(info_cost,-2)} {tokenType}</text>
+      <text id="inforeturn" x={layout.info_left+5} y={70}>Projected Payout = {Math.round10(ret,-2)} {tokenType}</text>
+      <text id="infoprofit" x={layout.info_left+5} y={90}>Net Profit = {Math.round10(ret-info_cost,-2)} {tokenType}</text>
     </g>
   }
   return <g id="info"></g>
@@ -750,6 +814,9 @@ const buildForeground = props => {
       <text id="leftamt" className="ordertip" x={0} y={0}></text>
       <text id="rightamt" className="ordertip" x={0} y={0}></text>
       <text id="costamt" className="ordertip" x={0} y={0}></text>
+      <text id="2x" className="reward" x={0} y={0}>2x</text>
+      <text id="3x" className="reward" x={0} y={0}>3x</text>
+      <text id="4x" className="reward" x={0} y={0}>4x</text>
     </g>
   }
   return ret
@@ -798,8 +865,6 @@ const buildOrderbookPremiums = props => {
       var y2 = layout.height - layout.height * (top - minp) / (maxp - minp)
       var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={y2} 
         width={layout.chart_mp_width} height={sy-y2}/>
-      //var call = <rect id="ordercall" className="premcall" x={layout.chart_mp_left} y={0} 
-        //width={layout.chart_mp_width} height={y2}/>
     }
     // Put
     if (props.mousestate === MOUSESTATE_PUT && isNumber(premiums.indicatedPutPremium)) {
@@ -807,8 +872,6 @@ const buildOrderbookPremiums = props => {
       y2 = layout.height - layout.height * (bottom - minp) / (maxp - minp)
       var put = <rect id="orderput" className="premput" x={layout.chart_mp_left} y={sy} 
         width={layout.chart_mp_width} height={y2-sy}/>
-      //var put = <rect id="orderput" className="premput" x={layout.chart_mp_left} y={y2} 
-        //width={layout.chart_mp_width} height={layout.height-y2}/>
     }
     return <g id="selprem">
       {call}
