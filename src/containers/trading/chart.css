@@ -157,14 +157,47 @@ svg#chart circle.put {
   pointer-events: auto;
 }
 
+#costamt.call {
+  fill: #0f0;
+}
+
+#costamt.put {
+  fill: #f00;
+}
+
 #infoback {
-  fill: #379;
+  fill: #135; 
+}
+
+#infocost.call {
+  fill: #0f0;
+}
+
+#infocost.put {
+  fill: #f00;
+}
+
+#inforeturn {
+  stroke: #b2e;
+}
+
+#infoprofit {
+  font-size: 20px;
 }
 
 #info line.spot {
   stroke: #ffc;
-  stroke-dasharray: 2,4;
+  stroke-dasharray: 1,1; 
   stroke-width: 2px !important;
+}
+
+#strikeline {
+  stroke-dasharray: 1,1;
+}
+
+#settleline {
+  stroke-dasharray: 1,1;
+  stroke: #b2e;
 }
 
 #info text {

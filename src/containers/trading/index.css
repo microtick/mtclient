@@ -25,6 +25,7 @@ h4 {
 #div-active {
   background: #3ae;
   color: #fff;
+  margin-top: 10px;
   padding: 10px;
   font-size: 14px;
 }
