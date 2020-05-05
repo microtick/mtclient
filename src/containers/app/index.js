@@ -207,7 +207,7 @@ const App = props => {
     if (not.type === 'error') {
       var message = not.msg
       if (props.token === "mt") {
-        if (not.msg.includes("Insufficient funds") || 
+        if (not.msg.includes("insufficient funds") || 
             not.msg.includes("insufficient account funds") ||
             not.msg.includes("No such address")) {
           message = "Insufficient account funds"
