@@ -157,6 +157,19 @@ svg#chart circle.put {
   pointer-events: auto;
 }
 
+#infoback {
+  fill: #379;
+}
+
+#info line.spot {
+  stroke-dasharray: 2,4;
+  stroke-width: 2px !important;
+}
+
+#info text {
+  fill: #fff;
+}
+
 #orderbook rect.quote15 {
   fill: #2264a3;
 }

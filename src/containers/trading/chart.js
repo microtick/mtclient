@@ -1,7 +1,7 @@
 import React from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { mouseState } from '../../modules/microtick'
+import { mouseState, mouseMoveTrigger } from '../../modules/microtick'
 import { buyCallDialog, buyPutDialog, placeQuoteDialog } from '../../modules/dialog'
 
 // css
@@ -36,7 +36,12 @@ var maxp = 0
 var calls
 var puts
 var dynamicWeight = 0
+
 var randomWalk = []
+const RANDOM_INC = 10 
+const RANDOM_HEIGHT = 0.01
+
+const QUOTE_SCALE = 4
 
 const MOUSESTATE_NONE = 0
 const MOUSESTATE_QUOTE = 1
@@ -49,6 +54,14 @@ const isNumber = n => {
 
 var tokenType = ""
 
+// Standard Normal variate using Box-Muller transform.
+const randn_bm = () => {
+  var u = 0, v = 0
+  while (u === 0) u = Math.random() // Converting [0,1) to (0,1)
+  while (v === 0) v = Math.random()
+  return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v )
+}
+
 const initDynamicView = props => {
   // HACK - gotta save token type into hacky variable because innerHTML can't
   // contain a <span>
@@ -60,6 +73,8 @@ const initDynamicView = props => {
   const bounds = elem.getBoundingClientRect()
   layout.chartwidth = bounds.width
   layout.height = bounds.height
+  layout.info_left = 0
+  layout.info_width = 0
   
   const view = props.view
   minp = view.minp
@@ -78,44 +93,86 @@ const initDynamicView = props => {
       
   } else if (props.mousestate === MOUSESTATE_QUOTE) {
       
-    layout.width = layout.chartwidth * 0.5
+    if (props.dialog.showinline) {
+      layout.width = layout.chartwidth * 0.5
+      layout.info_left = layout.width + 10
+      layout.info_width = layout.chart_ob_left - layout.info_left
+      
+      const qcspot = document.getElementById('qcspot')
+      var textProps = qcspot.getBoundingClientRect()
+      qcspot.setAttribute('x', layout.width - textProps.width-10)
+      
+      const posprem = document.getElementById('posprem')
+      textProps = posprem.getBoundingClientRect()
+      posprem.setAttribute('x', layout.width - textProps.width-10)
+      
+      const negprem = document.getElementById('negprem')
+      textProps = negprem.getBoundingClientRect()
+      negprem.setAttribute('x', layout.width - textProps.width-10)
+    } else {
+      layout.width = layout.chartwidth * 0.75
+    }
+      
     layout.chart_mp_left = layout.width
     layout.chart_mp_width = 10
     layout.chart_ob_left = layout.chartwidth * 0.75 + 10
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
-      
+    
     // check quote heights
     var spot = props.premiums.indicatedSpot
     calls = props.orderbook.calls.quotes.map(quote => {
-      const top = spot + quote.premium - (spot - props.spot) / 2
+      const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
       if (top > maxp) maxp = top
       return quote
     })
     puts = props.orderbook.puts.quotes.map(quote => {
-      const bottom = spot - quote.premium  - (spot - props.spot) / 2
+      const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
       if (bottom < minp) minp = bottom
       return quote
     })
+    
+    /*
     // check top / bottom quote premiums
-    const upper = props.premiums.qs + props.premiums.prem
-    const lower = props.premiums.qs - props.premiums.prem
+    const upper = props.premiums.qs + 2 * props.premiums.prem
+    const lower = props.premiums.qs - 2 * props.premiums.prem
     if (upper > maxp) maxp = upper
     if (lower < minp) minp = lower
-    layout.calcX = x => {
-      return 
-    }
+    */
       
   } else {
       
-    layout.width = layout.chartwidth * 0.5
+    if (props.dialog.showinline) {
+      layout.width = layout.chartwidth * 0.5
+      layout.info_left = layout.width
+      layout.info_width = layout.chart_mp_left - layout.info_left
+    } else {
+      layout.width = layout.chartwidth * 0.75
+    }
+      
     layout.chart_mp_left = layout.chartwidth * 0.75
     layout.chart_mp_width = 10
     layout.chart_ob_left = layout.chartwidth * 0.75 + 10
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
-      
-    calls = props.orderbook.calls.quotes
-    puts = props.orderbook.puts.quotes
+    
+    if (props.dialog.showinline) {
+      // check quote heights
+      var spot = props.premiums.indicatedSpot
+      calls = props.orderbook.calls.quotes.map(quote => {
+        const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
+        if (top > maxp) maxp = top
+        return quote
+      })
+      puts = props.orderbook.puts.quotes.map(quote => {
+        const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
+        if (bottom < minp) minp = bottom
+        return quote
+      })
+    }
   }
+  
+  //if (randomWalk.length === 0) {
+    //generateRW()
+  //}
   
   var height = maxp - minp
   if (height === 0) height = 1
@@ -261,6 +318,27 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
       costamt.setAttribute('y', py + 14)
     }
   }
+  info_cost = qty * price
+  info_qty = qty
+}
+
+const generateRW = () => {
+  // Generate random walk
+  const steps = Math.floor(layout.info_width / RANDOM_INC)
+  if (steps > 2) {
+    randomWalk = []
+    var last = 0
+    for (var i=0; i<steps-1; i++) {
+      last = last + Math.floor(randn_bm() * layout.height * RANDOM_HEIGHT)
+      randomWalk.push(last)
+    }
+    const delta = randomWalk[randomWalk.length-1] - randomWalk[0]
+    for (i=0; i<randomWalk.length; i++) {
+      const adjust = delta * i / randomWalk.length
+      randomWalk[i] = randomWalk[i] - adjust
+    }
+    randomWalk.push(0)
+  }
 }
 
 const buildBackground = props => {
@@ -281,8 +359,8 @@ const buildBackground = props => {
     const wt = isNaN(props.orderbook.totalWeight[props.dur]) ? 0 : props.orderbook.totalWeight[props.dur]
     const partialprem = wt === 0 ? 0 : back / (props.constants.LEVERAGE * wt)      
     
-    if (prem > partialprem * 2) {
-      prem = partialprem * 2
+    if (prem > partialprem * QUOTE_SCALE) {
+      prem = partialprem * QUOTE_SCALE 
     }
     
     const qty = backing / (props.constants.LEVERAGE * prem)
@@ -317,6 +395,11 @@ const buildBackground = props => {
     chartCursorPos(qty, price, prem, newspot, minp)
   }
   
+  const chMouseClick = event => {
+    if (props.dialog.showinline) return
+    props.placeQuoteDialog()
+  }
+  
   const obMouseMove = event => {
     var bounds = event.target.getBoundingClientRect()
     var x = event.clientX - bounds.left 
@@ -334,11 +417,6 @@ const buildBackground = props => {
     }
     orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], parseFloat(props.spot), y <= sy, y <= sy ? callprice : putprice, 
       maxp, minp)
-  }
-  
-  const chMouseClick = event => {
-    if (props.dialog.showinline) return
-    props.placeQuoteDialog()
   }
   
   const obMouseClick = event => {
@@ -379,11 +457,17 @@ const buildBackground = props => {
   }
   
   const mouseMove = event => {
-    if (props.dialog.showinline) return
-    
     const bounds = event.target.getBoundingClientRect()
     const x = event.clientX - bounds.left
     const y = event.clientY - bounds.top
+    
+    if (props.dialog.showinline) {
+      if (x >= layout.info_left && x < layout.info_left + layout.info_width) {
+        //generateRW()
+        mouseMoveTrigger(y)
+      }
+      return
+    }
     
     if (x <= layout.width) {
       props.mouseState(MOUSESTATE_QUOTE)
@@ -403,9 +487,13 @@ const buildBackground = props => {
       obMouseMove(event)
     }
   }
+  
   const mouseClick = event => {
-    if (props.dialog.showinline) return
-    props.placeQuoteDialog()
+    if (props.mousestate === MOUSESTATE_QUOTE) {
+      chMouseClick(event)
+    } else {
+      obMouseClick(event)
+    }
   }
   
   return <g>
@@ -495,6 +583,9 @@ const buildPriceGrid = props => {
   </g>
 }
 
+// use to propagate to info window
+var lasty
+
 const buildPriceOverlay = props => {
   const view = props.view
   const data = props.data
@@ -510,7 +601,7 @@ const buildPriceOverlay = props => {
     })
     var curx = 0
     if (data.length > 0) {
-      var lasty = layout.height - layout.height * (data[0].value - minp) / (maxp - minp)
+      lasty = layout.height - layout.height * (data[0].value - minp) / (maxp - minp)
     } else {
       lasty = layout.height - layout.height * (props.spot - minp) / (maxp - minp)
     }
@@ -519,8 +610,8 @@ const buildPriceOverlay = props => {
       //const x = width * (p.block - view.minb) / (view.maxb - view.minb)
       const y = layout.height - layout.height * (p.value - minp) / (maxp - minp)
       const linegr = <g key={i}>
-        <line className="spot" key={0} x1={curx} x2={x} y1={lasty} y2={lasty}/>
-        <line className="spot" key={1} x1={x} x2={x} y1={lasty} y2={y}/>
+        <line className="spot" x1={curx} x2={x} y1={lasty} y2={lasty}/>
+        <line className="spot"  x1={x} x2={x} y1={lasty} y2={y}/>
       </g>
       curx = x
       lasty = y
@@ -536,6 +627,59 @@ const buildPriceOverlay = props => {
       </g>
     </g>
   } 
+}
+
+var info_cost
+var info_qty
+
+const buildInfoOverlay = props => {
+  var movx = 0
+  var movy = 0
+  if (layout.info_width > 0) {
+    generateRW()
+    
+    movx = layout.info_left
+    if (props.mousestate === MOUSESTATE_QUOTE) {
+      var spot = props.premiums.indicatedSpot
+      if (!isNumber(spot)) spot = props.spot
+      var tmpy1 = layout.height - layout.height * (spot - minp) / (maxp - minp)
+    } else {
+      tmpy1 = lasty
+    }
+    const strike_price = minp - (tmpy1 - layout.height) * (maxp - minp) / layout.height
+    if (props.dialog.showinline && props.mousemove !== undefined) {
+      var tmpy2 = props.mousemove
+    } else {
+      tmpy2 = tmpy1
+    }
+    const settle_price = minp - (tmpy2 - layout.height) * (maxp - minp) / layout.height
+    movy = tmpy1
+    
+    var info = randomWalk.map((r, i) => {
+      const x = layout.info_left + i * RANDOM_INC
+      const y = r + tmpy1 + (tmpy2 - tmpy1) * (x - layout.info_left) / layout.info_width 
+      const tmp = <g key={i}>
+        <line className="spot" x1={x} x2={x+RANDOM_INC} y1={movy} y2={movy}/>
+        <line className="spot" x1={x+RANDOM_INC} x2={x+RANDOM_INC} y1={movy} y2={y}/>
+      </g>
+      movx = x
+      movy = y
+      return tmp
+    })
+    
+    const ret = (settle_price-strike_price)*info_qty
+    return <g id="info">
+      <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
+      {info}
+      <line className="spot" x1={movx+RANDOM_INC} x2={layout.info_left + layout.info_width} y1={movy} y2={movy}/>
+      <text id="infostrike" x={layout.info_left+25} y={tmpy1}>strike={Math.round10(strike_price,-2)}</text>
+      <text id="infosettle" x={layout.info_left+layout.info_width-125} y={tmpy2}>settle={Math.round10(settle_price,-2)}</text>
+      <text id="infocost" x={layout.info_left+5} y={20}>Cost={Math.round10(info_cost,-2)}</text>
+      <text id="inforeturn" x={layout.info_left+5} y={40}>Payout={Math.round10(ret,-2)}</text>
+      <text id="infoprofit" x={layout.info_left+5} y={60}>Net Profit={Math.round10(ret-info_cost,-2)}</text>
+    </g>
+  }
+  return <g id="info"></g>
 }
 
 const buildTradesOverlay = props => {
@@ -617,17 +761,15 @@ const buildOrderbookSpot = props => {
   const right = layout.chart_mp_left + layout.chart_mp_width
   if (props.premiums) {
     if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
-      var spot = parseFloat(props.spot)
-      var yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
       return <g id="spotpointer">
         <line x1={layout.chart_mp_left} y1={sy} x2={right} y2={sy}/>
         <line x1={right} y1={sy} x2={right-3} y2={sy+3}/>
         <line x1={right} y1={sy} x2={right-3} y2={sy-3}/>
       </g>
     } else {
-      spot = props.premiums.indicatedSpot
+      var spot = props.premiums.indicatedSpot
       if (!isNumber(spot)) spot = props.spot
-      yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
+      const yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
       return <g id="spotpointer">
         <line x1={layout.chart_mp_left} x2={mid} y1={sy} y2={sy}/>
         <line x1={mid} y1={yspot} x2={mid} y2={sy}/>
@@ -775,6 +917,7 @@ class Chart extends React.Component {
       const pricegrid = buildPriceGrid(props)
       //console.log("build price overlay")
       const data = buildPriceOverlay(props)
+      const info = buildInfoOverlay(props)
       //console.log("build trades overlay")
       const trades = buildTradesOverlay(props)
       //console.log("build orderbook spot")
@@ -793,6 +936,7 @@ class Chart extends React.Component {
             {pricegrid}
             {trades}
             {data}
+            {info}
             {prems}
             {orderbook}
             {spot}
@@ -830,6 +974,7 @@ const mapStateToProps = state => ({
   trades: state.microtick.trade.list,
   quote: state.microtick.quote,
   mousestate: state.microtick.chart.mouseState,
+  mousemove: state.microtick.chart.mouseMove,
   dialog: state.dialog
 })
 

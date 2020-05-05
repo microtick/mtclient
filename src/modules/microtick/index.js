@@ -44,6 +44,7 @@ const QUOTELIST = 'microtick/quote/list'
 const TRADELIST = 'microtick/trade/list'
 const QUOTEPARAMS= 'microtick/quote/params'
 const MOUSESTATE = 'microtick/update'
+const MOUSEMOVE = 'microtick/mousemove'
 const DONELOADING = 'microtick/loading'
 const SENDTOKENS = "dialog/sendtokens"
 const SHIFTSTART = 'shift/start'
@@ -601,6 +602,14 @@ export default (state = initialState, action) => {
         chart: {
           ...state.chart,
           mouseState: action.mouseState
+        }
+      }
+    case MOUSEMOVE:
+      return {
+        ...state,
+        chart: {
+          ...state.chart,
+          mouseMove: action.mouseMove
         }
       }
     default:
@@ -1251,6 +1260,13 @@ export const mouseState = mouseState => {
       mouseState: mouseState
     })
   }
+}
+
+export const mouseMoveTrigger = mouseMove => {
+  store.dispatch({
+    type: MOUSEMOVE,
+    mouseMove: mouseMove
+  })
 }
 
 export const settleTrade = async (dispatch, id) => {
