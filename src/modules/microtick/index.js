@@ -1111,7 +1111,7 @@ export const changeBacking = event => {
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
-    const qty = globals.quote.backing / 10 * globals.quote.premium
+    const qty = globals.quote.backing / (10 * globals.quote.premium)
     chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
@@ -1127,7 +1127,7 @@ export const changeSpot = event => {
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
-    const qty = globals.quote.backing / 10 * globals.quote.premium
+    const qty = globals.quote.backing / (10 * globals.quote.premium)
     chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
@@ -1141,7 +1141,7 @@ export const changePremium = event => {
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
-    const qty = globals.quote.backing / 10 * globals.quote.premium
+    const qty = globals.quote.backing / (10 * globals.quote.premium)
     chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }

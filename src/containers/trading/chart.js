@@ -38,15 +38,16 @@ var calls
 var puts
 var dynamicWeight = 0
 var mouseEnabled = {
+  chart: false,
   info: true,
-  orderbook: true
+  orderbook: false
 }
 
 var randomWalk = []
-const RANDOM_INC = 10 
-const RANDOM_HEIGHT = 0.01
+const RANDOM_HEIGHT = 0.02
+const RANDOM_TICKS = 30 
 
-const QUOTE_SCALE = 4
+const QUOTE_SCALE = 5
 
 const MOUSESTATE_NONE = 0
 const MOUSESTATE_QUOTE = 1
@@ -71,6 +72,10 @@ export const chartCursorPos = function(qty, spot, prem, newspot) {
   if (typeof spot === 'string') spot = parseFloat(spot)
   if (typeof prem === 'string') prem = parseFloat(prem)
   if (typeof newspot === 'string') newspot = parseFloat(newspot)
+  info_qqty = qty
+  info_qspot = spot
+  info_qprem = prem
+  info_newspot = newspot
   const y = layout.height - (spot - minp) * layout.height / (maxp - minp)
   const delta = prem * layout.height / (maxp - minp)
   const qc = document.getElementById('quotecursor')
@@ -219,6 +224,20 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
       }
     }
   })
+  // update visualizer
+  const infocostamt = document.getElementById('infocostamt')
+  if (infocostamt) {
+    infocostamt.innerHTML = "-" + Math.round10(qty * price, -2) + " " + tokenType
+  }
+  const infopremamt = document.getElementById('infopremamt') 
+  if (infopremamt) {
+    infopremamt.innerHTML = Math.round10(price, -2)
+  }
+  const infoqtyamt = document.getElementById('infoqtyamt')
+  if (infoqtyamt) {
+    infoqtyamt.innerHTML = "x " + Math.round10(qty, -2)
+  }
+  // update dialog
   const avgprem = document.getElementById('avg-prem')
   if (avgprem) {
     avgprem.innerHTML = Math.round10(price, -4)
@@ -246,25 +265,23 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
   }
   info_cost = qty * price
   info_qty = qty
+  info_prem = price
 }
 
 const generateRW = () => {
   // Generate random walk
-  const steps = Math.floor(layout.info_width / RANDOM_INC)
-  if (steps > 2) {
-    randomWalk = []
-    var last = 0
-    for (var i=0; i<steps-1; i++) {
-      last = last + Math.floor(randn_bm() * layout.height * RANDOM_HEIGHT)
-      randomWalk.push(last)
-    }
-    const delta = randomWalk[randomWalk.length-1] - randomWalk[0]
-    for (i=0; i<randomWalk.length; i++) {
-      const adjust = delta * i / randomWalk.length
-      randomWalk[i] = randomWalk[i] - adjust
-    }
-    randomWalk.push(0)
+  randomWalk = []
+  var last = 0
+  for (var i=0; i<RANDOM_TICKS-1; i++) {
+    last = last + Math.floor(randn_bm() * layout.height * RANDOM_HEIGHT)
+    randomWalk.push(last)
   }
+  const delta = randomWalk[randomWalk.length-1] - randomWalk[0]
+  for (i=0; i<randomWalk.length; i++) {
+    const adjust = delta * i / randomWalk.length
+    randomWalk[i] = randomWalk[i] - adjust
+  }
+  randomWalk.push(0)
 }
 
 const initDynamicView = props => {
@@ -289,8 +306,8 @@ const initDynamicView = props => {
       
     layout.width = layout.chartwidth * 0.75
     layout.chart_mp_left = layout.width
-    layout.chart_mp_width = 10
-    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_mp_width = 0
+    layout.chart_ob_left = layout.chartwidth * 0.75
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
     
     calls = props.orderbook.calls.quotes
@@ -300,8 +317,6 @@ const initDynamicView = props => {
       
     if (props.dialog.showinline) {
       layout.width = layout.chartwidth * 0.5
-      layout.info_left = layout.width + 10
-      layout.info_width = layout.chart_ob_left - layout.info_left
       
       const qcspot = document.getElementById('qcspot')
       var textProps = qcspot.getBoundingClientRect()
@@ -315,13 +330,15 @@ const initDynamicView = props => {
       textProps = negprem.getBoundingClientRect()
       negprem.setAttribute('x', layout.width - textProps.width-10)
     } else {
-      layout.width = layout.chartwidth * 0.75
+      layout.width = layout.chartwidth * 0.75 - 10
     }
       
     layout.chart_mp_left = layout.width
-    layout.chart_mp_width = 0
+    layout.chart_mp_width = 10
     layout.chart_ob_left = layout.chartwidth * 0.75
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+    layout.info_left = layout.chart_mp_left + layout.chart_mp_width
+    layout.info_width = layout.chart_ob_left - layout.info_left
     
     // check quote heights
     var spot = props.premiums.indicatedSpot
@@ -353,23 +370,36 @@ const initDynamicView = props => {
     
     spot = props.premiums.indicatedSpot
     
-    if (props.dialog.showinline && props.mousestate === MOUSESTATE_CALL) {
-      calls = props.orderbook.calls.quotes.map(quote => {
-        const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
-        if (top > maxp) maxp = top
-        return quote
-      })
+    if (props.dialog.showinline) {
+      const reserve = 0.4
+      if (props.mousestate === MOUSESTATE_CALL) {
+        calls = props.orderbook.calls.quotes.map(quote => {
+          const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
+          if (top > maxp) maxp = top
+          return quote
+        })
+        puts = props.orderbook.puts.quotes
+        
+        // reserve 40% screen below spot for text
+        if (props.spot - minp < (maxp - minp) * reserve) {
+          minp = props.spot - (maxp - props.spot) * reserve / (1-reserve)
+        }
+      }
+      if (props.mousestate === MOUSESTATE_PUT) {
+        calls = props.orderbook.calls.quotes
+        puts = props.orderbook.puts.quotes.map(quote => {
+          const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
+          if (bottom < minp) minp = bottom
+          return quote
+        })
+        
+        // reserve 40% screen above spot for text
+        if (maxp - props.spot < (maxp - minp) * reserve) {
+          maxp = props.spot + (props.spot - minp) * reserve / (1-reserve)
+        }
+      }
     } else {
       calls = props.orderbook.calls.quotes
-    }
-    
-    if (props.dialog.showinline && props.mousestate === MOUSESTATE_PUT) {
-      puts = props.orderbook.puts.quotes.map(quote => {
-        const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
-        if (bottom < minp) minp = bottom
-        return quote
-      })
-    } else {
       puts = props.orderbook.puts.quotes
     }
   }
@@ -389,7 +419,7 @@ const buildBackground = props => {
     var bounds = event.target.getBoundingClientRect()
     var x = event.clientX - bounds.left 
     if (x > layout.width) x = layout.width
-    var delta = (layout.width - x + 2)
+    var delta = ((layout.width - x) / 4 + 2)
     var y = event.clientY - bounds.top
     
     const backing = props.quote.backing
@@ -508,8 +538,12 @@ const buildBackground = props => {
           mouseMoveTrigger(y)
         }
       }
-      if (x >= layout.chart_ob_left) {
-        if (mouseEnabled.orderbook) {
+      if (props.mousestate === MOUSESTATE_QUOTE) {
+        if (x <= layout.width && mouseEnabled.chart) {
+          chMouseMove(event)
+        }
+      } else {
+        if (x >= layout.chart_ob_left && mouseEnabled.orderbook) {
           obMouseMove(event)
         }
       }
@@ -536,31 +570,42 @@ const buildBackground = props => {
   }
   
   const mouseClick = event => {
+    if (randomWalk.length === 0) generateRW()
     if (props.dialog.showinline) {
       const bounds = event.target.getBoundingClientRect()
       const x = event.clientX - bounds.left
-      if (x >= layout.info_left && x < layout.info_left+layout.info_width) { 
-        mouseEnabled.info = !mouseEnabled.info
-        //if (mouseEnabled.info) mouseEnabled.orderbook = true
+      if (props.mousestate === MOUSESTATE_QUOTE) {
+        if (x <= layout.width) {
+          mouseEnabled.chart = !mouseEnabled.chart
+        } else if (x >= layout.info_left && x < layout.info_left + layout.info_width) {
+          mouseEnabled.info = !mouseEnabled.info
+        }
         setLock({
+          chart: !mouseEnabled.chart,
           info: !mouseEnabled.info,
-          orderbook: !mouseEnabled.orderbook
+          orderbook: true
         })
-      }
-      if (x >= layout.chart_ob_left) {
-        mouseEnabled.orderbook = !mouseEnabled.orderbook
-        //if (mouseEnabled.orderbook) mouseEnabled.info = true
+      } else {
+        if (x >= layout.info_left && x < layout.info_left + layout.info_width) { 
+          mouseEnabled.info = !mouseEnabled.info
+        }
+        if (x >= layout.chart_ob_left) {
+          mouseEnabled.orderbook = !mouseEnabled.orderbook
+        }
         setLock({
+          chart: true,
           info: !mouseEnabled.info,
           orderbook: !mouseEnabled.orderbook
         })
       }
     } else {
+      mouseEnabled.chart = false
       mouseEnabled.info = true
-      mouseEnabled.orderbook = true
+      mouseEnabled.orderbook = false
       setLock({
-        info: false,
-        orderbook: false
+        chart: !mouseEnabled.chart,
+        info: !mouseEnabled.info,
+        orderbook: !mouseEnabled.orderbook
       })
     }
     if (props.mousestate === MOUSESTATE_QUOTE) {
@@ -705,6 +750,12 @@ const buildPriceOverlay = props => {
 
 var info_cost
 var info_qty
+var info_prem
+
+var info_qspot
+var info_qprem
+var info_qqty
+var info_newspot
 
 const buildInfoOverlay = props => {
   var movx = 0
@@ -728,18 +779,22 @@ const buildInfoOverlay = props => {
     movy = tmpy1
     
     if (randomWalk.length > 2) {
-      var info = randomWalk.map((r, i) => {
-        const x = layout.info_left + i * RANDOM_INC
+      const inc = layout.info_width / randomWalk.length
+      var info = [
+        <line key="mt0" className="spot" x1={layout.info_left} y1={tmpy1} x2={layout.info_left+inc/2} y2={tmpy1}/>
+      ]
+      for (var i=0,x=layout.info_left+inc/2; x+inc<layout.info_left+layout.info_width && i<randomWalk.length; i++,x+=inc) {
+        const r = randomWalk[i]
         const y = r + tmpy1 + (tmpy2 - tmpy1) * (x - layout.info_left) / layout.info_width 
         const tmp = <g key={i}>
           <line className="spot" x1={x} y1={movy} x2={x} y2={y}/>
-          <line className="spot" x1={x} y1={y} x2={x+RANDOM_INC} y2={y}/>
+          <line className="spot" x1={x} y1={y} x2={x+inc} y2={y}/>
         </g>
-        movx = x+RANDOM_INC
+        movx = x + inc
         movy = y
-        return tmp
-      })
-      info.push(<g key={"mt"}>
+        info.push(tmp)
+      }
+      info.push(<g key="mt1">
           <line className="spot" x1={movx} y1={movy} x2={movx} y2={tmpy2}/>
           <line className="spot" x1={movx} y1={tmpy2} x2={layout.info_left + layout.info_width} y2={tmpy2}/>
         </g>
@@ -747,6 +802,25 @@ const buildInfoOverlay = props => {
     }
     
     const info_y2 = layout.info_left + layout.info_width
+    if (props.mousestate === MOUSESTATE_QUOTE) {
+      var priceAsCall = info_qprem - (info_newspot - info_qspot) / 2
+      var priceAsPut = info_qprem + (info_newspot - info_qspot) / 2
+      if (priceAsCall < 0) priceAsCall = 0
+      if (priceAsPut < 0) priceAsPut = 0
+      console.log("quantity=" + info_qqty)
+      var profitAsCall = info_qqty * (priceAsCall - (settle_price - strike_price > 0 ? settle_price - strike_price : 0))
+      var profitAsPut = info_qqty * (priceAsPut - (strike_price - settle_price > 0 ? strike_price - settle_price : 0))
+      var premiumAsCall = priceAsCall * info_qqty
+      var premiumAsPut = priceAsPut * info_qqty
+      if (profitAsCall < -props.quote.backing) profitAsCall = -props.quote.backing
+      if (profitAsPut < -props.quote.backing) profitAsPut = -props.quote.backing
+      console.log("price as call: " + priceAsCall)
+      console.log("price as put: " + priceAsPut)
+      console.log("premium as call: " + premiumAsCall)
+      console.log("premium as put: " + premiumAsPut)
+      console.log("profit as call: " + profitAsCall)
+      console.log("profit as put: " + profitAsPut)
+    }
     if (props.mousestate === MOUSESTATE_CALL) {
       var infoclass = "call"
       if (settle_price > strike_price) {
@@ -755,7 +829,8 @@ const buildInfoOverlay = props => {
         ret = 0
       }
       var payout = <rect className="payout" x={info_y2-10} y={tmpy2} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:0}/>
-    } else if (props.mousestate === MOUSESTATE_PUT) {
+    }
+    if (props.mousestate === MOUSESTATE_PUT) {
       infoclass = "put"
       if (strike_price > settle_price) {
         ret = (strike_price - settle_price) * info_qty
@@ -764,23 +839,132 @@ const buildInfoOverlay = props => {
       }
       payout = <rect className="payout" x={info_y2-10} y={tmpy1} width={10} height={tmpy2>tmpy1?tmpy2-tmpy1:0}/>
     }
-    return <g id="info">
-      <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
-      {payout}
-      {info}
-      <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
-      <line id="settleline" x1={info_y2} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
-      <text id="infotitle" x={layout.info_left+100} y={20}>Outcome Visualizer</text>
-      <text id="infocost" className={infoclass} x={layout.info_left+5} y={70}>Position Cost = {Math.round10(info_cost,-2)} {tokenType}</text>
-      <text id="inforeturn" x={layout.info_left+5} y={90}>Projected Payout = {Math.round10(ret,-2)} {tokenType}</text>
-      <text id="infoprofit" x={layout.info_left+layout.info_width/2-80} y={120}>Net Profit = {Math.round10(ret-info_cost,-2)} {tokenType}</text>
-      <text id="infotime" x={layout.info_left+layout.info_width/2-40} y={layout.height-20}>{commonName[props.dur]} trade</text>
-      <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
-      <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
-      <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
-      <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
-      <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
-    </g>
+    window.requestAnimationFrame(() => {
+      const infotitle = document.getElementById('infotitle')
+      if (infotitle) {
+        var textProps = infotitle.getBoundingClientRect()
+        infotitle.setAttribute('x', layout.info_left + (layout.info_width - textProps.width)/2)
+      }
+      const infotime = document.getElementById('infotime')
+      if (infotime) {
+        textProps = infotime.getBoundingClientRect()
+        infotime.setAttribute('x', layout.info_left + (layout.info_width - textProps.width)/2)
+      }
+      const infoqtyamt = document.getElementById('infoqtyamt')
+      if (infoqtyamt) {
+        textProps = infoqtyamt.getBoundingClientRect()
+        infoqtyamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const infopremamt = document.getElementById('infopremamt')
+      if (infopremamt) {
+        textProps = infopremamt.getBoundingClientRect()
+        infopremamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const infocostamt = document.getElementById('infocostamt')
+      if (infocostamt) {
+        textProps = infocostamt.getBoundingClientRect()
+        infocostamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const inforeturnamt = document.getElementById('inforeturnamt')
+      if (inforeturnamt) {
+        textProps = inforeturnamt.getBoundingClientRect()
+        inforeturnamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const infoprofitamt = document.getElementById('infoprofitamt')
+      if (infoprofitamt) {
+        textProps = infoprofitamt.getBoundingClientRect()
+        infoprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const callpriceamt = document.getElementById('callpriceamt')
+      if (callpriceamt) {
+        textProps = callpriceamt.getBoundingClientRect()
+        callpriceamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const callpremiumamt = document.getElementById('callpremiumamt')
+      if (callpremiumamt) {
+        textProps = callpremiumamt.getBoundingClientRect()
+        callpremiumamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const callprofitamt = document.getElementById('callprofitamt')
+      if (callprofitamt) {
+        textProps = callprofitamt.getBoundingClientRect()
+        callprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const putpriceamt = document.getElementById('putpriceamt')
+      if (putpriceamt) {
+        textProps = putpriceamt.getBoundingClientRect()
+        putpriceamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const putpremiumamt = document.getElementById('putpremiumamt')
+      if (putpremiumamt) {
+        textProps = putpremiumamt.getBoundingClientRect()
+        putpremiumamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const putprofitamt = document.getElementById('putprofitamt')
+      if (putprofitamt) {
+        textProps = putprofitamt.getBoundingClientRect()
+        putprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+    })
+    if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {
+      const starty = props.mousestate === MOUSESTATE_CALL ? layout.height - 140 : 40
+      return <g id="info">
+        <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
+        {payout}
+        {info}
+        <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+        <line id="settleline" x1={info_y2} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+        <text id="infotitle" x={layout.info_left+5} y={20}>Outcome Visualizer</text>
+        <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
+        <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={starty}>{Math.round10(ret,-2)} {tokenType}</text>
+        <text x={layout.info_left+15} y={starty+18}>Avg Premium</text>
+        <text id="infopremamt" x={layout.info_left+5} y={starty+18}>{Math.round10(info_prem,-2)}</text>
+        <text x={layout.info_left+15} y={starty+36}>Quantity</text>
+        <text id="infoqtyamt" x={layout.info_left+5} y={starty+36}>x {Math.round10(info_qty,-2)}</text>
+        <text className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>Position cost</text>
+        <text id="infocostamt" className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>- {Math.round10(info_cost,-2)} {tokenType}</text>
+        <text className="infoprofit" x={layout.info_left+5} y={starty+72}>Projected profit</text>
+        <text id="infoprofitamt" className="infoprofit" x={layout.info_left+5} y={starty+72}>= {Math.round10(ret-info_cost,-2)} {tokenType}</text>
+        <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} duration</text>
+        <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
+        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
+        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
+        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
+        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
+      </g>
+    } else {
+      const startcall = 40
+      const startput = layout.height - 90
+      return <g id="info">
+        <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
+        {payout}
+        {info}
+        <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+        <line id="settleline" x1={info_y2} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+        <text id="infotitle" x={layout.info_left+5} y={20}>Outcome Visualizer</text>
+        
+        <text className="tradecall" x={layout.info_left+5} y={startcall}>Call quote</text>
+        <text id="callpriceamt" className="tradecall" x={layout.info_left+5} y={startcall}>{Math.round10(priceAsCall,-2)}</text>
+        <text className="tradecall" x={layout.info_left+5} y={startcall+18}>Call premium</text>
+        <text id="callpremiumamt" className="tradecall" x={layout.info_left+5} y={startcall+18}>{Math.round10(premiumAsCall,-2)} {tokenType}</text>
+        <text className="tradecall" x={layout.info_left+5} y={startcall+36}>Call profit</text>
+        <text id="callprofitamt" className="tradecall" x={layout.info_left+5} y={startcall+36}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
+        
+        <text className="tradeput" x={layout.info_left+5} y={startput}>Put quote</text>
+        <text id="putpriceamt" className="tradeput" x={layout.info_left+5} y={startput}>{Math.round10(priceAsPut,-2)}</text>
+        <text className="tradeput" x={layout.info_left+5} y={startput+18}>Put premium</text>
+        <text id="putpremiumamt" className="tradeput" x={layout.info_left+18} y={startput+18}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
+        <text className="tradeput" x={layout.info_left+5} y={startput+36}>Put profit</text>
+        <text id="putprofitamt" className="tradeput" x={layout.info_left+36} y={startput+36}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
+        
+        <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} duration</text>
+        <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
+        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
+        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
+        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
+        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
+      </g>
+    }
   }
   return <g id="info"></g>
 }
@@ -877,31 +1061,23 @@ const buildForeground = props => {
   return ret
 }
 
-/*
 const buildOrderbookSpot = props => {
   const sy = layout.height - layout.height * (props.spot - minp) / (maxp - minp)
   const mid = layout.chart_mp_left + layout.chart_mp_width / 2
   const right = layout.chart_mp_left + layout.chart_mp_width
-  if (props.premiums) {
-    if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
-      return <g id="spotpointer">
-        <line x1={layout.chart_mp_left} y1={sy} x2={right} y2={sy}/>
-      </g>
-    } else {
-      var spot = props.premiums.indicatedSpot
-      if (!isNumber(spot)) spot = props.spot
-      const yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
-      return <g id="spotpointer">
-        <line x1={layout.chart_mp_left} x2={mid} y1={sy} y2={sy}/>
-        <line x1={mid} y1={yspot} x2={mid} y2={sy}/>
-        <line x1={mid} y1={yspot} x2={right} y2={yspot}/>
-        <line x1={right} y1={yspot} x2={right-3} y2={yspot-3}/>
-        <line x1={right} y1={yspot} x2={right-3} y2={yspot+3}/>
-      </g>
-    }
+  if (props.premiums && props.mousestate === MOUSESTATE_QUOTE) {
+    var spot = props.premiums.indicatedSpot
+    if (!isNumber(spot)) spot = props.spot
+    const yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
+    return <g id="spotpointer">
+      <line x1={layout.chart_mp_left} x2={mid} y1={sy} y2={sy}/>
+      <line x1={mid} y1={yspot} x2={mid} y2={sy}/>
+      <line x1={mid} y1={yspot} x2={right} y2={yspot}/>
+      <line x1={right} y1={yspot} x2={right-3} y2={yspot-3}/>
+      <line x1={right} y1={yspot} x2={right-3} y2={yspot+3}/>
+    </g>
   }
 }
-*/
 
 const buildOrderbookPremiums = props => {
   const premiums = props.premiums
@@ -1050,7 +1226,7 @@ class Chart extends React.Component {
       //console.log("build trades overlay")
       const trades = buildTradesOverlay(props)
       //console.log("build orderbook spot")
-      //const spot = buildOrderbookSpot(props)
+      const spot = buildOrderbookSpot(props)
       //console.log("build orderbook premiums")
       const prems = buildOrderbookPremiums(props)
       //console.log("build orderbook")
@@ -1058,7 +1234,10 @@ class Chart extends React.Component {
       //console.log("build foreground")
       const foreground = buildForeground(props)
       if (props.dialog.showinline && props.lock !== undefined) {
-        if (props.lock.orderbook) {
+        if (props.mousestate === MOUSESTATE_QUOTE && props.lock.chart) {
+          var chlock = <image href={lock} x={0} y={2} width={16} height={16}/>
+        } 
+        if ((props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) && props.lock.orderbook) {
           var oblock = <image href={lock} x={layout.chart_mp_left} y={2} width={16} height={16}/>
         }
         if (props.lock.info) {
@@ -1072,8 +1251,10 @@ class Chart extends React.Component {
             {oblock}
             {timegrid}
             {pricegrid}
+            {chlock}
             {trades}
             {data}
+            {spot}
             {prems}
             {orderbook}
             {info}

@@ -173,25 +173,34 @@ svg#chart circle.put {
   font-size: 10px;
 }
 
-#infocost.call {
-  fill: #0f0;
+.infocostcall {
+  fill: #0f0 !important;
 }
 
-#infocost.put {
-  fill: #f00;
+.infocostput {
+  fill: #f00 !important;
 }
 
-#inforeturn {
-  stroke: #b2e;
+.inforeturn {
+  fill: #b2e !important;
 }
 
-#infoprofit {
-  font-size: 20px;
+.infoprofit {
+  fill: #ffc !important;
+}
+
+.tradecall {
+  fill: #0f0 !important;
+}
+
+.tradeput {
+  fill: #f00 !important;
 }
 
 #info line.spot {
   stroke: #ffc;
-  stroke-dasharray: 2,2; 
+  stroke-dasharray: 1,1;
+  stroke-opacity: 0.4;
   stroke-width: 2px !important;
 }
 
@@ -205,8 +214,13 @@ svg#chart circle.put {
 }
 
 .futuretime {
+  stroke: #fff !important;
   stroke-dasharray: 1,1;
   stroke-width: 1px;
+}
+
+.futuretimetip {
+  stroke: #fff !important;
 }
 
 .payout {
