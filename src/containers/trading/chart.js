@@ -1,13 +1,14 @@
 import React from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { mouseState, mouseMoveTrigger } from '../../modules/microtick'
+import { mouseState, mouseMoveTrigger, setLock } from '../../modules/microtick'
 import { buyCallDialog, buyPutDialog, placeQuoteDialog } from '../../modules/dialog'
 
 // css
 import './chart.css'
 
 require('./misc.js')
+const lock = require('./lock.png')
 
 const commonName = {
   300: "5 min",
@@ -36,6 +37,10 @@ var maxp = 0
 var calls
 var puts
 var dynamicWeight = 0
+var mouseEnabled = {
+  info: true,
+  orderbook: true
+}
 
 var randomWalk = []
 const RANDOM_INC = 10 
@@ -198,48 +203,22 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
       costamt.setAttribute('y', py + 14)
     }
   }
-  const reward2x = document.getElementById('2x')
-  if (reward2x) {
-    if (iscall) {
-      const cp = parseFloat(spot) + 2 * price
-      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
-      reward2x.setAttribute('x', cx - 8)
-      reward2x.setAttribute('y', cy + 4)
-    } else {
-      const pp = parseFloat(spot) - 2 * price
-      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
-      reward2x.setAttribute('x', cx - 8)
-      reward2x.setAttribute('y', py + 4)
+  [2,3,4,5,6,7,8,9].map(m => {
+    const reward = document.getElementById(m + 'x')
+    if (reward) {
+      if (iscall) {
+        const cp = parseFloat(spot) + m * price
+        const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
+        reward.setAttribute('x', cx - 8)
+        reward.setAttribute('y', cy + 4)
+      } else {
+        const pp = parseFloat(spot) - m * price
+        const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
+        reward.setAttribute('x', cx - 8)
+        reward.setAttribute('y', py + 4)
+      }
     }
-  }
-  const reward3x = document.getElementById('3x')
-  if (reward3x) {
-    if (iscall) {
-      const cp = parseFloat(spot) + 3 * price
-      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
-      reward3x.setAttribute('x', cx - 8)
-      reward3x.setAttribute('y', cy + 4)
-    } else {
-      const pp = parseFloat(spot) - 3 * price
-      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
-      reward3x.setAttribute('x', cx - 8)
-      reward3x.setAttribute('y', py + 4)
-    }
-  }
-  const reward4x = document.getElementById('4x')
-  if (reward4x) {
-    if (iscall) {
-      const cp = parseFloat(spot) + 4 * price
-      const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
-      reward4x.setAttribute('x', cx - 8)
-      reward4x.setAttribute('y', cy + 4)
-    } else {
-      const pp = parseFloat(spot) - 4 * price
-      const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
-      reward4x.setAttribute('x', cx - 8)
-      reward4x.setAttribute('y', py + 4)
-    }
-  }
+  })
   const avgprem = document.getElementById('avg-prem')
   if (avgprem) {
     avgprem.innerHTML = Math.round10(price, -4)
@@ -340,8 +319,8 @@ const initDynamicView = props => {
     }
       
     layout.chart_mp_left = layout.width
-    layout.chart_mp_width = 10
-    layout.chart_ob_left = layout.chartwidth * 0.75 + 10
+    layout.chart_mp_width = 0
+    layout.chart_ob_left = layout.chartwidth * 0.75
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
     
     // check quote heights
@@ -372,8 +351,9 @@ const initDynamicView = props => {
     layout.chart_ob_left = layout.chartwidth * 0.75 + 10
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
     
-    var spot = props.premiums.indicatedSpot
-    if (props.mousestate === MOUSESTATE_CALL) {
+    spot = props.premiums.indicatedSpot
+    
+    if (props.dialog.showinline && props.mousestate === MOUSESTATE_CALL) {
       calls = props.orderbook.calls.quotes.map(quote => {
         const top = spot + QUOTE_SCALE * (quote.premium - (spot - props.spot) / 2)
         if (top > maxp) maxp = top
@@ -383,7 +363,7 @@ const initDynamicView = props => {
       calls = props.orderbook.calls.quotes
     }
     
-    if (props.mousestate === MOUSESTATE_PUT) {
+    if (props.dialog.showinline && props.mousestate === MOUSESTATE_PUT) {
       puts = props.orderbook.puts.quotes.map(quote => {
         const bottom = spot - QUOTE_SCALE * (quote.premium  - (spot - props.spot) / 2)
         if (bottom < minp) minp = bottom
@@ -522,8 +502,16 @@ const buildBackground = props => {
     const y = event.clientY - bounds.top
     
     if (props.dialog.showinline) {
-      if (x >= layout.info_left) { //  && x < layout.info_left + layout.info_width) {
-        mouseMoveTrigger(y)
+      if (x >= layout.info_left && x < layout.info_left+layout.info_width) { 
+        if (mouseEnabled.info) {
+          generateRW()
+          mouseMoveTrigger(y)
+        }
+      }
+      if (x >= layout.chart_ob_left) {
+        if (mouseEnabled.orderbook) {
+          obMouseMove(event)
+        }
       }
       return
     }
@@ -548,6 +536,33 @@ const buildBackground = props => {
   }
   
   const mouseClick = event => {
+    if (props.dialog.showinline) {
+      const bounds = event.target.getBoundingClientRect()
+      const x = event.clientX - bounds.left
+      if (x >= layout.info_left && x < layout.info_left+layout.info_width) { 
+        mouseEnabled.info = !mouseEnabled.info
+        //if (mouseEnabled.info) mouseEnabled.orderbook = true
+        setLock({
+          info: !mouseEnabled.info,
+          orderbook: !mouseEnabled.orderbook
+        })
+      }
+      if (x >= layout.chart_ob_left) {
+        mouseEnabled.orderbook = !mouseEnabled.orderbook
+        //if (mouseEnabled.orderbook) mouseEnabled.info = true
+        setLock({
+          info: !mouseEnabled.info,
+          orderbook: !mouseEnabled.orderbook
+        })
+      }
+    } else {
+      mouseEnabled.info = true
+      mouseEnabled.orderbook = true
+      setLock({
+        info: false,
+        orderbook: false
+      })
+    }
     if (props.mousestate === MOUSESTATE_QUOTE) {
       chMouseClick(event)
     } else {
@@ -695,8 +710,6 @@ const buildInfoOverlay = props => {
   var movx = 0
   var movy = 0
   if (layout.info_width > 0) {
-    generateRW()
-    
     movx = layout.info_left
     if (props.mousestate === MOUSESTATE_QUOTE) {
       var spot = props.premiums.indicatedSpot
@@ -706,7 +719,7 @@ const buildInfoOverlay = props => {
       tmpy1 = lasty
     }
     const strike_price = minp - (tmpy1 - layout.height) * (maxp - minp) / layout.height
-    if (props.dialog.showinline && props.mousemove !== undefined) {
+    if (props.dialog.showinline && props.mousemove > 0) {
       var tmpy2 = props.mousemove
     } else {
       tmpy2 = tmpy1
@@ -714,23 +727,26 @@ const buildInfoOverlay = props => {
     const settle_price = minp - (tmpy2 - layout.height) * (maxp - minp) / layout.height
     movy = tmpy1
     
-    var info = randomWalk.map((r, i) => {
-      const x = layout.info_left + i * RANDOM_INC
-      const y = r + tmpy1 + (tmpy2 - tmpy1) * (x - layout.info_left) / layout.info_width 
-      const tmp = <g key={i}>
-        <line className="spot" x1={x} y1={movy} x2={x} y2={y}/>
-        <line className="spot" x1={x} y1={y} x2={x+RANDOM_INC} y2={y}/>
-      </g>
-      movx = x+RANDOM_INC
-      movy = y
-      return tmp
-    })
-    info.push(<g key={"mt"}>
-        <line className="spot" x1={movx} y1={movy} x2={movx} y2={tmpy2}/>
-        <line className="spot" x1={movx} y1={tmpy2} x2={layout.info_left + layout.info_width} y2={tmpy2}/>
-      </g>
-    )
+    if (randomWalk.length > 2) {
+      var info = randomWalk.map((r, i) => {
+        const x = layout.info_left + i * RANDOM_INC
+        const y = r + tmpy1 + (tmpy2 - tmpy1) * (x - layout.info_left) / layout.info_width 
+        const tmp = <g key={i}>
+          <line className="spot" x1={x} y1={movy} x2={x} y2={y}/>
+          <line className="spot" x1={x} y1={y} x2={x+RANDOM_INC} y2={y}/>
+        </g>
+        movx = x+RANDOM_INC
+        movy = y
+        return tmp
+      })
+      info.push(<g key={"mt"}>
+          <line className="spot" x1={movx} y1={movy} x2={movx} y2={tmpy2}/>
+          <line className="spot" x1={movx} y1={tmpy2} x2={layout.info_left + layout.info_width} y2={tmpy2}/>
+        </g>
+      )
+    }
     
+    const info_y2 = layout.info_left + layout.info_width
     if (props.mousestate === MOUSESTATE_CALL) {
       var infoclass = "call"
       if (settle_price > strike_price) {
@@ -738,6 +754,7 @@ const buildInfoOverlay = props => {
       } else {
         ret = 0
       }
+      var payout = <rect className="payout" x={info_y2-10} y={tmpy2} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:0}/>
     } else if (props.mousestate === MOUSESTATE_PUT) {
       infoclass = "put"
       if (strike_price > settle_price) {
@@ -745,17 +762,24 @@ const buildInfoOverlay = props => {
       } else {
         ret = 0
       }
+      payout = <rect className="payout" x={info_y2-10} y={tmpy1} width={10} height={tmpy2>tmpy1?tmpy2-tmpy1:0}/>
     }
     return <g id="info">
       <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
+      {payout}
       {info}
-      <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={layout.info_left + layout.info_width} y2={tmpy1}/>
-      <line id="settleline" x1={layout.info_left+layout.info_width} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
-      <text id="infotitle" x={layout.info_left+100} y={20}>Outcome Projector</text>
-      <text id="infocost" className={infoclass} x={layout.info_left+5} y={50}>Position Cost = {Math.round10(info_cost,-2)} {tokenType}</text>
-      <text id="inforeturn" x={layout.info_left+5} y={70}>Projected Payout = {Math.round10(ret,-2)} {tokenType}</text>
+      <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+      <line id="settleline" x1={info_y2} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+      <text id="infotitle" x={layout.info_left+100} y={20}>Outcome Visualizer</text>
+      <text id="infocost" className={infoclass} x={layout.info_left+5} y={70}>Position Cost = {Math.round10(info_cost,-2)} {tokenType}</text>
+      <text id="inforeturn" x={layout.info_left+5} y={90}>Projected Payout = {Math.round10(ret,-2)} {tokenType}</text>
       <text id="infoprofit" x={layout.info_left+layout.info_width/2-80} y={120}>Net Profit = {Math.round10(ret-info_cost,-2)} {tokenType}</text>
-      <text id="infotime" x={layout.info_left+layout.info_width/2-40} y={layout.height-10}>{commonName[props.dur]} (future)</text>
+      <text id="infotime" x={layout.info_left+layout.info_width/2-40} y={layout.height-20}>{commonName[props.dur]} trade</text>
+      <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
+      <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
+      <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
+      <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
+      <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
     </g>
   }
   return <g id="info"></g>
@@ -824,25 +848,36 @@ const buildForeground = props => {
   }
   if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {
     if (props.mousestate === MOUSESTATE_CALL) {
-      var costclass = "ordertip call"
+      var costclass = "call"
     }
     if (props.mousestate === MOUSESTATE_PUT) {
-      costclass = "ordertip put"
+      costclass = "put"
+    }
+    if (props.dialog.showinline) {
+      var mults = <g>
+        <text id="2x" className="reward" x={0} y={0}>2x</text>
+        <text id="3x" className="reward" x={0} y={0}>3x</text>
+        <text id="4x" className="reward" x={0} y={0}>4x</text>
+        <text id="5x" className="reward" x={0} y={0}>5x</text>
+        <text id="6x" className="reward" x={0} y={0}>6x</text>
+        <text id="7x" className="reward" x={0} y={0}>7x</text>
+        <text id="8x" className="reward" x={0} y={0}>8x</text>
+        <text id="9x" className="reward" x={0} y={0}>9x</text>
+      </g>
     }
     ret = <g>
       <line id="cursorx" className="cursor" x1={layout.chart_ob_left} y1={0} x2={layout.chart_ob_left} y2={layout.height}/>
-      <line id="cursory" className="cursor" x1={layout.chart_ob_left} y1={0} x2={layout.chart_ob_left + layout.chart_ob_width -1} y2={0}/>
+      <line id="cursory" className={"cursor " + costclass} x1={layout.chart_ob_left} y1={0} x2={layout.chart_ob_left + layout.chart_ob_width -1} y2={0}/>
       <text id="leftamt" className="ordertip" x={0} y={0}></text>
       <text id="rightamt" className="ordertip" x={0} y={0}></text>
-      <text id="costamt" className={costclass} x={0} y={0}></text>
-      <text id="2x" className="reward" x={0} y={0}>2x</text>
-      <text id="3x" className="reward" x={0} y={0}>3x</text>
-      <text id="4x" className="reward" x={0} y={0}>4x</text>
+      <text id="costamt" className={"ordertip " + costclass} x={0} y={0}></text>
+      {mults}
     </g>
   }
   return ret
 }
 
+/*
 const buildOrderbookSpot = props => {
   const sy = layout.height - layout.height * (props.spot - minp) / (maxp - minp)
   const mid = layout.chart_mp_left + layout.chart_mp_width / 2
@@ -866,6 +901,7 @@ const buildOrderbookSpot = props => {
     }
   }
 }
+*/
 
 const buildOrderbookPremiums = props => {
   const premiums = props.premiums
@@ -964,7 +1000,18 @@ const buildOrderBook = props => {
       y3 = layout.height - layout.height * (quoteBottom - minp) / (maxp - minp)
       putquoterects.push(<rect key="putquote" id="putquote" x={leftX} y={sy} width={shift} height={y3-sy}/>)
     }
-    return <g id="orderbook" viewBox="-10 -10 120 110">
+    window.requestAnimationFrame(() => {
+      const qty = props.premiums.qty
+      if (props.mousestate === MOUSESTATE_CALL) {
+        const callprice = props.orderbook.calls.price(qty)
+        orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], props.spot, true, callprice)
+      }
+      if (props.mousestate === MOUSESTATE_PUT) {
+        const putprice = props.orderbook.puts.price(qty)
+        orderBookCursorPos(qty, props.orderbook.totalWeight[props.dur], props.spot, false, putprice)
+      }
+    })
+    return <g id="orderbook">
       <g>{callquoterects}</g>
       <g>{putquoterects}</g>
       <line className="spot" x1={layout.chart_ob_left} x2={layout.chart_ob_left+layout.chart_ob_width} y1={sy} y2={sy}/>
@@ -1003,17 +1050,26 @@ class Chart extends React.Component {
       //console.log("build trades overlay")
       const trades = buildTradesOverlay(props)
       //console.log("build orderbook spot")
-      const spot = buildOrderbookSpot(props)
+      //const spot = buildOrderbookSpot(props)
       //console.log("build orderbook premiums")
       const prems = buildOrderbookPremiums(props)
       //console.log("build orderbook")
       const orderbook = buildOrderBook(props)
       //console.log("build foreground")
       const foreground = buildForeground(props)
+      if (props.dialog.showinline && props.lock !== undefined) {
+        if (props.lock.orderbook) {
+          var oblock = <image href={lock} x={layout.chart_mp_left} y={2} width={16} height={16}/>
+        }
+        if (props.lock.info) {
+          var infolock = <image href={lock} x={layout.info_left} y={2} width={16} height={16}/>
+        }
+      }
       var chart =
         <div id="chartwrap">
           <svg id="chart" width="640" height="480">
             {background}
+            {oblock}
             {timegrid}
             {pricegrid}
             {trades}
@@ -1021,7 +1077,7 @@ class Chart extends React.Component {
             {prems}
             {orderbook}
             {info}
-            {spot}
+            {infolock}
             {foreground}
           </svg>
         </div>
@@ -1035,7 +1091,6 @@ class Chart extends React.Component {
     }
     return null
   }
-
 }
 
 const mapStateToProps = state => ({
@@ -1057,6 +1112,7 @@ const mapStateToProps = state => ({
   quote: state.microtick.quote,
   mousestate: state.microtick.chart.mouseState,
   mousemove: state.microtick.chart.mouseMove,
+  lock: state.microtick.chart.lock,
   dialog: state.dialog
 })
 
@@ -1068,4 +1124,3 @@ export default connect(
   mapStateToProps, 
   mapDispatchToProps
 )(Chart)
-

@@ -169,6 +169,10 @@ svg#chart circle.put {
   fill: #135; 
 }
 
+#information {
+  font-size: 10px;
+}
+
 #infocost.call {
   fill: #0f0;
 }
@@ -187,17 +191,26 @@ svg#chart circle.put {
 
 #info line.spot {
   stroke: #ffc;
-  stroke-dasharray: 1,1; 
+  stroke-dasharray: 2,2; 
   stroke-width: 2px !important;
 }
 
 #strikeline {
-  stroke-dasharray: 1,1;
+  stroke: #555;
 }
 
 #settleline {
-  stroke-dasharray: 1,1;
+  stroke-dasharray: 2,2;
   stroke: #b2e;
+}
+
+.futuretime {
+  stroke-dasharray: 1,1;
+  stroke-width: 1px;
+}
+
+.payout {
+  fill: #b2e;
 }
 
 #info text {

@@ -45,6 +45,7 @@ const TRADELIST = 'microtick/trade/list'
 const QUOTEPARAMS= 'microtick/quote/params'
 const MOUSESTATE = 'microtick/update'
 const MOUSEMOVE = 'microtick/mousemove'
+const LOCK = 'microtick/lock'
 const DONELOADING = 'microtick/loading'
 const SENDTOKENS = "dialog/sendtokens"
 const SHIFTSTART = 'shift/start'
@@ -103,6 +104,7 @@ const initialState = {
   },
   chart: {
     mouseState: 0,
+    mouseMove: -1,
     size: globals.chart.size,
     ticks: {
       minb: 0,
@@ -610,6 +612,14 @@ export default (state = initialState, action) => {
         chart: {
           ...state.chart,
           mouseMove: action.mouseMove
+        }
+      }
+    case LOCK:
+      return {
+        ...state,
+        chart: {
+          ...state.chart,
+          lock: action.lock
         }
       }
     default:
@@ -1277,6 +1287,13 @@ export const mouseMoveTrigger = mouseMove => {
   store.dispatch({
     type: MOUSEMOVE,
     mouseMove: mouseMove
+  })
+}
+
+export const setLock = lock => {
+  store.dispatch({
+    type: LOCK,
+    lock: lock
   })
 }
 
