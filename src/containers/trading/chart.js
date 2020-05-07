@@ -807,19 +807,12 @@ const buildInfoOverlay = props => {
       var priceAsPut = info_qprem + (info_newspot - info_qspot) / 2
       if (priceAsCall < 0) priceAsCall = 0
       if (priceAsPut < 0) priceAsPut = 0
-      console.log("quantity=" + info_qqty)
       var profitAsCall = info_qqty * (priceAsCall - (settle_price - strike_price > 0 ? settle_price - strike_price : 0))
       var profitAsPut = info_qqty * (priceAsPut - (strike_price - settle_price > 0 ? strike_price - settle_price : 0))
       var premiumAsCall = priceAsCall * info_qqty
       var premiumAsPut = priceAsPut * info_qqty
       if (profitAsCall < -props.quote.backing) profitAsCall = -props.quote.backing
       if (profitAsPut < -props.quote.backing) profitAsPut = -props.quote.backing
-      console.log("price as call: " + priceAsCall)
-      console.log("price as put: " + priceAsPut)
-      console.log("premium as call: " + premiumAsCall)
-      console.log("premium as put: " + premiumAsPut)
-      console.log("profit as call: " + profitAsCall)
-      console.log("profit as put: " + profitAsPut)
     }
     if (props.mousestate === MOUSESTATE_CALL) {
       var infoclass = "call"
