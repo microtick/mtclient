@@ -615,10 +615,16 @@ const buildBackground = props => {
     }
   }
   
+  const right = layout.chart_ob_left + layout.chart_ob_width
   return <g>
     <rect id="chartback" x={0} width={layout.chartwidth} y={0} height={layout.height}
       onMouseEnter={mouseEnter} onMouseLeave={mouseLeave} 
       onMouseMove={mouseMove} onClick={mouseClick}/>
+      
+    <text id="axis_quantity" x={layout.chart_ob_left+5} y={layout.height-20}>quantity</text>
+    <line className="axis_qty" x1={layout.chart_mp_left+2} y1={layout.height-10} x2={right-2} y2={layout.height-10}/>
+    <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-7}/>
+    <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-13}/>
   </g>
 }
 

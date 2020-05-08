@@ -223,6 +223,19 @@ svg#chart circle.put {
   stroke: #fff !important;
 }
 
+#axis_quantity {
+  fill: #ccc !important;
+}
+
+.axis_qty {
+  stroke: #ccf;
+  stroke-dasharray: 1,1;
+}
+
+.axis_qty_tip {
+  stroke: #ccf;
+}
+
 .payout {
   fill: #b2e;
 }
