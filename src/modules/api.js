@@ -1,7 +1,7 @@
 import API from 'microtick'
 
 const config = {
-  ws: process.env.MICROTICK_WEBSOCKET,
+  ws: "ws://" + process.env.MICROTICK_WEBSOCKET,
   version: "v0.1.6"
 }
 

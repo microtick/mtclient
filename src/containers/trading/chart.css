@@ -157,12 +157,78 @@ svg#chart circle.put {
   pointer-events: auto;
 }
 
-#obback {
-  pointer-events: auto;
+#costamt.call {
+  fill: #0f0;
 }
 
-#obback {
-  fill: #333;
+#costamt.put {
+  fill: #f00;
+}
+
+#infoback {
+  fill: #135; 
+}
+
+#information {
+  font-size: 10px;
+}
+
+.infocostcall {
+  fill: #0f0 !important;
+}
+
+.infocostput {
+  fill: #f00 !important;
+}
+
+.inforeturn {
+  fill: #b2e !important;
+}
+
+.infoprofit {
+  fill: #ffc !important;
+}
+
+.tradecall {
+  fill: #0f0 !important;
+}
+
+.tradeput {
+  fill: #f00 !important;
+}
+
+#info line.spot {
+  stroke: #ffc;
+  stroke-dasharray: 1,1;
+  stroke-opacity: 0.4;
+  stroke-width: 2px !important;
+}
+
+#strikeline {
+  stroke: #555;
+}
+
+#settleline {
+  stroke-dasharray: 2,2;
+  stroke: #b2e;
+}
+
+.futuretime {
+  stroke: #fff !important;
+  stroke-dasharray: 1,1;
+  stroke-width: 1px;
+}
+
+.futuretimetip {
+  stroke: #fff !important;
+}
+
+.payout {
+  fill: #b2e;
+}
+
+#info text {
+  fill: #fff;
 }
 
 #orderbook rect.quote15 {
@@ -232,6 +298,10 @@ svg#chart circle.put {
 #orderbook line.spot {
   stroke: #333;
   stroke-width: 0.5px !important;
+}
+
+text.reward {
+  fill: #ffc;
 }
 
 line.ordertip {

@@ -61,7 +61,7 @@ const App = props => {
         var newaccount = <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
       }
       password = <div className="fullscreen">
-        <div className="password"> 
+        <div className="password">
           <div className="content">
             <div className="title">Unlock Microtick account {keys.acct}</div>
             <div className="form">
@@ -207,7 +207,7 @@ const App = props => {
     if (not.type === 'error') {
       var message = not.msg
       if (props.token === "dai") {
-        if (not.msg.includes("Insufficient funds") || 
+        if (not.msg.includes("insufficient funds") || 
             not.msg.includes("insufficient account funds") ||
             not.msg.includes("No such address")) {
           message = "Insufficient account funds"
@@ -295,7 +295,7 @@ const App = props => {
         </div>
       </div>
       action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
-    }
+    }    
     if (props.dialog.type === "withdraw") {
       header = <div className="header">
         <div className="title">Withdraw Microtick DAI to Ethereum ERC-20 DAI</div>
