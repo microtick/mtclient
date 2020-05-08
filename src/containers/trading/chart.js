@@ -814,6 +814,13 @@ const buildInfoOverlay = props => {
       if (profitAsCall < -props.quote.backing) profitAsCall = -props.quote.backing
       if (profitAsPut < -props.quote.backing) profitAsPut = -props.quote.backing
     }
+    if (props.mousestate === MOUSESTATE_QUOTE) {
+      var retcall = (settle_price - strike_price) * info_qqty
+      if (retcall < 0) retcall = 0
+      var retput = (strike_price - settle_price) * info_qqty
+      if (retput < 0) retput = 0
+      var payout = <rect className="payout" x={info_y2-10} y={tmpy1>tmpy2?tmpy2:tmpy1} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:tmpy2-tmpy1}/>
+    }
     if (props.mousestate === MOUSESTATE_CALL) {
       var infoclass = "call"
       if (settle_price > strike_price) {
@@ -821,8 +828,8 @@ const buildInfoOverlay = props => {
       } else {
         ret = 0
       }
-      var payout = <rect className="payout" x={info_y2-10} y={tmpy2} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:0}/>
-    }
+      payout = <rect className="payout" x={info_y2-10} y={tmpy2} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:0}/>
+    } 
     if (props.mousestate === MOUSESTATE_PUT) {
       infoclass = "put"
       if (strike_price > settle_price) {
@@ -862,6 +869,11 @@ const buildInfoOverlay = props => {
       if (inforeturnamt) {
         textProps = inforeturnamt.getBoundingClientRect()
         inforeturnamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+      }
+      const inforeturnamt2 = document.getElementById('inforeturnamt2')
+      if (inforeturnamt2) {
+        textProps = inforeturnamt2.getBoundingClientRect()
+        inforeturnamt2.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
       }
       const infoprofitamt = document.getElementById('infoprofitamt')
       if (infoprofitamt) {
@@ -906,7 +918,7 @@ const buildInfoOverlay = props => {
         {payout}
         {info}
         <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
-        <line id="settleline" x1={info_y2} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+        <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
         <text id="infotitle" x={layout.info_left+5} y={20}>Outcome Visualizer</text>
         <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
         <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={starty}>{Math.round10(ret,-2)} {tokenType}</text>
@@ -927,28 +939,32 @@ const buildInfoOverlay = props => {
       </g>
     } else {
       const startcall = 40
-      const startput = layout.height - 90
+      const startput = layout.height - 110
       return <g id="info">
         <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
         {payout}
         {info}
         <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
-        <line id="settleline" x1={info_y2} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+        <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
         <text id="infotitle" x={layout.info_left+5} y={20}>Outcome Visualizer</text>
         
-        <text className="tradecall" x={layout.info_left+5} y={startcall}>Call quote</text>
-        <text id="callpriceamt" className="tradecall" x={layout.info_left+5} y={startcall}>{Math.round10(priceAsCall,-2)}</text>
+        <text x={layout.info_left+5} y={startcall}>Call quote</text>
+        <text id="callpriceamt" x={layout.info_left+5} y={startcall}>{Math.round10(priceAsCall,-2)}</text>
         <text className="tradecall" x={layout.info_left+5} y={startcall+18}>Call premium</text>
         <text id="callpremiumamt" className="tradecall" x={layout.info_left+5} y={startcall+18}>{Math.round10(premiumAsCall,-2)} {tokenType}</text>
-        <text className="tradecall" x={layout.info_left+5} y={startcall+36}>Call profit</text>
-        <text id="callprofitamt" className="tradecall" x={layout.info_left+5} y={startcall+36}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
+        <text className="inforeturn" x={layout.info_left+5} y={startcall+36}>Projected payout</text>
+        <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={startcall+36}>{Math.round10(retcall,-2)} {tokenType}</text>
+        <text className="infoprofit" x={layout.info_left+5} y={startcall+54}>Call profit</text>
+        <text id="callprofitamt" className="infoprofit" x={layout.info_left+5} y={startcall+54}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
         
-        <text className="tradeput" x={layout.info_left+5} y={startput}>Put quote</text>
-        <text id="putpriceamt" className="tradeput" x={layout.info_left+5} y={startput}>{Math.round10(priceAsPut,-2)}</text>
+        <text x={layout.info_left+5} y={startput}>Put quote</text>
+        <text id="putpriceamt" x={layout.info_left+5} y={startput}>{Math.round10(priceAsPut,-2)}</text>
         <text className="tradeput" x={layout.info_left+5} y={startput+18}>Put premium</text>
         <text id="putpremiumamt" className="tradeput" x={layout.info_left+18} y={startput+18}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
-        <text className="tradeput" x={layout.info_left+5} y={startput+36}>Put profit</text>
-        <text id="putprofitamt" className="tradeput" x={layout.info_left+36} y={startput+36}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
+        <text className="inforeturn" x={layout.info_left+5} y={startput+36}>Projected payout</text>
+        <text id="inforeturnamt2" className="inforeturn" x={layout.info_left+5} y={startput+36}>{Math.round10(retput,-2)} {tokenType}</text>
+        <text className="infoprofit" x={layout.info_left+5} y={startput+54}>Put profit</text>
+        <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+54}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
         
         <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} duration</text>
         <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
