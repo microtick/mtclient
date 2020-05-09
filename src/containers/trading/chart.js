@@ -622,7 +622,7 @@ const buildBackground = props => {
       onMouseMove={mouseMove} onClick={mouseClick}/>
       
     <text className="info" x={layout.chart_ob_left+20} y={15}>Order Book</text>
-    <text id="axis_quantity" x={layout.chart_ob_left+5} y={layout.height-20}>quantity</text>
+    <text id="axis_quantity" x={layout.chart_ob_left+20} y={layout.height-20}>quantity</text>
     <line className="axis_qty" x1={layout.chart_mp_left+2} y1={layout.height-10} x2={right-2} y2={layout.height-10}/>
     <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-7}/>
     <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-13}/>
@@ -926,7 +926,7 @@ const buildInfoOverlay = props => {
         {info}
         <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
         <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
-        <text id="infotitle" x={layout.info_left+5} y={20}>Outcome Visualizer</text>
+        <text id="infotitle" x={layout.info_left+20} y={15}>Outcome Visualizer</text>
         <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
         <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={starty}>{Math.round10(ret,-2)} {tokenType}</text>
         <text x={layout.info_left+15} y={starty+18}>Avg Premium</text>
@@ -953,7 +953,7 @@ const buildInfoOverlay = props => {
         {info}
         <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
         <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
-        <text id="infotitle" className="info" x={layout.info_left+5} y={15}>Outcome Visualizer</text> 
+        <text id="infotitle" className="info" x={layout.info_left+20} y={15}>Outcome Visualizer</text> 
         <text x={layout.info_left+5} y={startcall}>Call quote</text>
         <text id="callpriceamt" x={layout.info_left+5} y={startcall}>{Math.round10(priceAsCall,-2)}</text>
         <text className="tradecall" x={layout.info_left+5} y={startcall+18}>Call premium</text>
