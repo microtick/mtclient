@@ -165,6 +165,14 @@ svg#chart circle.put {
   fill: #f00;
 }
 
+.info {
+  fill: #ccc;
+}
+
+#infotitle {
+  fill: #ccc !important;
+}
+
 #infoback {
   fill: #135; 
 }
@@ -187,6 +195,10 @@ svg#chart circle.put {
 
 .infoprofit {
   fill: #ffc !important;
+}
+
+#infotime {
+  fill: #ccc !important;
 }
 
 .tradecall {
