@@ -47,7 +47,7 @@ var randomWalk = []
 const RANDOM_HEIGHT = 0.02
 const RANDOM_TICKS = 30 
 
-const QUOTE_SCALE = 5
+const QUOTE_SCALE = 3
 
 const MOUSESTATE_NONE = 0
 const MOUSESTATE_QUOTE = 1
@@ -166,14 +166,12 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
       const cp = parseFloat(spot) + price / 2
       const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
       ctext.innerHTML = "⇑ " + Math.round10(price, -4)
-      const textProps = ctext.getBoundingClientRect()
       ctext.setAttribute('x', layout.chart_ob_left + 5)
       ctext.setAttribute('y', cy + 5)
     } else {
       const pp = parseFloat(spot) - price / 2 
       const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
       ctext.innerHTML = "⇓ " + Math.round10(price, -4)
-      const textProps = ctext.getBoundingClientRect()
       ctext.setAttribute('x', layout.chart_ob_left + 5)
       ctext.setAttribute('y', py + 5)
     }
@@ -223,6 +221,7 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
         reward.setAttribute('y', py + 4)
       }
     }
+    return null
   })
   // update visualizer
   const infocostamt = document.getElementById('infocostamt')
@@ -304,11 +303,13 @@ const initDynamicView = props => {
   
   if (props.mousestate === MOUSESTATE_NONE) {
       
-    layout.width = layout.chartwidth * 0.75
-    layout.chart_mp_left = layout.width
-    layout.chart_mp_width = 0
+    layout.width = layout.chartwidth * 0.5
     layout.chart_ob_left = layout.chartwidth * 0.75
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
+    layout.chart_mp_left = layout.chart_ob_left
+    layout.chart_mp_width = 0
+    layout.info_left = layout.width
+    layout.info_width = layout.chart_ob_left - layout.info_left
     
     calls = props.orderbook.calls.quotes
     puts = props.orderbook.puts.quotes
@@ -316,8 +317,6 @@ const initDynamicView = props => {
   } else if (props.mousestate === MOUSESTATE_QUOTE) {
       
     if (props.dialog.showinline) {
-      layout.width = layout.chartwidth * 0.5
-      
       const qcspot = document.getElementById('qcspot')
       var textProps = qcspot.getBoundingClientRect()
       qcspot.setAttribute('x', layout.width - textProps.width-10)
@@ -329,15 +328,14 @@ const initDynamicView = props => {
       const negprem = document.getElementById('negprem')
       textProps = negprem.getBoundingClientRect()
       negprem.setAttribute('x', layout.width - textProps.width-10)
-    } else {
-      layout.width = layout.chartwidth * 0.75 - 10
     }
-      
-    layout.chart_mp_left = layout.width
-    layout.chart_mp_width = 10
+    
+    layout.width = layout.chartwidth * 0.5
     layout.chart_ob_left = layout.chartwidth * 0.75
     layout.chart_ob_width = layout.chartwidth - layout.chart_ob_left
-    layout.info_left = layout.chart_mp_left + layout.chart_mp_width
+    layout.chart_mp_left = layout.chart_ob_left
+    layout.chart_mp_width = 0
+    layout.info_left = layout.width
     layout.info_width = layout.chart_ob_left - layout.info_left
     
     // check quote heights
@@ -355,13 +353,13 @@ const initDynamicView = props => {
     
   } else {
       
-    if (props.dialog.showinline) {
+    //if (props.dialog.showinline) {
       layout.width = layout.chartwidth * 0.5
       layout.info_left = layout.width
       layout.info_width = layout.chart_mp_left - layout.info_left
-    } else {
-      layout.width = layout.chartwidth * 0.75
-    }
+    //} else {
+      //layout.width = layout.chartwidth * 0.75
+    //}
       
     layout.chart_mp_left = layout.chartwidth * 0.75
     layout.chart_mp_width = 10
@@ -419,7 +417,7 @@ const buildBackground = props => {
     var bounds = event.target.getBoundingClientRect()
     var x = event.clientX - bounds.left 
     if (x > layout.width) x = layout.width
-    var delta = ((layout.width - x) / 4 + 2)
+    var delta = ((layout.width - x) / 3 + 2)
     var y = event.clientY - bounds.top
     
     const backing = props.quote.backing
@@ -552,14 +550,15 @@ const buildBackground = props => {
     
     if (x <= layout.width) {
       props.mouseState(MOUSESTATE_QUOTE)
-    } 
-    if (x >= layout.chart_ob_left) {
+    } else if (x >= layout.chart_mp_left) {
       const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
       if (y <= sy) {
         props.mouseState(MOUSESTATE_CALL)
       } else {
         props.mouseState(MOUSESTATE_PUT)
       }
+    } else {
+      props.mouseState(MOUSESTATE_NONE)
     }
     
     if (props.mousestate === MOUSESTATE_QUOTE) {
@@ -610,7 +609,8 @@ const buildBackground = props => {
     }
     if (props.mousestate === MOUSESTATE_QUOTE) {
       chMouseClick(event)
-    } else {
+    } 
+    if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {
       obMouseClick(event)
     }
   }
@@ -621,8 +621,8 @@ const buildBackground = props => {
       onMouseEnter={mouseEnter} onMouseLeave={mouseLeave} 
       onMouseMove={mouseMove} onClick={mouseClick}/>
       
-    <text className="info" x={layout.chart_ob_left+20} y={15}>Order Book</text>
-    <text id="axis_quantity" x={layout.chart_ob_left+20} y={layout.height-20}>quantity</text>
+    <text className="info" x={layout.chart_mp_left+20} y={15}>Order Book</text>
+    <text id="axis_quantity" x={layout.chart_mp_left+20} y={layout.height-20}>quantity</text>
     <line className="axis_qty" x1={layout.chart_mp_left+2} y1={layout.height-10} x2={right-2} y2={layout.height-10}/>
     <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-7}/>
     <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-13}/>
@@ -667,10 +667,17 @@ const buildTimeGrid = props => {
       rules.push(<line key={i} className={clz} x1={x} y1={0} x2={x} y2={layout.height}/>)
       text.push(<text key={i} className="gridtext" x={x+5} y={layout.height-4}>{commonName[grids[i]]}</text>)
     }
+    for (var i in grids) {
+      if (grids[i] < props.chartsize / 2) {
+        const x = layout.info_left + layout.info_width * 2 * grids[i] / props.chartsize
+        rules.push(<line key={i} className="gridrule light" x1={x} y1={0} x2={x} y2={layout.height}/>)
+      }
+    }
     return <g>
-      <line className="gridrule" x1={layout.width} y1={0} x2={layout.width} y2={layout.height}/>
+      <line className="gridrule now" x1={layout.width} y1={0} x2={layout.width} y2={layout.height}/>
       {rules}
       {text}
+      <line className="gridrule now" x1={layout.info_left+layout.info_width} y1={0} x2={layout.info_left+layout.info_width} y2={layout.height}/>
     </g>
   }
 }
@@ -701,6 +708,7 @@ const buildPriceGrid = props => {
     const y = layout.height - layout.height * (tic - minp) / (maxp - minp)
     return <g key={i}>
       <line className="gridrule" x1={0} x2={layout.width} y1={y} y2={y}/>
+      <line className="gridrule light" x1={layout.width} x2={layout.width+layout.info_width} y1={y} y2={y}/>
       <text className="gridtext" x="5" y={y-4}>{tic}</text>
     </g>
   })
@@ -718,13 +726,13 @@ const buildPriceOverlay = props => {
   //console.log("view=" + JSON.stringify(view))
   const mint = view.now - view.dur
   if (data.length > 0) {
+    /*
     const points = data.map((p, i) => {
       const x = layout.width * (p.time - mint) / view.dur
-      //const x2 = width * (p.block - view.minb) / (view.maxb - view.minb)
-      //console.log("x=" + x)
       const y = layout.height - layout.height * (p.value - minp) / (maxp - minp)
       return <circle className="spot" key={i} cx={x} cy={y}/>
     })
+    */
     var curx = 0
     if (data.length > 0) {
       lasty = layout.height - layout.height * (data[0].value - minp) / (maxp - minp)
@@ -743,26 +751,23 @@ const buildPriceOverlay = props => {
       lasty = y
       return linegr
     })
-    lines.push(<line className="spot" key={data.length+2} x1={curx} x2={layout.width+2} y1={lasty} y2={lasty}/>)
+    lines.push(<line className="spot" key={data.length+2} x1={curx} x2={layout.width} y1={lasty} y2={lasty}/>)
     return <g>
       <g>
         {lines}
-      </g>
-      <g>
-        {points}
       </g>
     </g>
   } 
 }
 
-var info_cost
-var info_qty
-var info_prem
+var info_cost = 0
+var info_qty = 0
+var info_prem = 0
 
-var info_qspot
-var info_qprem
-var info_qqty
-var info_newspot
+var info_qspot = 0
+var info_qprem = 0
+var info_qqty = 0
+var info_newspot = 0
 
 const buildInfoOverlay = props => {
   var movx = 0
@@ -820,8 +825,7 @@ const buildInfoOverlay = props => {
       var premiumAsPut = priceAsPut * info_qqty
       if (profitAsCall < -props.quote.backing) profitAsCall = -props.quote.backing
       if (profitAsPut < -props.quote.backing) profitAsPut = -props.quote.backing
-    }
-    if (props.mousestate === MOUSESTATE_QUOTE) {
+      
       var retcall = (settle_price - strike_price) * info_qqty
       if (retcall < 0) retcall = 0
       var retput = (strike_price - settle_price) * info_qqty
@@ -847,11 +851,12 @@ const buildInfoOverlay = props => {
       payout = <rect className="payout" x={info_y2-10} y={tmpy1} width={10} height={tmpy2>tmpy1?tmpy2-tmpy1:0}/>
     }
     window.requestAnimationFrame(() => {
-      const infotitle = document.getElementById('infotitle')
-      if (infotitle) {
-        var textProps = infotitle.getBoundingClientRect()
-        infotitle.setAttribute('x', layout.info_left + (layout.info_width - textProps.width)/2)
-      }
+      var textProps
+      //const infotitle = document.getElementById('infotitle')
+      //if (infotitle) {
+        //var textProps = infotitle.getBoundingClientRect()
+        //infotitle.setAttribute('x', layout.info_left + (layout.info_width - textProps.width)/2)
+      //}
       const infotime = document.getElementById('infotime')
       if (infotime) {
         textProps = infotime.getBoundingClientRect()
@@ -918,61 +923,108 @@ const buildInfoOverlay = props => {
         putprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
       }
     })
-    if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {
-      const starty = props.mousestate === MOUSESTATE_CALL ? layout.height - 140 : 40
-      return <g id="info">
-        <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
-        {payout}
-        {info}
-        <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
-        <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
-        <text id="infotitle" x={layout.info_left+20} y={15}>Outcome Visualizer</text>
-        <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
-        <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={starty}>{Math.round10(ret,-2)} {tokenType}</text>
-        <text x={layout.info_left+15} y={starty+18}>Avg Premium</text>
-        <text id="infopremamt" x={layout.info_left+5} y={starty+18}>{Math.round10(info_prem,-2)}</text>
-        <text x={layout.info_left+15} y={starty+36}>Quantity</text>
-        <text id="infoqtyamt" x={layout.info_left+5} y={starty+36}>x {Math.round10(info_qty,-2)}</text>
-        <text className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>Position cost</text>
-        <text id="infocostamt" className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>- {Math.round10(info_cost,-2)} {tokenType}</text>
-        <text className="infoprofit" x={layout.info_left+5} y={starty+72}>Projected profit</text>
-        <text id="infoprofitamt" className="infoprofit" x={layout.info_left+5} y={starty+72}>= {Math.round10(ret-info_cost,-2)} {tokenType}</text>
-        <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} duration</text>
-        <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
-        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
-        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
-        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
-        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
-      </g>
+    if (props.dialog.showinline) {
+      if (props.mousestate === MOUSESTATE_QUOTE) {
+        const startcall = 40
+        const startput = layout.height - 110
+        return <g id="info">
+          <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
+          {payout}
+          {info}
+          <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+          <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+          <text id="infotitle" className="info" x={layout.info_left+20} y={15}>Outcome Visualizer</text> 
+          <text x={layout.info_left+5} y={startcall}>Call quote</text>
+          <text id="callpriceamt" x={layout.info_left+5} y={startcall}>{Math.round10(priceAsCall,-2)}</text>
+          <text className="tradecall" x={layout.info_left+5} y={startcall+18}>Call premium</text>
+          <text id="callpremiumamt" className="tradecall" x={layout.info_left+5} y={startcall+18}>{Math.round10(premiumAsCall,-2)} {tokenType}</text>
+          <text className="inforeturn" x={layout.info_left+5} y={startcall+36}>Projected payout</text>
+          <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={startcall+36}>{Math.round10(retcall,-2)} {tokenType}</text>
+          <text className="infoprofit" x={layout.info_left+5} y={startcall+54}>Call profit</text>
+          <text id="callprofitamt" className="infoprofit" x={layout.info_left+5} y={startcall+54}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
+          
+          <text x={layout.info_left+5} y={startput}>Put quote</text>
+          <text id="putpriceamt" x={layout.info_left+5} y={startput}>{Math.round10(priceAsPut,-2)}</text>
+          <text className="tradeput" x={layout.info_left+5} y={startput+18}>Put premium</text>
+          <text id="putpremiumamt" className="tradeput" x={layout.info_left+18} y={startput+18}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
+          <text className="inforeturn" x={layout.info_left+5} y={startput+36}>Projected payout</text>
+          <text id="inforeturnamt2" className="inforeturn" x={layout.info_left+5} y={startput+36}>{Math.round10(retput,-2)} {tokenType}</text>
+          <text className="infoprofit" x={layout.info_left+5} y={startput+54}>Put profit</text>
+          <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+54}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
+          
+          <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
+          <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
+          <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
+          <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
+          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
+          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
+        </g>
+      }
+      if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {
+        const starty = props.mousestate === MOUSESTATE_CALL ? layout.height - 140 : 40
+        return <g id="info">
+          <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
+          {payout}
+          {info}
+          <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+          <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+          <text id="infotitle" x={layout.info_left+20} y={15}>Outcome Visualizer</text>
+          <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
+          <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={starty}>{Math.round10(ret,-2)} {tokenType}</text>
+          <text x={layout.info_left+15} y={starty+18}>Avg Premium</text>
+          <text id="infopremamt" x={layout.info_left+5} y={starty+18}>{Math.round10(info_prem,-2)}</text>
+          <text x={layout.info_left+15} y={starty+36}>Quantity</text>
+          <text id="infoqtyamt" x={layout.info_left+5} y={starty+36}>x {Math.round10(info_qty,-2)}</text>
+          <text className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>Position cost</text>
+          <text id="infocostamt" className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>- {Math.round10(info_cost,-2)} {tokenType}</text>
+          <text className="infoprofit" x={layout.info_left+5} y={starty+72}>Projected profit</text>
+          <text id="infoprofitamt" className="infoprofit" x={layout.info_left+5} y={starty+72}>= {Math.round10(ret-info_cost,-2)} {tokenType}</text>
+          <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
+          <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
+          <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
+          <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
+          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
+          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
+        </g>
+      }
     } else {
-      const startcall = 40
-      const startput = layout.height - 110
+      const view = props.view
+      const mint = view.now
+      const trades = props.trades.filter(t => {
+          return (t.market === props.market && t.end.getTime() > mint)
+        }).map((t, i) => {
+          const strike = t.strike
+          const sum = t.type === 0 ? 
+            parseFloat(t.strike) + parseFloat(t.premium) / parseFloat(t.qty) : 
+            parseFloat(t.strike) - parseFloat(t.premium) / parseFloat(t.qty)
+          const x1 = layout.info_left
+          var x2 = layout.info_left + layout.info_width * 2 * (t.end.getTime() - mint) / view.dur
+          if (x2 > layout.info_left + layout.info_width) {
+            x2 = layout.info_left + layout.info_width
+          }
+          const y1 = layout.height - layout.height * (strike - minp) / (maxp - minp)
+          const y2 = layout.height - layout.height * (sum - minp) / (maxp - minp)
+          //const yfinal = layout.height - layout.height * (t.final - minp) / (maxp - minp)
+          var clz = t.type === 0 ? "call" : "put"
+          const x = x1 < x2 ? x1 : x2
+          const y = y1 < y2 ? y1 : y2
+          const w = x2 > layout.info_left + layout.info_width ? layout.info_left + layout.info_width - x1 : x2 - x1
+          const h = y1 < y2 ? y2 - y1 : y1 - y2
+          clz = clz + " future"
+          if (x2 < layout.info_left + layout.info_width) {
+            var end = <circle className={clz} cx={x2} cy={y1} r="1"/>
+          }
+          return <g key={i}>
+            <rect className={clz} x={x} y={y} width={w} height={h}/>
+            <line className={clz + " tradebase " + t.dir} x1={x1} y1={y1} x2={x2 > layout.info_left + layout.info_width ? layout.info_left + layout.info_width : x2} y2={y1}/>
+            {end}
+          </g>
+        })
       return <g id="info">
-        <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
-        {payout}
-        {info}
+        <text id="infotitle" x={layout.info_left+20} y={15}>Trade View</text>
         <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
-        <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
-        <text id="infotitle" className="info" x={layout.info_left+20} y={15}>Outcome Visualizer</text> 
-        <text x={layout.info_left+5} y={startcall}>Call quote</text>
-        <text id="callpriceamt" x={layout.info_left+5} y={startcall}>{Math.round10(priceAsCall,-2)}</text>
-        <text className="tradecall" x={layout.info_left+5} y={startcall+18}>Call premium</text>
-        <text id="callpremiumamt" className="tradecall" x={layout.info_left+5} y={startcall+18}>{Math.round10(premiumAsCall,-2)} {tokenType}</text>
-        <text className="inforeturn" x={layout.info_left+5} y={startcall+36}>Projected payout</text>
-        <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={startcall+36}>{Math.round10(retcall,-2)} {tokenType}</text>
-        <text className="infoprofit" x={layout.info_left+5} y={startcall+54}>Call profit</text>
-        <text id="callprofitamt" className="infoprofit" x={layout.info_left+5} y={startcall+54}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
-        
-        <text x={layout.info_left+5} y={startput}>Put quote</text>
-        <text id="putpriceamt" x={layout.info_left+5} y={startput}>{Math.round10(priceAsPut,-2)}</text>
-        <text className="tradeput" x={layout.info_left+5} y={startput+18}>Put premium</text>
-        <text id="putpremiumamt" className="tradeput" x={layout.info_left+18} y={startput+18}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
-        <text className="inforeturn" x={layout.info_left+5} y={startput+36}>Projected payout</text>
-        <text id="inforeturnamt2" className="inforeturn" x={layout.info_left+5} y={startput+36}>{Math.round10(retput,-2)} {tokenType}</text>
-        <text className="infoprofit" x={layout.info_left+5} y={startput+54}>Put profit</text>
-        <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+54}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
-        
-        <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} duration</text>
+        {trades}
+        <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
         <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
         <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
         <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
@@ -988,7 +1040,7 @@ const buildTradesOverlay = props => {
   const view = props.view
   const mint = view.now - view.dur
   const t = props.trades.filter(t => {
-    return t.market === props.market
+    return (t.market === props.market && t.end.getTime() > mint)
   }).map((t, i) => {
     const strike = t.strike
     const sum = t.type === 0 ? 
@@ -1017,19 +1069,19 @@ const buildTradesOverlay = props => {
     if (x2 < layout.width) {
       var end = <g>
         <line className={clz + " tradebase " + t.dir} x1={x2} y1={y1} x2={x2} y2={yfinal}/>
-        <line className={clz + " tradebase"} x1={x2-3} x2={x2+3} y1={yfinal-3} y2={yfinal+3}/>
-        <line className={clz + " tradebase"} x1={x2-3} x2={x2+3} y1={yfinal+3} y2={yfinal-3}/>
+        <line className={clz + " tradebase"} x1={x2-3} x2={x2+2} y1={yfinal-2} y2={yfinal+2}/>
+        <line className={clz + " tradebase"} x1={x2-3} x2={x2+2} y1={yfinal+2} y2={yfinal-2}/>
       </g>
     }
     return <g key={i}>
       {begin}
       <rect className={clz} x={x} y={y} width={w} height={h}/>
       <line className={clz + " tradebase " + t.dir} x1={x1} y1={y1} x2={x2 > layout.width ? layout.width : x2} y2={y1}/>
-      <circle className={clz} cx={x1} cy={y1}/>
+      <circle className={clz} cx={x1} cy={y1} r="1"/>
       {end}
     </g>
   })
-  return <g>
+  return <g id="trades">
     {t}
   </g>
 }
@@ -1084,12 +1136,17 @@ const buildOrderbookSpot = props => {
     var spot = props.premiums.indicatedSpot
     if (!isNumber(spot)) spot = props.spot
     const yspot = layout.height - layout.height * (spot - minp) / (maxp - minp)
+    if (props.dialog.showinline) {
+      var pointer = <g>
+        <line x1={right} y1={yspot} x2={right-3} y2={yspot-3}/>
+        <line x1={right} y1={yspot} x2={right-3} y2={yspot+3}/>
+      </g>
+    }
     return <g id="spotpointer">
       <line x1={layout.chart_mp_left} x2={mid} y1={sy} y2={sy}/>
       <line x1={mid} y1={yspot} x2={mid} y2={sy}/>
       <line x1={mid} y1={yspot} x2={right} y2={yspot}/>
-      <line x1={right} y1={yspot} x2={right-3} y2={yspot-3}/>
-      <line x1={right} y1={yspot} x2={right-3} y2={yspot+3}/>
+      {pointer}
     </g>
   }
 }

@@ -35,9 +35,19 @@ svg .loading {
 
 .gridrule.heavy {
   stroke: #ccf;
-  stroke-width: 3px;
+  stroke-width: 2px;
   stroke-dasharray: 2,2;
   stroke-opacity: 0.8;
+}
+
+.gridrule.light {
+  stroke-opacity: 0.2;
+}
+
+.gridrule.now {
+  stroke: #ffc;
+  stroke-width: 1.5px;
+  stroke-dasharray: none;
 }
 
 .gridtext {
@@ -77,78 +87,97 @@ svg .loading {
   margin: auto;
 }
 
-svg#chart {
+#chart {
   display: block;
   width: 100%;
   margin: auto;
 }
 
-svg#chart line.spot {
-  stroke-width: 2.5px;
+#chart line.spot {
+  stroke-width: 1.5px;
+  stroke: #ffc;
 }
 
-svg#chart circle.spot {
-  stroke-width: 1px;
-  fill: #000;
-  r: 1.5px; 
-}
-
-svg#chart line.inactive {
+#trades line.inactive {
   stroke: #fff;
   stroke-opacity: 0.5;
 }
 
-svg#chart rect.inactive {
+#trades rect.inactive {
   fill: #ddd;
   fill-opacity: 0.1;
   stroke: #fff;
   stroke-opacity: 0.15;
 }
 
-svg#chart line.tradebase {
+#info line.future {
+  stroke: #888;
+  stroke-opacity: 0.5;
+}
+
+#info rect.future.call {
+  fill: #080;
+  fill-opacity: 0.1;
+  stroke: #080;
+  stroke-opacity: 0.15;
+}
+
+#info rect.future.put {
+  fill: #800;
+  fill-opacity: 0.1;
+  stroke: #800;
+  stroke-opacity: 0.15;
+}
+
+#info circle.future {
+  fill: #888;
+  fill-opacity: 0.1;
+}
+
+#trades line.tradebase {
   stroke-width: 1.5px;
 }
 
-svg#chart line.tradebase.short {
+#trades line.tradebase.short {
   stroke-dasharray: 8,2;
 }
 
-svg#chart line.call {
+#trades line.call {
   stroke: #0f0;
 }
 
-svg#chart line.begin {
+#trades line.begin {
   stroke-opacity: 0.4;
 }
 
-svg#chart rect.call {
+#trades rect.call {
   fill: #0f0;
   fill-opacity: 0.1;
   stroke: #0f0;
-  stroke-opacity: 0.2;
+  stroke-opacity: 0.1;
 }
 
-svg#chart circle.call {
+#trades circle.call {
   stroke: #0f0;
   fill: #0f0;
-  r: 3;
+  r: 1;
 }
 
-svg#chart line.put {
+#trades line.put {
   stroke: #f00;
 }
 
-svg#chart rect.put {
+#trades rect.put {
   fill: #f00;
   fill-opacity: 0.1;
   stroke: #f00;
-  stroke-opacity: 0.2;
+  stroke-opacity: 0.1;
 }
 
-svg#chart circle.put {
+#trades circle.put {
   stroke: #f00;
   fill: #f00;
-  r: 3;
+  r: 1;
 }
 
 #chartback {
@@ -174,7 +203,7 @@ svg#chart circle.put {
 }
 
 #infoback {
-  fill: #135; 
+  fill: #333; 
 }
 
 #information {
