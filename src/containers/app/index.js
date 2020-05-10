@@ -63,7 +63,10 @@ const App = props => {
       password = <div className="fullscreen">
         <div className="password">
           <div className="content">
-            <div className="title">Unlock Microtick account {keys.acct}</div>
+            <div className="title">
+              <h2>Unlock Microtick account</h2>
+              <p>{keys.acct}</p>
+            </div>
             <div className="form">
               <p><input type="password" maxLength="40" id="password"/></p>
               {err}

@@ -240,8 +240,7 @@ function calcMinMax(obj) {
     if (minp > put) minp = put
   }
   obj.trade.list.map(tr => {
-    if ((tr.market === globals.market) && (tr.endBlock === undefined || tr.endBlock >= minb ||
-      Date.parse(tr.end) >= mint)) {
+    if ((tr.market === globals.market) && (tr.endBlock === undefined || Date.parse(tr.end) >= mint)) {
       if (tr.type === BuyCall) {
         const min = tr.strike
         if (minp > min) minp = min
@@ -1442,7 +1441,7 @@ export const sendTokens = () => {
               memo: ""
             }
           }
-          const res = await api.postTx(Object.assign(data, envelope))
+          await api.postTx(Object.assign(data, envelope))
         } catch (err) {
           console.log("send err=" + err)
         }
