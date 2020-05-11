@@ -1338,7 +1338,7 @@ class Chart extends React.Component {
     }
     if (props.selected) {
       return <div id="chartwrap">
-        <svg id="chart" width="640" height="480">
+        <svg id="chart" width="1024" height="768">
         </svg>
       </div>
     }

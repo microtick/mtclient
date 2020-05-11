@@ -136,7 +136,7 @@ div#marketSelect {
 }
 
 #dialog.buy {
-  left: 150px;
+  right: 10px;
 }
 
 #dialog.quote {
