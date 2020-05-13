@@ -26,6 +26,7 @@ const DEFAULTCHARTSIZE = 7200
 const DIALOG_TIME1 = 1500
 const DIALOG_TIME2 = 1750
 
+const SELECT_WALLET = 'app/wallet'
 const PASSWORD = 'app/password'
 const INVALIDPASSWORD = 'app/invalidpassword'
 const RESETPASSWORD = 'app/resetpassword'
@@ -54,6 +55,8 @@ const WITHDRAWACCOUNT = 'dialog/withdrawaccount'
 const CONFIRMWITHDRAW = 'dialog/confirmwithdraw'
 const WAITWITHDRAW = 'shift/waitwithdraw'
 const WITHDRAWCOMPLETE = 'shift/withdrawcomplete'
+const ENABLELEDGER = 'microtick/ledger'
+const INTERACTLEDGER = 'dialog/interactledger'
 const CLOSEDIALOG = 'dialog/close'
 
 const globals = {
@@ -87,8 +90,10 @@ const Put = 1
 
 const initialState = {
   loading: true,
+  ledger: false,
   blocktime: BLOCKTIME,
   balance: 0,
+  wallet: "none",
   password: {
     prompt: true,
     invalid: false
@@ -352,6 +357,11 @@ export default (state = initialState, action) => {
   //console.log("action=" + action.type)
   //console.log("state=" + JSON.stringify(state,null,2))
   switch (action.type) {
+    case SELECT_WALLET:
+      return {
+        ...state,
+        wallet: action.wallet
+      }
     case RESETPASSWORD:
       return {
         ...state,
@@ -620,6 +630,11 @@ export default (state = initialState, action) => {
           ...state.chart,
           lock: action.lock
         }
+      }
+    case ENABLELEDGER:
+      return {
+        ...state,
+        ledger: true
       }
     default:
       return state
@@ -997,7 +1012,15 @@ export const buyCall = () => {
     const dur = api.durationFromSeconds(globals.dur)
     const notId = createBuyNotification(dispatch, BuyCall, market, dur, qty)
     try {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: true
+      })
       await api.marketTrade(market, dur, "call", qty + "quantity")
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
@@ -1011,6 +1034,10 @@ export const buyCall = () => {
         balance: globals.accountInfo.balance
       })
     } catch (err) {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       removeNotification(dispatch, notId)
       if (err !== undefined) createErrorNotification(dispatch, err.message)
     }
@@ -1028,7 +1055,15 @@ export const buyPut = () => {
     const dur = api.durationFromSeconds(globals.dur)
     const notId = createBuyNotification(dispatch, BuyPut, market, dur, qty)
     try {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: true
+      })
       await api.marketTrade(market, dur, "put", qty + "quantity")
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
@@ -1042,6 +1077,10 @@ export const buyPut = () => {
         balance: globals.accountInfo.balance
       })
     } catch (err) {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       removeNotification(dispatch, notId)
       console.log(err)
       createErrorNotification(dispatch, err.message)
@@ -1163,8 +1202,16 @@ export const placeQuote = () => {
     console.log("  premium: " + premium)
     console.log("  backing: " + backing + "(" + typeof backing + ")")
     const notId = createPlaceQuoteNotification(dispatch, market, dur, spot, premium, backing)
-    try {
+    try { 
+      dispatch({
+        type: INTERACTLEDGER,
+        value: true
+      })
       await api.createQuote(market, dur, backing + "dai", spot + "spot", premium + "premium")
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       setTimeout(() => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
@@ -1179,6 +1226,10 @@ export const placeQuote = () => {
         balance: globals.accountInfo.balance,
       })
     } catch (err) {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       removeNotification(dispatch, notId)
       console.log(err)
       createErrorNotification(dispatch, err.message)
@@ -1190,7 +1241,15 @@ export const cancelQuote = async (dispatch, id) => {
   console.log("Canceling quote: " + id)
   const notId = createCancelQuoteNotification(dispatch, id)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.cancelQuote(id)
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1205,6 +1264,10 @@ export const cancelQuote = async (dispatch, id) => {
       balance: globals.accountInfo.balance
     })
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1215,7 +1278,15 @@ export const backQuote = async (dispatch, id, amount) => {
   console.log("Backing quote: " + id + " amount=" + amount)
   const notId = createBackQuoteNotification(dispatch, id, amount)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.depositQuote(id, amount + "dai")
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1230,6 +1301,10 @@ export const backQuote = async (dispatch, id, amount) => {
       balance: globals.accountInfo.balance,
     })
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1240,7 +1315,15 @@ export const updateSpot = async (dispatch, id, newspot) => {
   console.log("Updating spot: " + id + " new spot=" + newspot)
   const notId = createUpdateSpotNotification(dispatch, id, newspot)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.updateQuote(id, newspot + "spot", "0premium")
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1248,6 +1331,10 @@ export const updateSpot = async (dispatch, id, newspot) => {
     fetchActiveQuotes()
     fetchOrderBook()
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1258,7 +1345,15 @@ export const updatePremium = async (dispatch, id, newpremium) => {
   console.log("Updating premium: " + id + " new premium=" + newpremium)
   const notId = createUpdatePremiumNotification(dispatch, id, newpremium)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.updateQuote(id, "0spot", newpremium + "premium")
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1266,6 +1361,10 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     fetchActiveQuotes()
     fetchOrderBook()
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1300,12 +1399,24 @@ export const settleTrade = async (dispatch, id) => {
   console.log("Settling trade: " + id)
   const notId = createSettleNotification(dispatch, id)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.settleTrade(id)
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1318,6 +1429,49 @@ export const newAccount = () => {
     dispatch({
       type: RESETPASSWORD
     })
+  }
+}
+
+export const selectWallet = hw => {
+  return async dispatch => {
+    if (hw) {
+      try {
+        dispatch({
+          type: ENABLELEDGER
+        })
+        dispatch({
+          type: INTERACTLEDGER,
+          value: true
+        })
+        await api.init("ledger")
+        dispatch({
+          type: INTERACTLEDGER,
+          value: false
+        })
+        dispatch({
+          type: CLOSEDIALOG
+        })
+        await init()
+        const keys = await api.getWallet()
+        console.log("Ledger account=" + keys.acct)
+        dispatch({
+          type: SELECT_WALLET,
+          value: "ledger"
+        })
+        dispatch({
+          type: PASSWORD
+        })
+        globals.account = keys.acct
+        selectAccount()
+      } catch (err) {
+        console.log(err.message)
+      }
+    } else {
+      dispatch({
+        type: SELECT_WALLET,
+        value: "software"
+      })
+    }
   }
 }
 

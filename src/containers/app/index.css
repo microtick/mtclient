@@ -13,6 +13,62 @@ main {
   z-index: 0;
 }
 
+#wallet-select {
+  width: 600px;
+  margin: auto;
+}
+
+.wallet-choices {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+
+.wallet-choice button {
+  margin-left: 20px;
+  width: 200px;
+  height: 200px;
+}
+
+#wallet-ledger-logo {
+  width: 200px;
+}
+
+#wallet-software-logo {
+  width: 150px;
+}
+
+#interact {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
+
+#interact .center {
+  margin-left: auto;
+  margin-right: auto;
+  background: #33f;
+  width: 600px;
+  height: 200px;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 10px 10px 10px #666;
+}
+
+#interact .center p {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  padding-top: 80px;
+}
+
 .fullscreen {
   position: absolute;
   z-index: 100;
@@ -26,9 +82,9 @@ main {
 
 .password {
   position: fixed;
-  left: 20%;
   top: 25%;
-  width: 60%;
+  left: 20%;
+  right: 20%;
   background: #fff;
   border: 4px solid #888;
   border-radius: 10px;
@@ -54,6 +110,7 @@ main {
 }
 
 .password .title {
+  text-align: center;
   font-size: 18px;
   line-height: 24px;
 }
