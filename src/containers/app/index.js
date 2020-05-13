@@ -21,25 +21,51 @@ import About from '../about'
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
 import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, fundAccountDialog, closeDialog } from '../../modules/dialog'
-import { choosePassword, enterPassword, newAccount, requestTokens, sendTokens, requestShift, withdrawAccount } from '../../modules/microtick'
+import { selectWallet, choosePassword, enterPassword, newAccount, 
+    requestTokens, sendTokens, requestShift, withdrawAccount } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
 import ClipBoard from 'react-copy-to-clipboard'
 import ClipImage from './Clipboard.svg'
+import Ledger from './ledger.svg'
+import Software from './software.svg'
 import logo from './mtlogo-sm.png'
 import "./index.css"
 
 import { menuSelected } from '../../modules/app'
 
 const App = props => {
-  if (props.password.prompt) {
+  if (props.dialog.showinteract && props.ledger) {
+    var interact = <div id="interact">
+      <div className="center">
+        <p>Please confirm the interaction on your Ledger device</p>
+      </div>
+    </div>
+  }
+  if (props.wallet === "none") {
+    var login = <div className="fullscreen">
+      <div id="wallet-select" className="password">
+        <h1>Select the wallet you would like to use:</h1>
+        <div className="wallet-choices">
+          <div className="wallet-choice">
+            <h2>Hardware Wallet</h2>
+            <button className="button" onClick={() => props.selectWallet(true)}><img id="wallet-ledger-logo" src={Ledger} alt="ledger"/></button>
+          </div>
+          <div className="wallet-choice">
+            <h2>Software Wallet</h2>
+            <button className="button" onClick={() => {props.selectWallet(false)}}><img id="wallet-software-logo" src={Software} alt="software wallet"/></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  } else if (props.password.prompt) {
     const checkAccount = document.cookie.split(';').filter(item => {
       return item.indexOf('mtm.account=') >= 0
     }).map(item => {
       return item.slice(item.indexOf('=') + 1)
     })
     if (checkAccount.length === 0) {
-      var password = <div className="fullscreen">
+      login = <div className="fullscreen">
         <div className="password">
           <div className="content">
             <div className="title">Choose a password to create a new account</div>
@@ -57,10 +83,12 @@ const App = props => {
       }
       const keys = JSON.parse(checkAccount[0])
       /*eslint-disable no-script-url*/
-      if (props.token === "mt") {
+      //if (props.token === "mt") {
         var newaccount = <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
-      }
-      password = <div className="fullscreen">
+      //} else {
+        //newaccount = <p>Restore account</p>
+      //}
+      login = <div className="fullscreen">
         <div className="password">
           <div className="content">
             <div className="title">
@@ -450,6 +478,7 @@ const App = props => {
     withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
   }
   return <div>
+    {interact}
     <section id="ui"> 
       <div id="notifications">
         {notifications}
@@ -457,7 +486,7 @@ const App = props => {
     </section>
     {dialog}
     <div id="page-header">
-      <a href="http://microtick.com" alt="Microtick"><img src={logo} alt={"logo"}/></a>
+      <a href="http://microtick.com" alt="Microtick"><img src={logo} alt="logo"/></a>
       <nav role="navigation">
         <a href="http://microtick.com">Home</a>
         <a href="http://microtick.com/background-information.html">Learn More</a>
@@ -485,7 +514,7 @@ const App = props => {
     </div>
     {menu}
     <main>
-      {password}
+      {login}
       {page}
     </main>
     <div id="page-footer">
@@ -497,6 +526,8 @@ const App = props => {
 }
 
 const mapStateToProps = state => ({
+  ledger: state.microtick.ledger,
+  wallet: state.microtick.wallet,
   password: state.microtick.password,
   constants: state.app.constants,
   menu: state.app.menu,
@@ -519,6 +550,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => {
   return bindActionCreators({
+    selectWallet,
     choosePassword,
     enterPassword,
     newAccount,

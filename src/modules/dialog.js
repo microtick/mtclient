@@ -15,6 +15,7 @@ const FUNDACCOUNTDIALOG = "dialog/fundaccount"
 const SENDTOKENSDIALOG = "dialog/sendtokens"
 const WITHDRAWACCOUNTDIALOG = "dialog/withdrawaccount"
 const CONFIRMWITHDRAW = "dialog/confirmwithdraw"
+const INTERACTLEDGER = "dialog/interactledger"
 const SHIFTSTART = "shift/start"
 const SHIFTSTATUS = "shift/status"
 const WAITWITHDRAW = "shift/waitwithdraw"
@@ -32,6 +33,11 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
+    case INTERACTLEDGER:
+      return {
+        ...state,
+        showinteract: action.value
+      }
     case BUYCALL:
       return {
         ...state,

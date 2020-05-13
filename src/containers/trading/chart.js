@@ -667,10 +667,10 @@ const buildTimeGrid = props => {
       rules.push(<line key={i} className={clz} x1={x} y1={0} x2={x} y2={layout.height}/>)
       text.push(<text key={i} className="gridtext" x={x+5} y={layout.height-4}>{commonName[grids[i]]}</text>)
     }
-    for (var i in grids) {
+    for (i in grids) {
       if (grids[i] < props.chartsize / 2) {
         const x = layout.info_left + layout.info_width * 2 * grids[i] / props.chartsize
-        rules.push(<line key={i} className="gridrule light" x1={x} y1={0} x2={x} y2={layout.height}/>)
+        rules.push(<line key={i+".2"} className="gridrule light" x1={x} y1={0} x2={x} y2={layout.height}/>)
       }
     }
     return <g>
