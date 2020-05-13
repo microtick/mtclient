@@ -3,4 +3,5 @@ package-lock.json
 yarn.lock
 start.sh
 build.sh
+build
 ~
