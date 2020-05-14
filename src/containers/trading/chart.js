@@ -815,7 +815,7 @@ const buildInfoOverlay = props => {
       )
     }
     
-    const info_y2 = layout.info_left + layout.info_width
+    const info_x2 = layout.info_left + layout.info_width
     if (props.mousestate === MOUSESTATE_QUOTE) {
       var priceAsCall = info_qprem - (info_newspot - info_qspot) / 2
       var priceAsPut = info_qprem + (info_newspot - info_qspot) / 2
@@ -832,7 +832,7 @@ const buildInfoOverlay = props => {
       if (retcall < 0) retcall = 0
       var retput = (strike_price - settle_price) * info_qqty
       if (retput < 0) retput = 0
-      var payout = <rect className="payout" x={info_y2-10} y={tmpy1>tmpy2?tmpy2:tmpy1} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:tmpy2-tmpy1}/>
+      var payout = <rect className="payout" x={info_x2-10} y={tmpy1>tmpy2?tmpy2:tmpy1} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:tmpy2-tmpy1}/>
     }
     if (props.mousestate === MOUSESTATE_CALL) {
       var infoclass = "call"
@@ -841,7 +841,7 @@ const buildInfoOverlay = props => {
       } else {
         ret = 0
       }
-      payout = <rect className="payout" x={info_y2-10} y={tmpy2} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:0}/>
+      payout = <rect className="payout" x={info_x2-10} y={tmpy2} width={10} height={tmpy1>tmpy2?tmpy1-tmpy2:0}/>
     } 
     if (props.mousestate === MOUSESTATE_PUT) {
       infoclass = "put"
@@ -850,7 +850,7 @@ const buildInfoOverlay = props => {
       } else {
         ret = 0
       }
-      payout = <rect className="payout" x={info_y2-10} y={tmpy1} width={10} height={tmpy2>tmpy1?tmpy2-tmpy1:0}/>
+      payout = <rect className="payout" x={info_x2-10} y={tmpy1} width={10} height={tmpy2>tmpy1?tmpy2-tmpy1:0}/>
     }
     window.requestAnimationFrame(() => {
       var textProps
@@ -923,7 +923,7 @@ const buildInfoOverlay = props => {
           <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
           {payout}
           {info}
-          <line id="strikeline" className="quote" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+          <line id="strikeline" className="quote" x1={layout.info_left} y1={tmpy1} x2={info_x2} y2={tmpy1}/>
           <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
           <text id="infotitle" className="info" x={layout.info_left+20} y={15}>Outcome Visualizer</text> 
           <text className="tradecall" x={layout.info_left+5} y={startcall}>Call premium</text>
@@ -933,7 +933,7 @@ const buildInfoOverlay = props => {
           <text className="infoprofit" x={layout.info_left+5} y={startcall+36}>Call profit</text>
           <text id="callprofitamt" className="infoprofit" x={layout.info_left+5} y={startcall+36}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
           
-          <text x={layout.info_left+5} y={startput}>Put quote</text>
+          <text className="tradeput" x={layout.info_left+5} y={startput}>Put premium</text>
           <text id="putpremiumamt" className="tradeput" x={layout.info_left} y={startput}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
           <text className="inforeturn" x={layout.info_left+5} y={startput+18}>Projected payout</text>
           <text id="inforeturnamt2" className="inforeturn" x={layout.info_left+5} y={startput+18}>{Math.round10(retput,-2)} {tokenType}</text>
@@ -941,11 +941,11 @@ const buildInfoOverlay = props => {
           <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+36}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
           
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
-          <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
+          <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
-          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
-          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
+          <line className="futuretimetip" x1={info_x2-2} y1={layout.height-10} x2={info_x2-5} y2={layout.height-7}/>
+          <line className="futuretimetip" x1={info_x2-2} y1={layout.height-10} x2={info_x2-5} y2={layout.height-13}/>
         </g>
       }
       if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {
@@ -954,7 +954,7 @@ const buildInfoOverlay = props => {
           <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
           {payout}
           {info}
-          <line id="strikeline" className={props.mousestate === MOUSESTATE_CALL ? "call" : "put"} x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+          <line id="strikeline" className={props.mousestate === MOUSESTATE_CALL ? "call" : "put"} x1={layout.info_left} y1={tmpy1} x2={info_x2} y2={tmpy1}/>
           <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
           <text id="infotitle" x={layout.info_left+20} y={15}>Outcome Visualizer</text>
           <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
@@ -968,11 +968,11 @@ const buildInfoOverlay = props => {
           <text className="infoprofit" x={layout.info_left+5} y={starty+72}>Projected profit</text>
           <text id="infoprofitamt" className="infoprofit" x={layout.info_left+5} y={starty+72}>= {Math.round10(ret-info_cost,-2)} {tokenType}</text>
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
-          <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
+          <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
-          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
-          <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
+          <line className="futuretimetip" x1={info_x2-2} y1={layout.height-10} x2={info_x2-5} y2={layout.height-7}/>
+          <line className="futuretimetip" x1={info_x2-2} y1={layout.height-10} x2={info_x2-5} y2={layout.height-13}/>
         </g>
       }
     } else {
@@ -1031,7 +1031,7 @@ const buildInfoOverlay = props => {
             }
           }
           const expX = x2 > layout.info_left + layout.info_width ? layout.info_left + layout.info_width : x2
-          if ((t.type === 0 && tmpy1 < y1 + h) || (t.type === 1 && tmpy1 > y1)) {
+          if ((t.type === 0 && tmpy1 < y1) || (t.type === 1 && tmpy1 > y1)) {
             var final = <line className={clz + " tradebase " + t.dir} x1={expX} y1={y1} x2={expX} y2={tmpy1}/>
           }
           return <g key={i}>
@@ -1043,14 +1043,16 @@ const buildInfoOverlay = props => {
         })
       return <g id="info">
         <text id="infotitle" x={layout.info_left+20} y={15}>Trade View</text>
-        <line id="strikeline" className="info" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+        <line id="strikeline" className="info" x1={layout.info_left} y1={tmpy1} x2={info_x2} y2={tmpy1}/>
+        <line id="strikeline" className="info" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1-3}/>
+        <line id="strikeline" className="info" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1+3}/>
         {trades}
         <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
-        <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
-        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
-        <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-13}/>
-        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-7}/>
-        <line className="futuretimetip" x1={info_y2-2} y1={layout.height-10} x2={info_y2-5} y2={layout.height-13}/>
+        <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
+        <line className="futuretimetip" x1={layout.info_left+3} y1={layout.height-10} x2={layout.info_left+6} y2={layout.height-7}/>
+        <line className="futuretimetip" x1={layout.info_left+3} y1={layout.height-10} x2={layout.info_left+6} y2={layout.height-13}/>
+        <line className="futuretimetip" x1={info_x2-2} y1={layout.height-10} x2={info_x2-5} y2={layout.height-7}/>
+        <line className="futuretimetip" x1={info_x2-2} y1={layout.height-10} x2={info_x2-5} y2={layout.height-13}/>
       </g>
     }
   }

@@ -129,12 +129,13 @@ svg .loading {
 
 #info rect.future.outthemoney {
   fill: #ddd !important;
-  fill-opacity: 0.1;
+  fill-opacity: 0.05;
   stroke-opacity: 0;
 }
 
 #info rect.future.inthemoney {
-  fill-opacity: 0.4;
+  fill: #ddd !important;
+  fill-opacity: 0.05;
   stroke-opacity: 0;
 }
 
@@ -163,15 +164,19 @@ svg .loading {
 }
 
 #trades line.tradebase {
-  stroke-width: 2px;
-  stroke-opacity: 0.6;
+  stroke-width: 1px;
+  stroke-opacity: 0.4;
 }
 
 #trades line.tradebase.call {
+  stroke-width: 2px;
+  stroke-opacity: 0.6;
   stroke: #0f0;
 }
 
 #trades line.tradebase.put {
+  stroke-width: 2px;
+  stroke-opacity: 0.6;
   stroke: #f00;
 }
 
