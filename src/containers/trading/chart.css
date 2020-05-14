@@ -47,7 +47,7 @@ svg .loading {
 .gridrule.now {
   stroke: #dcb;
   stroke-opacity: 1;
-  stroke-width: 3px;
+  stroke-width: 2px;
   stroke-dasharray: none;
 }
 
@@ -134,7 +134,7 @@ svg .loading {
 }
 
 #info rect.future.inthemoney {
-  fill-opacity: 0.5;
+  fill-opacity: 0.4;
   stroke-opacity: 0;
 }
 

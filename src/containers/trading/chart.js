@@ -894,11 +894,6 @@ const buildInfoOverlay = props => {
         textProps = infoprofitamt.getBoundingClientRect()
         infoprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
       }
-      const callpriceamt = document.getElementById('callpriceamt')
-      if (callpriceamt) {
-        textProps = callpriceamt.getBoundingClientRect()
-        callpriceamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
-      }
       const callpremiumamt = document.getElementById('callpremiumamt')
       if (callpremiumamt) {
         textProps = callpremiumamt.getBoundingClientRect()
@@ -908,11 +903,6 @@ const buildInfoOverlay = props => {
       if (callprofitamt) {
         textProps = callprofitamt.getBoundingClientRect()
         callprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
-      }
-      const putpriceamt = document.getElementById('putpriceamt')
-      if (putpriceamt) {
-        textProps = putpriceamt.getBoundingClientRect()
-        putpriceamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
       }
       const putpremiumamt = document.getElementById('putpremiumamt')
       if (putpremiumamt) {
@@ -936,23 +926,19 @@ const buildInfoOverlay = props => {
           <line id="strikeline" className="quote" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
           <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
           <text id="infotitle" className="info" x={layout.info_left+20} y={15}>Outcome Visualizer</text> 
-          <text x={layout.info_left+5} y={startcall}>Call quote</text>
-          <text id="callpriceamt" x={layout.info_left+5} y={startcall}>{Math.round10(priceAsCall,-2)}</text>
-          <text className="tradecall" x={layout.info_left+5} y={startcall+18}>Call premium</text>
-          <text id="callpremiumamt" className="tradecall" x={layout.info_left+5} y={startcall+18}>{Math.round10(premiumAsCall,-2)} {tokenType}</text>
-          <text className="inforeturn" x={layout.info_left+5} y={startcall+36}>Projected payout</text>
-          <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={startcall+36}>{Math.round10(retcall,-2)} {tokenType}</text>
-          <text className="infoprofit" x={layout.info_left+5} y={startcall+54}>Call profit</text>
-          <text id="callprofitamt" className="infoprofit" x={layout.info_left+5} y={startcall+54}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
+          <text className="tradecall" x={layout.info_left+5} y={startcall}>Call premium</text>
+          <text id="callpremiumamt" className="tradecall" x={layout.info_left+5} y={startcall}>{Math.round10(premiumAsCall,-2)} {tokenType}</text>
+          <text className="inforeturn" x={layout.info_left+5} y={startcall+18}>Projected payout</text>
+          <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={startcall+18}>{Math.round10(retcall,-2)} {tokenType}</text>
+          <text className="infoprofit" x={layout.info_left+5} y={startcall+36}>Call profit</text>
+          <text id="callprofitamt" className="infoprofit" x={layout.info_left+5} y={startcall+36}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
           
           <text x={layout.info_left+5} y={startput}>Put quote</text>
-          <text id="putpriceamt" x={layout.info_left+5} y={startput}>{Math.round10(priceAsPut,-2)}</text>
-          <text className="tradeput" x={layout.info_left+5} y={startput+18}>Put premium</text>
-          <text id="putpremiumamt" className="tradeput" x={layout.info_left+18} y={startput+18}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
-          <text className="inforeturn" x={layout.info_left+5} y={startput+36}>Projected payout</text>
-          <text id="inforeturnamt2" className="inforeturn" x={layout.info_left+5} y={startput+36}>{Math.round10(retput,-2)} {tokenType}</text>
-          <text className="infoprofit" x={layout.info_left+5} y={startput+54}>Put profit</text>
-          <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+54}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
+          <text id="putpremiumamt" className="tradeput" x={layout.info_left} y={startput}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
+          <text className="inforeturn" x={layout.info_left+5} y={startput+18}>Projected payout</text>
+          <text id="inforeturnamt2" className="inforeturn" x={layout.info_left+5} y={startput+18}>{Math.round10(retput,-2)} {tokenType}</text>
+          <text className="infoprofit" x={layout.info_left+5} y={startput+36}>Put profit</text>
+          <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+36}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
           
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
           <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
@@ -1013,9 +999,9 @@ const buildInfoOverlay = props => {
           const w = x2 > layout.info_left + layout.info_width ? layout.info_left + layout.info_width - x1 : x2 - x1
           const h = y1 < y2 ? y2 - y1 : y1 - y2
           clz = clz + " future"
-          if (x2 < layout.info_left + layout.info_width) {
-            var end = <circle className={clz} cx={x2} cy={y1} r="1"/>
-          }
+          //if (x2 < layout.info_left + layout.info_width) {
+            //var end = <circle className={clz} cx={x2} cy={tmpy1} r="1"/>
+          //}
           var ty1 = y
           var ty2 = tmpy1 > y ? (tmpy1 > y + h ? y + h : tmpy1) : y
           var ty3 = y + h
@@ -1044,11 +1030,15 @@ const buildInfoOverlay = props => {
               otm_h = ty2 - ty1
             }
           }
+          const expX = x2 > layout.info_left + layout.info_width ? layout.info_left + layout.info_width : x2
+          if ((t.type === 0 && tmpy1 < y1 + h) || (t.type === 1 && tmpy1 > y1)) {
+            var final = <line className={clz + " tradebase " + t.dir} x1={expX} y1={y1} x2={expX} y2={tmpy1}/>
+          }
           return <g key={i}>
             <rect className={clz + " outthemoney"} x={x} y={otm_y} width={w} height={otm_h}/>
             <rect className={clz + " inthemoney"} x={x} y={itm_y} width={w} height={itm_h}/>
-            <line className={clz + " tradebase " + t.dir} x1={x1} y1={y1} x2={x2 > layout.info_left + layout.info_width ? layout.info_left + layout.info_width : x2} y2={y1}/>
-            {end}
+            <line className={clz + " tradebase " + t.dir} x1={x1} y1={y1} x2={expX} y2={y1}/>
+            {final}
           </g>
         })
       return <g id="info">
@@ -1341,10 +1331,10 @@ class Chart extends React.Component {
           var chlock = <image href={lock} x={0} y={2} width={16} height={16}/>
         } 
         if ((props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) && props.lock.orderbook) {
-          var oblock = <image href={lock} x={layout.chart_mp_left} y={2} width={16} height={16}/>
+          var oblock = <image href={lock} x={layout.chart_mp_left+2} y={2} width={16} height={16}/>
         }
         if (props.lock.info) {
-          var infolock = <image href={lock} x={layout.info_left} y={2} width={16} height={16}/>
+          var infolock = <image href={lock} x={layout.info_left+4} y={2} width={16} height={16}/>
         }
       }
       var chart =
@@ -1357,14 +1347,14 @@ class Chart extends React.Component {
             {chlock}
             {trades}
             {data}
-            {spot}
             {prems}
             {orderbook}
             {info}
             {infolock}
             {foreground}
-            <line className="gridrule now" x1={layout.width} y1={0} x2={layout.width} y2={layout.height}/>
+            <line className="gridrule now" x1={layout.width+2} y1={0} x2={layout.width+2} y2={layout.height}/>
             <line className="gridrule now" x1={layout.info_left+layout.info_width} y1={0} x2={layout.info_left+layout.info_width} y2={layout.height}/>
+            {spot}
           </svg>
         </div>
       return chart

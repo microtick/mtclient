@@ -556,6 +556,7 @@ export default (state = initialState, action) => {
         chart: {
           ...state.chart,
           ticks: {
+            ...state.chart.ticks,
             data: newdata,
             minb: targetmin,
             maxb: action.block.number,
