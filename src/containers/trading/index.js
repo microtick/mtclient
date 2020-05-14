@@ -150,7 +150,7 @@ class Home extends React.Component {
         const newspot = props.premiums.indicatedSpot
         const tooltip_weight = "Weight = Quantity"
         const tooltip_newspot = "New Spot = (Market Spot * Market Weight + Spot * Weight) / (Market Weight + Weight)"
-        const premstep = Math.roundLog(props.premiums.prem / 10)
+        const premstep = Math.pow(10, Math.floor(Math.log10(props.premiums.prem))-1)
         const spotstep = premstep
         if (props.account === undefined) {
           actions = <div>
@@ -163,7 +163,7 @@ class Home extends React.Component {
             <button onClick={() => { props.closeDialog(); props.cancelDialog() }}>Cancel</button>
           </div>
         }
-        const backing = Math.pow(10, Math.floor(Math.log10(props.quote.backing)))
+        const backingStep = Math.pow(10, Math.floor(Math.log10(props.quote.backing))-1)
         dialog = <div id="dialog" className="quote">
           <ReactToolTip/>
           <div className="inner quote">
@@ -184,7 +184,7 @@ class Home extends React.Component {
                   <td>Backing</td>
                   <td></td>
                   <td>
-                    <input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backing}/> 
+                    <input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backingStep}/> 
                     {props.token}
                   </td>
                 </tr>

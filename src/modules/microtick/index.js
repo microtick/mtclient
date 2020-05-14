@@ -68,7 +68,8 @@ const globals = {
     size: DEFAULTCHARTSIZE
   },
   quote: {
-    backing: 10
+    backing: 10,
+    weight: 0
   },
   quotes: []
 }
@@ -139,6 +140,7 @@ const initialState = {
   },
   quote: {
     backing: 10,
+    weight: 0,
     list: []
   }
 }
@@ -442,6 +444,10 @@ export default (state = initialState, action) => {
         ...state,
         premiums: {
           ...action
+        },
+        quote: {
+          ...state.quote,
+          weight: action.weight
         }
       })
     case TICK:
@@ -598,13 +604,15 @@ export default (state = initialState, action) => {
         }
       }
     case QUOTEPARAMS:
+      const qty = globals.quote.backing / (10 * globals.quote.premium)
       return {
         ...state,
         quote: {
           ...state.quote,
           spot: globals.quote.spot,
           premium: globals.quote.premium,
-          backing: globals.quote.backing
+          backing: globals.quote.backing,
+          weight: qty
         }
       }
     case MOUSESTATE:
@@ -1144,7 +1152,7 @@ export const changeBacking = event => {
   var backing = parseFloat(event.target.value)
   if (backing < 0) backing = 0
   return async dispatch => {
-    globals.quote.backing = backing.toString()
+    globals.quote.backing = backing
     dispatch({
       type: QUOTEPARAMS
     })

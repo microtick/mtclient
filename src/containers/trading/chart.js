@@ -301,6 +301,10 @@ const initDynamicView = props => {
   minp = view.minp
   maxp = view.maxp
   
+  if (props.dialog.showinline && props.mousestate === MOUSESTATE_QUOTE) {
+    dynamicWeight = props.quote.weight
+  }
+  
   if (props.mousestate === MOUSESTATE_NONE) {
       
     layout.width = layout.chartwidth * 0.5
@@ -674,10 +678,8 @@ const buildTimeGrid = props => {
       }
     }
     return <g>
-      <line className="gridrule now" x1={layout.width} y1={0} x2={layout.width} y2={layout.height}/>
       {rules}
       {text}
-      <line className="gridrule now" x1={layout.info_left+layout.info_width} y1={0} x2={layout.info_left+layout.info_width} y2={layout.height}/>
     </g>
   }
 }
@@ -931,7 +933,7 @@ const buildInfoOverlay = props => {
           <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
           {payout}
           {info}
-          <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+          <line id="strikeline" className="quote" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
           <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
           <text id="infotitle" className="info" x={layout.info_left+20} y={15}>Outcome Visualizer</text> 
           <text x={layout.info_left+5} y={startcall}>Call quote</text>
@@ -966,7 +968,7 @@ const buildInfoOverlay = props => {
           <rect id="infoback" x={layout.info_left} y={0} width={layout.info_width} height={layout.height}/>
           {payout}
           {info}
-          <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+          <line id="strikeline" className={props.mousestate === MOUSESTATE_CALL ? "call" : "put"} x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
           <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
           <text id="infotitle" x={layout.info_left+20} y={15}>Outcome Visualizer</text>
           <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
@@ -1014,15 +1016,44 @@ const buildInfoOverlay = props => {
           if (x2 < layout.info_left + layout.info_width) {
             var end = <circle className={clz} cx={x2} cy={y1} r="1"/>
           }
+          var ty1 = y
+          var ty2 = tmpy1 > y ? (tmpy1 > y + h ? y + h : tmpy1) : y
+          var ty3 = y + h
+          if (t.dir === "long") {
+            if (t.type === 0) {
+              var itm_y = ty2
+              var itm_h = ty3 - ty2
+              var otm_y = ty1
+              var otm_h = ty2 - ty1
+            } else {
+              itm_y = ty1
+              itm_h = ty2 - ty1
+              otm_y = ty2
+              otm_h = ty3 - ty2
+            }
+          } else {
+            if (t.type === 0) {
+              itm_y = ty1
+              itm_h = ty2 - ty1
+              otm_y = ty2
+              otm_h = ty3 - ty2
+            } else {
+              itm_y = ty2
+              itm_h = ty3 - ty2
+              otm_y = ty1
+              otm_h = ty2 - ty1
+            }
+          }
           return <g key={i}>
-            <rect className={clz} x={x} y={y} width={w} height={h}/>
+            <rect className={clz + " outthemoney"} x={x} y={otm_y} width={w} height={otm_h}/>
+            <rect className={clz + " inthemoney"} x={x} y={itm_y} width={w} height={itm_h}/>
             <line className={clz + " tradebase " + t.dir} x1={x1} y1={y1} x2={x2 > layout.info_left + layout.info_width ? layout.info_left + layout.info_width : x2} y2={y1}/>
             {end}
           </g>
         })
       return <g id="info">
         <text id="infotitle" x={layout.info_left+20} y={15}>Trade View</text>
-        <line id="strikeline" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
+        <line id="strikeline" className="info" x1={layout.info_left} y1={tmpy1} x2={info_y2} y2={tmpy1}/>
         {trades}
         <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
         <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_y2-2} y2={layout.height-10}/>
@@ -1332,6 +1363,8 @@ class Chart extends React.Component {
             {info}
             {infolock}
             {foreground}
+            <line className="gridrule now" x1={layout.width} y1={0} x2={layout.width} y2={layout.height}/>
+            <line className="gridrule now" x1={layout.info_left+layout.info_width} y1={0} x2={layout.info_left+layout.info_width} y2={layout.height}/>
           </svg>
         </div>
       return chart
