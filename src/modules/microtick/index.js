@@ -1524,7 +1524,11 @@ export const requestTokens = () => {
     console.log("Request tokens")
     const notId = createFaucetRequestNotification(dispatch, globals.account)
     try {
-      const res = await axios.get("http://" + process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
+      var proto = "http://"
+      if (window.location.protocol === "https:") {
+        proto = "https://"
+      }
+      const res = await axios.get(proto + process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
       console.log(JSON.stringify(res.data, null, 2))
       if (res.data !== "success") {
         if (res.data.startsWith("failure: ")) {
@@ -1595,9 +1599,22 @@ export const sendTokens = () => {
               memo: ""
             }
           }
+          
+          dispatch({
+            type: INTERACTLEDGER,
+            value: true
+          })
           await api.postTx(Object.assign(data, envelope))
+          dispatch({
+            type: INTERACTLEDGER,
+            value: false
+          })
         } catch (err) {
-          console.log("send err=" + err)
+          dispatch({
+            type: INTERACTLEDGER,
+            value: false
+          })
+          createErrorNotification(dispatch, "Send tokens failed", err.message)
         }
       }
     })
@@ -1617,7 +1634,11 @@ export const requestShift = acct => {
     }
     
     // connect to server
-    const client = new w3cwebsocket("ws://" + process.env.MICROTICK_FAUCET)
+    var proto = "ws://"
+    if (window.location.protocol === "https:") {
+      proto = "wss://"
+    }
+    const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
     
     const close = () => {
       client.close()
@@ -1698,7 +1719,11 @@ export const withdrawAccount = () => {
         const dai = document.getElementById("dai-amount").value
         
         // connect to server
-        const client = new w3cwebsocket("ws://" + process.env.MICROTICK_FAUCET)
+        var proto = "ws://"
+        if (window.location.protocol === "https:") {
+          proto = "wss://"
+        }
+        const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
         
         const close = () => {
           dispatch({
