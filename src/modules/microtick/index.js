@@ -26,6 +26,7 @@ const DEFAULTCHARTSIZE = 7200
 const DIALOG_TIME1 = 1500
 const DIALOG_TIME2 = 1750
 
+const SELECT_WALLET = 'app/wallet'
 const PASSWORD = 'app/password'
 const INVALIDPASSWORD = 'app/invalidpassword'
 const RESETPASSWORD = 'app/resetpassword'
@@ -44,6 +45,8 @@ const QUOTELIST = 'microtick/quote/list'
 const TRADELIST = 'microtick/trade/list'
 const QUOTEPARAMS= 'microtick/quote/params'
 const MOUSESTATE = 'microtick/update'
+const MOUSEMOVE = 'microtick/mousemove'
+const LOCK = 'microtick/lock'
 const DONELOADING = 'microtick/loading'
 const SENDTOKENS = "dialog/sendtokens"
 const SHIFTSTART = 'shift/start'
@@ -52,6 +55,8 @@ const WITHDRAWACCOUNT = 'dialog/withdrawaccount'
 const CONFIRMWITHDRAW = 'dialog/confirmwithdraw'
 const WAITWITHDRAW = 'shift/waitwithdraw'
 const WITHDRAWCOMPLETE = 'shift/withdrawcomplete'
+const ENABLELEDGER = 'microtick/ledger'
+const INTERACTLEDGER = 'dialog/interactledger'
 const CLOSEDIALOG = 'dialog/close'
 
 const globals = {
@@ -63,7 +68,8 @@ const globals = {
     size: DEFAULTCHARTSIZE
   },
   quote: {
-    backing: 10
+    backing: 10,
+    weight: 0
   },
   quotes: []
 }
@@ -85,8 +91,10 @@ const Put = 1
 
 const initialState = {
   loading: true,
+  ledger: false,
   blocktime: BLOCKTIME,
   balance: 0,
+  wallet: "none",
   password: {
     prompt: true,
     invalid: false
@@ -102,6 +110,7 @@ const initialState = {
   },
   chart: {
     mouseState: 0,
+    mouseMove: -1,
     size: globals.chart.size,
     ticks: {
       minb: 0,
@@ -131,6 +140,7 @@ const initialState = {
   },
   quote: {
     backing: 10,
+    weight: 0,
     list: []
   }
 }
@@ -237,8 +247,7 @@ function calcMinMax(obj) {
     if (minp > put) minp = put
   }
   obj.trade.list.map(tr => {
-    if ((tr.market === globals.market) && (tr.endBlock === undefined || tr.endBlock >= minb ||
-      Date.parse(tr.end) >= mint)) {
+    if ((tr.market === globals.market) && (tr.endBlock === undefined || Date.parse(tr.end) >= mint)) {
       if (tr.type === BuyCall) {
         const min = tr.strike
         if (minp > min) minp = min
@@ -350,6 +359,11 @@ export default (state = initialState, action) => {
   //console.log("action=" + action.type)
   //console.log("state=" + JSON.stringify(state,null,2))
   switch (action.type) {
+    case SELECT_WALLET:
+      return {
+        ...state,
+        wallet: action.wallet
+      }
     case RESETPASSWORD:
       return {
         ...state,
@@ -430,6 +444,10 @@ export default (state = initialState, action) => {
         ...state,
         premiums: {
           ...action
+        },
+        quote: {
+          ...state.quote,
+          weight: action.weight
         }
       })
     case TICK:
@@ -538,6 +556,7 @@ export default (state = initialState, action) => {
         chart: {
           ...state.chart,
           ticks: {
+            ...state.chart.ticks,
             data: newdata,
             minb: targetmin,
             maxb: action.block.number,
@@ -586,13 +605,15 @@ export default (state = initialState, action) => {
         }
       }
     case QUOTEPARAMS:
+      const qty = globals.quote.backing / (10 * globals.quote.premium)
       return {
         ...state,
         quote: {
           ...state.quote,
           spot: globals.quote.spot,
           premium: globals.quote.premium,
-          backing: globals.quote.backing
+          backing: globals.quote.backing,
+          weight: qty
         }
       }
     case MOUSESTATE:
@@ -602,6 +623,27 @@ export default (state = initialState, action) => {
           ...state.chart,
           mouseState: action.mouseState
         }
+      }
+    case MOUSEMOVE:
+      return {
+        ...state,
+        chart: {
+          ...state.chart,
+          mouseMove: action.mouseMove
+        }
+      }
+    case LOCK:
+      return {
+        ...state,
+        chart: {
+          ...state.chart,
+          lock: action.lock
+        }
+      }
+    case ENABLELEDGER:
+      return {
+        ...state,
+        ledger: true
       }
     default:
       return state
@@ -801,7 +843,7 @@ async function fetchOrderBook() {
   
   var colorizeCount = 0
   const colormap = {}
-  
+    
   const computePricing = async type => {
     const obj = {}
     obj.maxPrem = 0
@@ -873,7 +915,7 @@ async function fetchOrderBook() {
   const calls = await computePricing(CallAsk)
   const puts = await computePricing(PutAsk)
   
-  store.dispatch({
+  const dispatch = {
     type: ORDERBOOK,
     durs: durs,
     totalBacking: totalBacking,
@@ -917,7 +959,16 @@ async function fetchOrderBook() {
         indicatedPutPremium: p
       })
     }
-  })
+  }
+  
+  store.dispatch(dispatch)
+  
+  // Dynamically update cursor which is not managed by react for speed
+  if (globals.mouseState === 2 || globals.mouseState === 3) { // MOUSESTATE_CALL || MOUSESTATE_PUT
+    orderBookCursorPos(globals.qty, globals.orderbook.totalWeight[globals.dur], globals.spot, 
+      globals.mouseState === 2, 
+      globals.mouseState === 2 ? calls.price(globals.qty) : puts.price(globals.qty))
+  }
 }
 
 async function fetchActiveQuotes() {
@@ -970,7 +1021,15 @@ export const buyCall = () => {
     const dur = api.durationFromSeconds(globals.dur)
     const notId = createBuyNotification(dispatch, BuyCall, market, dur, qty)
     try {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: true
+      })
       await api.marketTrade(market, dur, "call", qty + "quantity")
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
@@ -984,6 +1043,10 @@ export const buyCall = () => {
         balance: globals.accountInfo.balance
       })
     } catch (err) {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       removeNotification(dispatch, notId)
       if (err !== undefined) createErrorNotification(dispatch, err.message)
     }
@@ -1001,7 +1064,15 @@ export const buyPut = () => {
     const dur = api.durationFromSeconds(globals.dur)
     const notId = createBuyNotification(dispatch, BuyPut, market, dur, qty)
     try {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: true
+      })
       await api.marketTrade(market, dur, "put", qty + "quantity")
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       //console.log("Result=" + JSON.stringify(tx, null, 2))
       setTimeout(() => {
         removeNotification(dispatch, notId)
@@ -1015,6 +1086,10 @@ export const buyPut = () => {
         balance: globals.accountInfo.balance
       })
     } catch (err) {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       removeNotification(dispatch, notId)
       console.log(err)
       createErrorNotification(dispatch, err.message)
@@ -1067,6 +1142,7 @@ export const changeQtyCall = event => {
 export const changeQtyPut = event => {
   var qty = parseFloat(event.target.value)
   if (qty < 0 || isNaN(qty)) qty = 0
+  if (qty > globals.orderbook.totalWeight[globals.dur]) qty = globals.orderbook.totalWeight[globals.dur]
   return async dispatch => {
     globals.orderbook.setBuyPremium(qty, false)
     orderBookCursorPos(qty, globals.orderbook.totalWeight[globals.dur], globals.spot, false, globals.orderbook.puts.price(qty))
@@ -1077,12 +1153,12 @@ export const changeBacking = event => {
   var backing = parseFloat(event.target.value)
   if (backing < 0) backing = 0
   return async dispatch => {
-    globals.quote.backing = backing.toString()
+    globals.quote.backing = backing
     dispatch({
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
-    const qty = globals.quote.backing / 10 * globals.quote.premium
+    const qty = globals.quote.backing / (10 * globals.quote.premium)
     chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
@@ -1098,7 +1174,7 @@ export const changeSpot = event => {
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
-    const qty = globals.quote.backing / 10 * globals.quote.premium
+    const qty = globals.quote.backing / (10 * globals.quote.premium)
     chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
@@ -1112,7 +1188,7 @@ export const changePremium = event => {
       type: QUOTEPARAMS
     })
     newQuoteParams(dispatch)
-    const qty = globals.quote.backing / 10 * globals.quote.premium
+    const qty = globals.quote.backing / (10 * globals.quote.premium)
     chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
@@ -1135,8 +1211,16 @@ export const placeQuote = () => {
     console.log("  premium: " + premium)
     console.log("  backing: " + backing + "(" + typeof backing + ")")
     const notId = createPlaceQuoteNotification(dispatch, market, dur, spot, premium, backing)
-    try {
+    try { 
+      dispatch({
+        type: INTERACTLEDGER,
+        value: true
+      })
       await api.createQuote(market, dur, backing + "dai", spot + "spot", premium + "premium")
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       setTimeout(() => {
         removeNotification(dispatch, notId)
       }, DIALOG_TIME1)
@@ -1151,6 +1235,10 @@ export const placeQuote = () => {
         balance: globals.accountInfo.balance,
       })
     } catch (err) {
+      dispatch({
+        type: INTERACTLEDGER,
+        value: false
+      })
       removeNotification(dispatch, notId)
       console.log(err)
       createErrorNotification(dispatch, err.message)
@@ -1162,7 +1250,15 @@ export const cancelQuote = async (dispatch, id) => {
   console.log("Canceling quote: " + id)
   const notId = createCancelQuoteNotification(dispatch, id)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.cancelQuote(id)
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1177,6 +1273,10 @@ export const cancelQuote = async (dispatch, id) => {
       balance: globals.accountInfo.balance
     })
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1187,7 +1287,15 @@ export const backQuote = async (dispatch, id, amount) => {
   console.log("Backing quote: " + id + " amount=" + amount)
   const notId = createBackQuoteNotification(dispatch, id, amount)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.depositQuote(id, amount + "dai")
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1202,6 +1310,10 @@ export const backQuote = async (dispatch, id, amount) => {
       balance: globals.accountInfo.balance,
     })
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1212,7 +1324,15 @@ export const updateSpot = async (dispatch, id, newspot) => {
   console.log("Updating spot: " + id + " new spot=" + newspot)
   const notId = createUpdateSpotNotification(dispatch, id, newspot)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.updateQuote(id, newspot + "spot", "0premium")
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1220,6 +1340,10 @@ export const updateSpot = async (dispatch, id, newspot) => {
     fetchActiveQuotes()
     fetchOrderBook()
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1230,7 +1354,15 @@ export const updatePremium = async (dispatch, id, newpremium) => {
   console.log("Updating premium: " + id + " new premium=" + newpremium)
   const notId = createUpdatePremiumNotification(dispatch, id, newpremium)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.updateQuote(id, "0spot", newpremium + "premium")
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
@@ -1238,6 +1370,10 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     fetchActiveQuotes()
     fetchOrderBook()
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1245,6 +1381,7 @@ export const updatePremium = async (dispatch, id, newpremium) => {
 }
 
 export const mouseState = mouseState => {
+  globals.mouseState = mouseState
   return async dispatch => {
     dispatch({
       type: MOUSESTATE,
@@ -1253,16 +1390,42 @@ export const mouseState = mouseState => {
   }
 }
 
+export const mouseMoveTrigger = mouseMove => {
+  store.dispatch({
+    type: MOUSEMOVE,
+    mouseMove: mouseMove
+  })
+}
+
+export const setLock = lock => {
+  store.dispatch({
+    type: LOCK,
+    lock: lock
+  })
+}
+
 export const settleTrade = async (dispatch, id) => {
   console.log("Settling trade: " + id)
   const notId = createSettleNotification(dispatch, id)
   try {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: true
+    })
     await api.settleTrade(id)
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     setTimeout(() => {
       removeNotification(dispatch, notId)
     }, DIALOG_TIME1)
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
   } catch (err) {
+    dispatch({
+      type: INTERACTLEDGER,
+      value: false
+    })
     removeNotification(dispatch, notId)
     console.log(err)
     createErrorNotification(dispatch, err.message)
@@ -1275,6 +1438,49 @@ export const newAccount = () => {
     dispatch({
       type: RESETPASSWORD
     })
+  }
+}
+
+export const selectWallet = hw => {
+  return async dispatch => {
+    if (hw) {
+      try {
+        dispatch({
+          type: ENABLELEDGER
+        })
+        dispatch({
+          type: INTERACTLEDGER,
+          value: true
+        })
+        await api.init("ledger")
+        dispatch({
+          type: INTERACTLEDGER,
+          value: false
+        })
+        dispatch({
+          type: CLOSEDIALOG
+        })
+        await init()
+        const keys = await api.getWallet()
+        console.log("Ledger account=" + keys.acct)
+        dispatch({
+          type: SELECT_WALLET,
+          value: "ledger"
+        })
+        dispatch({
+          type: PASSWORD
+        })
+        globals.account = keys.acct
+        selectAccount()
+      } catch (err) {
+        console.log(err.message)
+      }
+    } else {
+      dispatch({
+        type: SELECT_WALLET,
+        value: "software"
+      })
+    }
   }
 }
 
@@ -1327,7 +1533,11 @@ export const requestTokens = () => {
     console.log("Request tokens")
     const notId = createFaucetRequestNotification(dispatch, globals.account)
     try {
-      const res = await axios.get("http://" + process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
+      var proto = "http://"
+      if (window.location.protocol === "https:") {
+        proto = "https://"
+      }
+      const res = await axios.get(proto + process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
       console.log(JSON.stringify(res.data, null, 2))
       if (res.data !== "success") {
         if (res.data.startsWith("failure: ")) {
@@ -1398,9 +1608,22 @@ export const sendTokens = () => {
               memo: ""
             }
           }
-          const res = await api.postTx(Object.assign(data, envelope))
+          
+          dispatch({
+            type: INTERACTLEDGER,
+            value: true
+          })
+          await api.postTx(Object.assign(data, envelope))
+          dispatch({
+            type: INTERACTLEDGER,
+            value: false
+          })
         } catch (err) {
-          console.log("send err=" + err)
+          dispatch({
+            type: INTERACTLEDGER,
+            value: false
+          })
+          createErrorNotification(dispatch, "Send tokens failed", err.message)
         }
       }
     })
@@ -1420,7 +1643,11 @@ export const requestShift = acct => {
     }
     
     // connect to server
-    const client = new w3cwebsocket("ws://" + process.env.MICROTICK_FAUCET)
+    var proto = "ws://"
+    if (window.location.protocol === "https:") {
+      proto = "wss://"
+    }
+    const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
     
     const close = () => {
       client.close()
@@ -1501,7 +1728,11 @@ export const withdrawAccount = () => {
         const dai = document.getElementById("dai-amount").value
         
         // connect to server
-        const client = new w3cwebsocket("ws://" + process.env.MICROTICK_FAUCET)
+        var proto = "ws://"
+        if (window.location.protocol === "https:") {
+          proto = "wss://"
+        }
+        const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
         
         const close = () => {
           dispatch({

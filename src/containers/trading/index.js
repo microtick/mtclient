@@ -49,11 +49,11 @@ class Home extends React.Component {
           </div>
         } else {
           actions = <div>
-            <button onClick={() => { props.closeDialog(); props.buyCall() }}>Buy Call</button>
             <button onClick={() => { props.closeDialog(); props.cancelDialog() }}>Cancel</button>
+            <button onClick={() => { props.closeDialog(); props.buyCall() }}>Buy Call</button>
           </div>
         }
-        dialog = <div id="dialog">
+        dialog = <div id="dialog" className="buy">
           <ReactToolTip/>
           <div className="inner call">
             <h3>Buy Call?</h3>
@@ -80,12 +80,12 @@ class Home extends React.Component {
                 <tr>
                   <td data-tip={tooltip_averprem}>Avg Premium</td>
                   <td></td>
-                  <td>⇑ {Math.round10(props.premiums.prem, props.constants.TOKEN_PRECISION)}</td>
+                  <td>⇑ <span id="avg-prem">{Math.round10(props.premiums.prem, props.constants.UNIT_PRECISION)}</span></td>
                 </tr>
                 <tr>
                   <td data-tip={tooltip_cost}>Cost</td>
                   <td></td>
-                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+                  <td><span id="buy-cost" className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -101,11 +101,11 @@ class Home extends React.Component {
           </div>
         } else {
           actions = <div>
-            <button onClick={() => { props.closeDialog(); props.buyPut() }}>Buy Put</button>
             <button onClick={() => { props.closeDialog(); props.cancelDialog() }}>Cancel</button>
+            <button onClick={() => { props.closeDialog(); props.buyPut() }}>Buy Put</button>
           </div>
         }
-        dialog = <div id="dialog">
+        dialog = <div id="dialog" className="buy">
           <ReactToolTip/>
           <div className="inner put">
             <h3>Buy Put?</h3>
@@ -132,12 +132,12 @@ class Home extends React.Component {
                 <tr>
                   <td data-tip={tooltip_averprem}>Avg Premium</td>
                   <td></td>
-                  <td>⇓ {Math.round10(props.premiums.prem, props.constants.TOKEN_PRECISION)}</td>
+                  <td>⇓ <span id="avg-prem">{Math.round10(props.premiums.prem, props.constants.UNIT_PRECISION)}</span></td>
                 </tr>
                 <tr>
                   <td data-tip={tooltip_cost}>Cost</td>
                   <td></td>
-                  <td><span className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+                  <td><span id="buy-cost" className="cost">{Math.round10(cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -150,7 +150,7 @@ class Home extends React.Component {
         const newspot = props.premiums.indicatedSpot
         const tooltip_weight = "Weight = Quantity"
         const tooltip_newspot = "New Spot = (Market Spot * Market Weight + Spot * Weight) / (Market Weight + Weight)"
-        const premstep = Math.roundLog(props.premiums.prem / 10)
+        const premstep = Math.pow(10, Math.floor(Math.log10(props.premiums.prem))-1)
         const spotstep = premstep
         if (props.account === undefined) {
           actions = <div>
@@ -163,7 +163,8 @@ class Home extends React.Component {
             <button onClick={() => { props.closeDialog(); props.cancelDialog() }}>Cancel</button>
           </div>
         }
-        dialog = <div id="dialog">
+        const backingStep = Math.pow(10, Math.floor(Math.log10(props.quote.backing))-1)
+        dialog = <div id="dialog" className="quote">
           <ReactToolTip/>
           <div className="inner quote">
             <h3>Place Quote?</h3>
@@ -177,12 +178,15 @@ class Home extends React.Component {
                 <tr>
                   <td>Duration</td>
                   <td></td>
-                  <td>■ {props.dur} blocks</td>
+                  <td>■ {commonName[props.dur]}</td>
                 </tr>
                 <tr>
                   <td>Backing</td>
                   <td></td>
-                  <td>{Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} {props.token}</td>
+                  <td>
+                    <input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backingStep}/> 
+                    {props.token}
+                  </td>
                 </tr>
                 <tr>
                   <td data-tip="Observed spot">Spot</td>
@@ -217,7 +221,7 @@ class Home extends React.Component {
     } else {
       if (props.selected && props.spot !== undefined && props.view.maxp > props.view.minp) {
         if (props.mousestate === 1) {
-          dialog = <div id="actioncontainer">
+          var action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
                 <p className="blue">Place Quote</p>
@@ -229,7 +233,7 @@ class Home extends React.Component {
           </div>
         }
         if (props.mousestate === 2) {
-          dialog = <div id="actioncontainer">
+          action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
                 <p className="green">Buy Call</p>
@@ -240,7 +244,7 @@ class Home extends React.Component {
           </div>
         }
         if (props.mousestate === 3) {
-          dialog = <div id="actioncontainer">
+          action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
                 <p className="red">Buy Put</p>
@@ -335,15 +339,16 @@ class Home extends React.Component {
     if (props.spot > 0) {
       const tooltip_marketmass = "Total token backing for this market"
       const tooltip_marketweight = "Sum of all the quote weights for this market (quote weight = premium / backing)"
-      const backing = Math.pow(10, Math.floor(Math.log10(props.quote.backing)))
+      //const backing = Math.pow(10, Math.floor(Math.log10(props.quote.backing)))
+        //<p id="movemarket">At the current market weight, a quote with backing of 
+        //<input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backing}/> 
+        //&nbsp;{props.token} can move this market {Math.round10(props.quote.backing / (5 * props.weight), -6)} (at most)
+        //</p>
       var spot = <div id="spot">
         <ReactToolTip/>
         <p id="spottext" className="actual">Consensus = @{Math.round10(props.spot, props.constants.SPOT_PRECISION)}</p>
         <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} {props.token}</p>
         <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
-        <p id="movemarket">At the current market weight, a quote with backing of <input type="number" id="quote-backing" onChange={props.changeBacking} value={Math.round10(props.quote.backing, props.constants.TOKEN_PRECISION)} step={backing}/> 
-        &nbsp;{props.token} can move this market {Math.round10(props.quote.backing / (5 * props.weight), -6)} (at most)
-        </p>
       </div>
     }
     return <div id="div-trading">
@@ -377,15 +382,16 @@ class Home extends React.Component {
               </div>
             </div>
             <div className="row">
+              {action}
               {orderbook}
+              <div id="controldiv">
+                {spot}
+              </div>
             </div>
             <div className="row">
               <div id="chartdiv">
-                <Chart token={props.token}/>
-              </div>
-              <div id="controldiv">
-                {spot}
                 {dialog}
+                <Chart token={props.token}/>
               </div>
             </div>
           </div>

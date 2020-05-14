@@ -35,9 +35,20 @@ svg .loading {
 
 .gridrule.heavy {
   stroke: #ccf;
-  stroke-width: 3px;
+  stroke-width: 2px;
   stroke-dasharray: 2,2;
   stroke-opacity: 0.8;
+}
+
+.gridrule.light {
+  stroke-opacity: 0.2;
+}
+
+.gridrule.now {
+  stroke: #dcb;
+  stroke-opacity: 1;
+  stroke-width: 2px;
+  stroke-dasharray: none;
 }
 
 .gridtext {
@@ -77,78 +88,128 @@ svg .loading {
   margin: auto;
 }
 
-svg#chart {
+#chart {
   display: block;
   width: 100%;
   margin: auto;
 }
 
-svg#chart line.spot {
-  stroke-width: 2.5px;
+#chart line.spot {
+  stroke-width: 1.5px;
+  stroke: #3bf;
 }
 
-svg#chart circle.spot {
-  stroke-width: 1px;
-  fill: #000;
-  r: 1.5px; 
-}
-
-svg#chart line.inactive {
+#trades line.inactive {
   stroke: #fff;
   stroke-opacity: 0.5;
 }
 
-svg#chart rect.inactive {
+#trades rect.inactive {
   fill: #ddd;
   fill-opacity: 0.1;
-  stroke: #fff;
-  stroke-opacity: 0.15;
+  stroke-opacity: 0;
 }
 
-svg#chart line.tradebase {
-  stroke-width: 1.5px;
+#info line.future {
+  stroke-width: 2px;
+  stroke-opacity: 0.6;
 }
 
-svg#chart line.tradebase.short {
+#info line.future.short {
   stroke-dasharray: 8,2;
 }
 
-svg#chart line.call {
+#info line.future.call {
   stroke: #0f0;
 }
 
-svg#chart line.begin {
+#info line.future.put {
+  stroke: #f00;
+}
+
+#info rect.future.outthemoney {
+  fill: #ddd !important;
+  fill-opacity: 0.05;
+  stroke-opacity: 0;
+}
+
+#info rect.future.inthemoney {
+  fill: #ddd !important;
+  fill-opacity: 0.05;
+  stroke-opacity: 0;
+}
+
+#info rect.future.call {
+  fill: #080;
+  stroke: #080;
+}
+
+#info rect.future.put {
+  fill: #800;
+  stroke: #800;
+}
+
+#info circle.future {
+  fill-opacity: 0.1;
+}
+
+#info circle.future.call {
+  stroke: #0f0;
+  fill: #0f0;
+}
+
+#info circle.future.put {
+  stroke: #f00;
+  fill: #f00;
+}
+
+#trades line.tradebase {
+  stroke-width: 1px;
   stroke-opacity: 0.4;
 }
 
-svg#chart rect.call {
-  fill: #0f0;
-  fill-opacity: 0.1;
+#trades line.tradebase.call {
+  stroke-width: 2px;
+  stroke-opacity: 0.6;
   stroke: #0f0;
-  stroke-opacity: 0.2;
 }
 
-svg#chart circle.call {
+#trades line.tradebase.put {
+  stroke-width: 2px;
+  stroke-opacity: 0.6;
+  stroke: #f00;
+}
+
+#trades line.tradebase.short {
+  stroke-dasharray: 8,2;
+}
+
+#trades line {
+  stroke-opacity: 0.3;
+}
+
+#trades rect.call {
+  fill: #ddd;
+  fill-opacity: 0.1;
+  stroke-opacity: 0;
+}
+
+#trades circle.call {
   stroke: #0f0;
   fill: #0f0;
-  r: 3;
+  r: 1;
 }
 
-svg#chart line.put {
-  stroke: #f00;
-}
-
-svg#chart rect.put {
-  fill: #f00;
+#trades rect.put {
+  fill: #ddd;
   fill-opacity: 0.1;
-  stroke: #f00;
-  stroke-opacity: 0.2;
+  stroke-opacity: 0;
 }
 
-svg#chart circle.put {
+#trades circle.put {
   stroke: #f00;
   fill: #f00;
-  r: 3;
+  r: 1;
 }
 
 #chartback {
@@ -157,12 +218,118 @@ svg#chart circle.put {
   pointer-events: auto;
 }
 
-#obback {
-  pointer-events: auto;
+#costamt.call {
+  fill: #0f0;
 }
 
-#obback {
-  fill: #333;
+#costamt.put {
+  fill: #f00;
+}
+
+.info {
+  fill: #ccc;
+}
+
+#infotitle {
+  fill: #ccc !important;
+}
+
+#infoback {
+  fill: #333; 
+}
+
+#information {
+  font-size: 10px;
+}
+
+.infocostcall {
+  fill: #0f0 !important;
+}
+
+.infocostput {
+  fill: #f00 !important;
+}
+
+.inforeturn {
+  fill: #b2e !important;
+}
+
+.infoprofit {
+  fill: #ffc !important;
+}
+
+#infotime {
+  fill: #ccc !important;
+}
+
+.tradecall {
+  fill: #0f0 !important;
+}
+
+.tradeput {
+  fill: #f00 !important;
+}
+
+#info line.spot {
+  stroke: #3bf;
+  stroke-opacity: 0.4;
+  stroke-width: 2px !important;
+}
+
+#strikeline {
+  stroke-width: 1px;
+}
+
+#strikeline.quote {
+  stroke: #ffc;
+}
+
+#strikeline.call {
+  stroke: #0f0;
+}
+
+#strikeline.put {
+  stroke: #f00;
+}
+
+#strikeline.info {
+  stroke: #3bf;
+}
+
+#settleline {
+  stroke-dasharray: 2,2;
+  stroke: #b2e;
+}
+
+.futuretime {
+  stroke: #fff !important;
+  stroke-dasharray: 1,1;
+  stroke-width: 1px;
+}
+
+.futuretimetip {
+  stroke: #fff !important;
+}
+
+#axis_quantity {
+  fill: #ccc !important;
+}
+
+.axis_qty {
+  stroke: #ccf;
+  stroke-dasharray: 1,1;
+}
+
+.axis_qty_tip {
+  stroke: #ccf;
+}
+
+.payout {
+  fill: #b2e;
+}
+
+#info text {
+  fill: #fff;
 }
 
 #orderbook rect.quote15 {
@@ -232,6 +399,10 @@ svg#chart circle.put {
 #orderbook line.spot {
   stroke: #333;
   stroke-width: 0.5px !important;
+}
+
+text.reward {
+  fill: #ffc;
 }
 
 line.ordertip {
