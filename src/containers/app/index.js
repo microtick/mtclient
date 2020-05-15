@@ -288,7 +288,7 @@ const App = props => {
       if (props.token === "mt") {
         if (not.msg.includes("insufficient funds") || 
             not.msg.includes("insufficient account funds") ||
-            not.msg.includes("No such address")) {
+            not.msg.includes("invalid address")) {
           message = "Insufficient account funds"
           var button = <button id="requestbutton" onClick={() => {
             props.closeNotification(not.id)
