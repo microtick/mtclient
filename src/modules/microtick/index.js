@@ -30,6 +30,10 @@ const SELECT_WALLET = 'app/wallet'
 const PASSWORD = 'app/password'
 const INVALIDPASSWORD = 'app/invalidpassword'
 const RESETPASSWORD = 'app/resetpassword'
+const RECOVERACCOUNT = 'app/recoveraccount'
+const DONERECOVER = 'app/donerecover'
+const MNEMONIC = 'app/mnemonic'
+const WRITTENMNEMONIC = 'app/writtenmnemonic'
 const MENU = 'app/menu'
 const MARKET = 'microtick/market/select'
 const DUR = 'microtick/market/dur'
@@ -98,6 +102,12 @@ const initialState = {
   password: {
     prompt: true,
     invalid: false
+  },
+  mnemonic: {
+    prompt: false
+  },
+  recover: {
+    prompt: false
   },
   market: {
     selected: false,
@@ -372,6 +382,24 @@ export default (state = initialState, action) => {
           invalid: false
         }
       }
+    case RECOVERACCOUNT:
+      return {
+        ...state,
+        password: {
+          prompt: false
+        },
+        recover: {
+          prompt: true,
+          done: action.done
+        }
+      }
+    case DONERECOVER:
+      return {
+        ...state,
+        recover: {
+          prompt: false
+        }
+      }
     case PASSWORD:
       return {
         ...state,
@@ -386,6 +414,22 @@ export default (state = initialState, action) => {
         password: {
           prompt: true,
           invalid: true
+        }
+      }
+    case MNEMONIC:
+      return {
+        ...state,
+        mnemonic: {
+          prompt: true,
+          words: action.words,
+          done: action.done
+        }
+      }
+    case WRITTENMNEMONIC:
+      return {
+        ...state,
+        mnemonic: {
+          prompt: false
         }
       }
     case MARKET:
@@ -1441,6 +1485,43 @@ export const newAccount = () => {
   }
 }
 
+export const recoverAccount = () => {
+  return async dispatch => {
+    dispatch({
+      type: RECOVERACCOUNT,
+      done: async () => {
+        const words = []
+        for (var i=0; i<24; i++) {
+          words.push(document.getElementById("word"+i).value)
+        }
+        const password = document.getElementById('password').value
+        dispatch({
+          type: DONERECOVER
+        })
+        try {
+          await api.init(words)
+          await init()
+          var keys = await api.getWallet()
+          if (keys.priv === undefined) {
+            throw new Error("Account recovery failed")
+          }
+          keys.priv = btoa(window.sjcl.encrypt(password, keys.priv))
+          document.cookie = "mtm.account=" + JSON.stringify(keys) + ";max-age=31536000;"
+          console.log("Creating account on server: " + keys.acct)
+          globals.account = keys.acct
+          selectAccount()
+        } catch (err) {
+          console.log(err.message)
+          dispatch({
+            type: SELECT_WALLET,
+            value: "none"
+          })
+        }
+      }
+    })
+  }
+}
+
 export const selectWallet = hw => {
   return async dispatch => {
     if (hw) {
@@ -1490,7 +1571,17 @@ export const choosePassword = () => {
       type: PASSWORD
     })
     const password = document.getElementById('password').value
-    await api.init()
+    await api.init("software", mnemonic => {
+      dispatch({
+        type: MNEMONIC,
+        words: mnemonic.split(' '),
+        done: () => {
+          dispatch({
+            type: WRITTENMNEMONIC
+          })
+        }
+      })
+    })
     await init()
     var keys = await api.getWallet()
     keys.priv = btoa(window.sjcl.encrypt(password, keys.priv))

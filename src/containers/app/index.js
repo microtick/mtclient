@@ -21,7 +21,7 @@ import About from '../about'
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
 import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, fundAccountDialog, closeDialog } from '../../modules/dialog'
-import { selectWallet, choosePassword, enterPassword, newAccount, 
+import { selectWallet, choosePassword, enterPassword, newAccount, recoverAccount,
     requestTokens, sendTokens, requestShift, withdrawAccount } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
@@ -66,13 +66,13 @@ const App = props => {
     })
     if (checkAccount.length === 0) {
       login = <div className="fullscreen">
-        <div className="password">
+        <div id="choosepass" className="password">
           <div className="content">
-            <div className="title">Choose a password to create a new account</div>
+            <h2>Choose a password to create a new account</h2>
             <div className="form">
-              <p><input type="password" maxLength="40" id="password"/></p>
+              <p><input type="password" maxLength="60" id="password"/></p>
               <p>Make sure to remember this password. It can not be recovered.</p>
-              <button className="button" onClick={() => props.choosePassword()}>Submit</button>
+              <button className="button" onClick={() => props.choosePassword()}>Set Password</button>
             </div>
           </div>
         </div>
@@ -82,29 +82,77 @@ const App = props => {
         var err = <p className="error">Invalid password entered</p>
       }
       const keys = JSON.parse(checkAccount[0])
-      /*eslint-disable no-script-url*/
-      //if (props.token === "mt") {
-        var newaccount = <p>Forgot password? <button onClick={() => props.newAccount()}>Create a new account</button></p>
-      //} else {
-        //newaccount = <p>Restore account</p>
-      //}
+      var newaccount = <p>Forgot password? You can <button onClick={() => props.newAccount()}>Create a new account</button> or 
+        &nbsp;<button onClick={() => props.recoverAccount()}>Recover an account</button></p>
       login = <div className="fullscreen">
-        <div className="password">
+        <div id="unlockwallet" className="password">
           <div className="content">
             <div className="title">
-              <h2>Unlock Microtick account</h2>
-              <p>{keys.acct}</p>
+              <h2>Unlock Software Wallet</h2>
+              <p>Enter the password to unlock your wallet:</p>
             </div>
-            <div className="form">
-              <p><input type="password" maxLength="40" id="password"/></p>
-              {err}
-              {newaccount}
-              <button className="button" onClick={() => props.enterPassword()}>Unlock</button>
-            </div>
+            <p><input type="password" maxLength="60" id="password"/></p>
+            {err}
+            <button className="mainbutton" onClick={() => props.enterPassword()}>Unlock Wallet</button>
+            {newaccount}
           </div>
         </div>
       </div>
     }
+  } else if (props.mnemonic.prompt) {
+    const rows = []
+    for (var i=0; i<6; i++) {
+      rows.push(<tr key={i}>
+        <td className="mnemonic_number">{4*i+1}</td><td className="mnemonic_word">{props.mnemonic.words[4*i]}</td>
+        <td className="mnemonic_number">{4*i+2}</td><td className="mnemonic_word">{props.mnemonic.words[4*i+1]}</td>
+        <td className="mnemonic_number">{4*i+3}</td><td className="mnemonic_word">{props.mnemonic.words[4*i+2]}</td>
+        <td className="mnemonic_number">{4*i+4}</td><td className="mnemonic_word">{props.mnemonic.words[4*i+3]}</td>
+      </tr>)
+    }
+    login = <div className="fullscreen">
+      <div className="mnemonic">
+        <div className="content">
+          <div className="title">
+            <h2>Write down your wallet's secret phrase:</h2>
+            <table>
+              <tbody>
+                {rows}
+              </tbody>
+            </table>
+            <p>This secret phrase is not known by anyone else, including Microtick. It will provide the only way to recover your wallet if your browser data becomes corrupted 
+            or you forget your password. Write it down and keep it somewhere safe!</p>
+            <button className="button" onClick={() => props.mnemonic.done()}>I have written it down</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  } else if (props.recover.prompt) {
+    const rows = []
+    for (i=0; i<6; i++) {
+      rows.push(<tr key={i}>
+        <td className="recover_number">{4*i+1}</td><td className="recover_word"><input id={"word"+(4*i)}></input></td>
+        <td className="recover_number">{4*i+2}</td><td className="recover_word"><input id={"word"+(4*i+1)}></input></td>
+        <td className="recover_number">{4*i+3}</td><td className="recover_word"><input id={"word"+(4*i+2)}></input></td>
+        <td className="recover_number">{4*i+4}</td><td className="recover_word"><input id={"word"+(4*i+3)}></input></td>
+      </tr>)
+    }
+    login = <div className="fullscreen">
+      <div className="recover">
+        <div className="content">
+          <div className="title">
+            <h2>Enter your wallet's secret phrase:</h2>
+            <table>
+              <tbody>
+                {rows}
+              </tbody>
+            </table>
+            <p>Choose a password for the account:</p>
+            <p><input type="password" maxLength="60" id="password"/></p>
+            <button className="button" onClick={() => props.recover.done()}>Recover</button>
+          </div>
+        </div>
+      </div>
+    </div>
   }
   const notifications = props.notifications.map((not, id) => {
     if (not.type === 'testtokens') {
@@ -529,6 +577,8 @@ const mapStateToProps = state => ({
   ledger: state.microtick.ledger,
   wallet: state.microtick.wallet,
   password: state.microtick.password,
+  mnemonic: state.microtick.mnemonic,
+  recover: state.microtick.recover,
   constants: state.app.constants,
   menu: state.app.menu,
   chainid: state.tendermint.block.chainid,
@@ -554,6 +604,7 @@ const mapDispatchToProps = dispatch => {
     choosePassword,
     enterPassword,
     newAccount,
+    recoverAccount,
     requestTokens,
     requestShift,
     closeNotification,
