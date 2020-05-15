@@ -289,10 +289,12 @@ const App = props => {
           not.msg.includes("insufficient account funds") ||
           not.msg.includes("invalid address")) {
         message = "Insufficient account funds"
-        var button = <button id="requestbutton" onClick={() => {
-          props.closeNotification(not.id)
-          props.requestTokens()
-        }}>Request tokens</button>
+	if (props.token === "mt") {
+          var button = <button id="requestbutton" onClick={() => {
+            props.closeNotification(not.id)
+            props.requestTokens()
+          }}>Request tokens</button>
+	}
       }
       return <div key={id} className="outer error">
         <div className="inner">
