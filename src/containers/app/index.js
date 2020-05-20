@@ -81,7 +81,6 @@ const App = props => {
       if (props.password.invalid) {
         var err = <p className="error">Invalid password entered</p>
       }
-      const keys = JSON.parse(checkAccount[0])
       var newaccount = <p>Forgot password? You can <button onClick={() => props.newAccount()}>Create a new account</button> or 
         &nbsp;<button onClick={() => props.recoverAccount()}>Recover an account</button></p>
       login = <div className="fullscreen">
@@ -511,8 +510,11 @@ const App = props => {
       break
     default:
   }
+  if (process.env.MICROTICK_LEADERBOARD !== "off") {
+     var leaderboard = <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
+  }
   var menu = <div id="menu">
-      <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
+      {leaderboard}
       <div className={props.menu.selected === 'trading' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('trading')}>Trading</div>
       <div className={props.menu.selected === 'status' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('status')}>Status</div>
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>

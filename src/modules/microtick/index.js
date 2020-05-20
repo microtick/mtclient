@@ -17,6 +17,8 @@ import { init } from '../chain/tendermint'
 import { SequentialTaskQueue } from 'sequential-task-queue'
 import axios from 'axios'
 import { w3cwebsocket } from 'websocket'
+import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
+import CosmosApp from 'ledger-cosmos-js'
 
 const BLOCKTIME = 5
 
@@ -35,6 +37,7 @@ const DONERECOVER = 'app/donerecover'
 const MNEMONIC = 'app/mnemonic'
 const WRITTENMNEMONIC = 'app/writtenmnemonic'
 const MENU = 'app/menu'
+const MARKETS = 'microtick/markets'
 const MARKET = 'microtick/market/select'
 const DUR = 'microtick/market/dur'
 const ORDERBOOK = 'microtick/market/orderbook'
@@ -66,6 +69,7 @@ const CLOSEDIALOG = 'dialog/close'
 const globals = {
   accountSubscriptions: {},
   dur: DEFAULTDUR,
+  markets: [],
   durs: [],
   spot: 0,
   chart: {
@@ -109,6 +113,7 @@ const initialState = {
   recover: {
     prompt: false
   },
+  markets: [],
   market: {
     selected: false,
     symbol: '',
@@ -431,6 +436,11 @@ export default (state = initialState, action) => {
         mnemonic: {
           prompt: false
         }
+      }
+    case MARKETS:
+      return {
+        ...state,
+        markets: globals.markets
       }
     case MARKET:
       return {
@@ -837,6 +847,11 @@ export const selectDur = choice => {
 }
 
 const selectAccount = async () => {
+  globals.markets = api.getMarkets()
+  store.dispatch({
+    type: MARKETS
+  })
+  
   const block = await api.blockInfo()
   globals.blockNumber = block.block
   globals.accountInfo = await api.getAccountInfo(globals.account)
@@ -1533,7 +1548,11 @@ export const selectWallet = hw => {
           type: INTERACTLEDGER,
           value: true
         })
-        await api.init("ledger")
+        await api.init("ledger", async () => {
+          const transport = await TransportWebUSB.create()
+          const app = new CosmosApp(transport)
+          return app
+	      })
         dispatch({
           type: INTERACTLEDGER,
           value: false

@@ -351,6 +351,12 @@ class Home extends React.Component {
         <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
       </div>
     }
+    var markets = props.markets.map(m => {
+      return {
+        value: m,
+        label: m
+      }
+    })
     return <div id="div-trading">
       <div>
         <div className="row">
@@ -362,22 +368,7 @@ class Home extends React.Component {
                   id="market-select"
                   onChange={props.selectMarket}
                   value={props.market}
-                  options={[
-                    //{ value: 'AUXLN', label: 'Commodity: Gold USD/kg' },
-                    //{ value: 'AGXLN', label: 'Commodity: Silver USD/kg' },
-                    //{ value: 'PTXLN', label: 'Commodity: Platinum USD/kg' },
-                    { value: 'ATOMUSD', label: 'Crypto: Cosmos Atom/USD' },
-                    { value: 'ETHUSD', label: 'Crypto: Ethereum ETH/USD' },
-                    { value: 'XBTUSD', label: 'Crypto: Bitcoin BTC/USD' },
-                    //{ value: 'LTCUSD', label: 'Crypto: Litecoin LTC/USD' },
-                    //{ value: 'UNI', label: 'Magical Unicorns' },
-                    //{ value: 'XMRUSD', label: 'Crypto: Monero XMR/USD' },
-                    //{ value: 'ZECUSD', label: 'Crypto: Zcash ZEC/USD' },
-                    //{ value: 'EURUSD', label: 'Forex: EUR/USD' },
-                    //{ value: 'EURJPY', label: 'Forex: EUR/JPY' },
-                    //{ value: 'GBPUSD', label: 'Forex: GBP/USD' },
-                    //{ value: 'USDCAD', label: 'Forex: USD/CAD' }
-                  ]}
+                  options={markets}
                 />
               </div>
             </div>
@@ -409,6 +400,7 @@ class Home extends React.Component {
 const mapStateToProps = state => ({
   constants: state.app.constants,
   block: state.tendermint.block.number,
+  markets: state.microtick.markets,
   market: state.microtick.market.symbol,
   spot: state.microtick.market.spot,
   selected: state.microtick.market.selected,

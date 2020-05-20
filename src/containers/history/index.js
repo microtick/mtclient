@@ -288,7 +288,7 @@ function buildPageTradeHistory(props) {
     if (data.endBlock !== -1) {
       var endblock = <p>End block: {data.endBlock}</p>
     }
-    if (data.trade.type) {
+    if (data.trade.type === "put") {
       var direction = "⇓"
       var profitable = Math.round10(strike - unitpremium, -6)
     } else {
@@ -346,7 +346,7 @@ function buildPageTradeHistory(props) {
     const WIDTH = 500
     const HEIGHT = 320
     const TOP = 300
-    if (data.trade.type) {
+    if (data.trade.type === "put") {
       const bottom = strike - unitpremium
       var minp = data.minp < bottom ? data.minp : bottom
       var maxp = data.maxp
@@ -379,7 +379,7 @@ function buildPageTradeHistory(props) {
     
     // Cost breakdown table
     
-    if (data.trade.type === 0) {
+    if (data.trade.type === "call") {
       var deltaDescription = "Quoted Spot - Strike"
     } else {
       deltaDescription = "Strike - Quoted Spot"
@@ -391,7 +391,7 @@ function buildPageTradeHistory(props) {
       const mqty = cp.quantity
       const cprem = cp.premium
       const mprem = Math.round10(cprem / mqty, -6)
-      if (data.trade.type === 0) {
+      if (data.trade.type === "call") {
         var delta = Math.round10(spot - strike, props.constants.SPOT_PRECISION)
       } else {
         delta = Math.round10(strike - spot, props.constants.SPOT_PRECISION)
@@ -409,7 +409,7 @@ function buildPageTradeHistory(props) {
         <td className="col3 section-right">Δ {delta}</td>
         <td className="col4">⇕ {Math.round10(prem, -6)}</td>
         {discount}
-        <td className="col4 section-right">{data.trade.type ? "⇓" : "⇑"} ={mprem}</td>
+        <td className="col4 section-right">{data.trade.type === "put" ? "⇓" : "⇑"} ={mprem}</td>
         <td className="col5">{Math.round10(cprem, -6)} {props.token}</td>
       </tr>
     })
@@ -551,8 +551,13 @@ function buildPageTradeHistory(props) {
     
     // Page content
     
+    if (data.trade.type === "call") {
+      var tradeType = "Call"
+    } else {
+      tradeType = "Put"
+    }
     var content = <div>
-      <h4>{data.trade.type ? "Put" : "Call"} {data.trade.market} / {commonName[data.trade.duration]} : Trade {data.state}</h4>
+      <h4>{tradeType} {data.trade.market} / {commonName[data.trade.duration]} : Trade {data.state}</h4>
       <div className="traderow">
         {metrics}
         {chart}
@@ -809,7 +814,7 @@ const buildPriceGrid = (token, width, height, minp, maxp, ttype) => {
   //console.log("tics=" + tics)
   const grids = tics.map((tic, i) => {
     const y = height - height * (tic - minp) / (maxp - minp)
-    var ticDisplay = ttype ? tic * -1 : tic
+    var ticDisplay = ttype === "put" ? tic * -1 : tic
     if (ticDisplay >= 0) {
       ticDisplay += " " + token
     } else {
@@ -853,14 +858,14 @@ const buildTradeHistoryChart = (data, scaleX, scaleY) => {
     var settleY = strikeY
   } else {
     const final = scaleY(data.trade.final)
-    if (data.trade.type) {
+    if (data.trade.type === "put") {
       settleY = final > strikeY ? final : strikeY 
     } else {
       settleY = final < strikeY ? final : strikeY
     }
   }
   const unitprem = data.trade.cost / data.trade.quantity
-  if (data.trade.type) {
+  if (data.trade.type === "put") {
     const premY = scaleY(data.trade.strike - unitprem)
     const height = premY >= strikeY ? premY-strikeY : 0
     var rect = <rect x={tradeX1} y={strikeY} width={tradeX2-tradeX1} height={height}/>
