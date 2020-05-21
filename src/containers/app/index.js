@@ -119,7 +119,7 @@ const App = props => {
               </tbody>
             </table>
             <p>This secret phrase is not known by anyone else, including Microtick. It will provide the only way to recover your wallet if your browser data becomes corrupted 
-            or you forget your password. Write it down and keep it somewhere safe!</p>
+            or you forget your password. <span className="emphas">Write it down and keep it somewhere safe!</span></p>
             <button className="button" onClick={() => props.mnemonic.done()}>I have written it down</button>
           </div>
         </div>

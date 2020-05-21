@@ -46,7 +46,7 @@ h4 {
 }
 
 #div-market {
-  flex-grow: 3;
+  width: 200px;
 }
 
 #div-order {
@@ -170,6 +170,7 @@ div#marketSelect {
 
 #market-select {
   z-index: 10;
+  width: 200px;
 }
 
 #action {

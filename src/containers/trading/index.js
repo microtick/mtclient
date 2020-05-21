@@ -264,7 +264,7 @@ class Home extends React.Component {
             <h5>Place Quote</h5>
             <ol>
               <li>Select the market you are interested in above.</li>
-              <li>Select the time duration you are interested in from the table above.</li>
+              <li>Select the time duration you are interested in from the table.</li>
               <li>Place a quote by hovering the mouse over the left hand side of the chart. 
                  Choose the approximate spot price (center line) and premium (top and bottom lines) for
                  your quote.</li>
@@ -277,8 +277,8 @@ class Home extends React.Component {
             <h5>Buy Call or Put</h5>
             <ol>
               <li>Select the market you are interested in above.</li>
-              <li>Select the time duration you are interested in from the table above.</li>
-              <li>Buy a call or put by hovering the mouse over the right hand side of the chart. 
+              <li>Select the time duration you are interested in from the table.</li>
+              <li>Buy a call or put by hovering the mouse over the Order Book. 
                To buy a call, hover above the current spot price indicated by the horizontal line. To buy a
                put, hover below the spot price.</li>
               <li>Click at the approximate amount and a dialog will appear allowing you to adjust the 
@@ -371,8 +371,6 @@ class Home extends React.Component {
                   options={markets}
                 />
               </div>
-            </div>
-            <div className="row">
               {action}
               {orderbook}
               <div id="controldiv">

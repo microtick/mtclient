@@ -185,6 +185,10 @@ main {
   text-align: justify;
 }
 
+.mnemonic .emphas {
+  font-weight: bold;
+}
+
 .recover {
   position: fixed;
   left: 50%;
