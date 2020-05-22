@@ -353,8 +353,8 @@ class Home extends React.Component {
     }
     var markets = props.markets.map(m => {
       return {
-        value: m,
-        label: m
+        value: m.name,
+        label: m.name + ": " + m.description
       }
     })
     return <div id="div-trading">
