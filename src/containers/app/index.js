@@ -563,10 +563,8 @@ const App = props => {
       </div>
     </div>
     {menu}
-    <main>
-      {login}
-      {page}
-    </main>
+    {login}
+    {page}
     <div id="page-footer">
       <p>Copyright &copy; 2018-2020 Microtick LLC</p>
       <p>Microtick option standardization U.S. patents 7,856,395 and 8,229,840.</p>

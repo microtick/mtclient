@@ -9,10 +9,6 @@ body {
   pointer-events: none;
 }
 
-main {
-  z-index: 0;
-}
-
 #wallet-select {
   width: 600px;
   margin: auto;
@@ -271,7 +267,7 @@ main {
   background: #666;
   color: #fff;
   padding: 10px;
-  flex: 0 0 40em;
+  flex-grow: 1;
 }
 
 #div-chain h3 {
@@ -356,7 +352,8 @@ main {
   background: #999;
 }
 
-main {
+#div-trading {
+  width: 100%;
 }
 
 #page-footer {
