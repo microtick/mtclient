@@ -278,6 +278,7 @@ svg .loading {
 
 #strikeline {
   stroke-width: 1px;
+  stroke-dasharray: 1,1;
 }
 
 #strikeline.quote {
