@@ -53,7 +53,7 @@ const App = props => {
           </div>
           <div className="wallet-choice">
             <h2>Software Wallet</h2>
-            <button className="button" onClick={() => {props.selectWallet(false)}}><img id="wallet-software-logo" src={Software} alt="software wallet"/></button>
+            <button className="button" autoFocus onClick={() => {props.selectWallet(false)}}><img id="wallet-software-logo" src={Software} alt="software wallet"/></button>
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@ const App = props => {
           <div className="content">
             <h2>Choose a password to create a new account</h2>
             <div className="form">
-              <p><input type="password" maxLength="60" id="password"/></p>
+              <p><input type="password" autoFocus maxLength="60" id="password" onKeyDown={e=>{if (e.key==='Enter') props.choosePassword()}}/></p>
               <p>Make sure to remember this password. It can not be recovered.</p>
               <button className="button" onClick={() => props.choosePassword()}>Set Password</button>
             </div>
@@ -90,7 +90,7 @@ const App = props => {
               <h2>Unlock Software Wallet</h2>
               <p>Enter the password to unlock your wallet:</p>
             </div>
-            <p><input type="password" maxLength="60" id="password"/></p>
+            <p><input type="password" autoFocus maxLength="60" id="password" onKeyDown={e=>{if (e.key==='Enter') props.enterPassword()}}/></p>
             {err}
             <button className="mainbutton" onClick={() => props.enterPassword()}>Unlock Wallet</button>
             {newaccount}
@@ -146,7 +146,7 @@ const App = props => {
               </tbody>
             </table>
             <p>Choose a password for the account:</p>
-            <p><input type="password" maxLength="60" id="password"/></p>
+            <p><input type="password" autoFocus maxLength="60" id="password" onKeyDown={e=>{if (e.key==='Enter') props.recover.done()}}/></p>
             <button className="button" onClick={() => props.recover.done()}>Recover</button>
           </div>
         </div>

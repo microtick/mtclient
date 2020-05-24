@@ -398,8 +398,8 @@ svg .loading {
 }
 
 #orderbook line.spot {
-  stroke: #333;
-  stroke-width: 0.5px !important;
+  stroke: #28b;
+  stroke-width: 1px !important;
 }
 
 text.reward {
