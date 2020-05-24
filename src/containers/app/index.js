@@ -558,7 +558,7 @@ const App = props => {
           {fund}
           {withdraw}
         </div>
-        <p>Address = {props.account}</p>
+        <p>Address = {props.account} {props.ledger ? "(ledger)" : "(software)"}</p>
         {acctInfo}
       </div>
     </div>
