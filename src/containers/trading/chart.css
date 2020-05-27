@@ -277,8 +277,12 @@ svg .loading {
 }
 
 #strikeline {
-  stroke-width: 1px;
-  stroke-dasharray: 1,1;
+  stroke-width: 1.5px;
+  stroke-dasharray: 1,2;
+}
+
+#strikeline.tip {
+  stroke-dasharray: none;
 }
 
 #strikeline.quote {
@@ -303,8 +307,8 @@ svg .loading {
 }
 
 .futuretime {
-  stroke: #fff !important;
-  stroke-dasharray: 1,1;
+  stroke: #ccf !important;
+  stroke-dasharray: 1,2;
   stroke-width: 1px;
 }
 
@@ -398,8 +402,8 @@ svg .loading {
 }
 
 #orderbook line.spot {
-  stroke: #28b;
-  stroke-width: 1px !important;
+  stroke: #333;
+  stroke-width: 0.5px !important;
 }
 
 text.reward {

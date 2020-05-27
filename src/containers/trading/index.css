@@ -106,7 +106,7 @@ div#marketSelect {
 
 #spot {
   float: right;
-  width: 250px;
+  width: 260px;
   background: #000;
   color: #0c0;
   font-size: 20px;
@@ -218,7 +218,12 @@ div#marketSelect {
 #div-trading {
   background: #cba;
   margin: 0px;
-  padding: 10px;
+}
+
+#div-trading .row {
+  padding-top: 5px;
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 #div-history {
@@ -291,6 +296,7 @@ div#marketSelect {
 }
 
 #instructions {
+  font-size: 14px;
 }
 
 #instructions h4 {
@@ -314,7 +320,8 @@ div#marketSelect {
   font-size: 16px;
   color: #ff8;
   text-align: center;
-  margin-bottom: 0px;
+  margin-top: 5px;
+  margin-bottom: 10px;
 }
 
 #instructions p {
@@ -324,5 +331,7 @@ div#marketSelect {
 
 #instructions ol {
   color: #fff;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 

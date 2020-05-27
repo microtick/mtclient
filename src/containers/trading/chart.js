@@ -1044,8 +1044,8 @@ const buildInfoOverlay = props => {
       return <g id="info">
         <text id="infotitle" x={layout.info_left+20} y={15}>Trade View</text>
         <line id="strikeline" className="info" x1={layout.info_left} y1={tmpy1} x2={info_x2} y2={tmpy1}/>
-        <line id="strikeline" className="info" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1-3}/>
-        <line id="strikeline" className="info" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1+3}/>
+        <line id="strikeline" className="info tip" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1-3}/>
+        <line id="strikeline" className="info tip" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1+3}/>
         {trades}
         <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
         <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>

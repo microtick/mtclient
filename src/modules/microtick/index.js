@@ -1808,6 +1808,13 @@ export const requestShift = acct => {
           })
         }
       }
+      if (obj.type === "confirmed") {
+        dispatch({
+          type: SHIFTSTATUS,
+          amount: shiftParams.amount,
+          complete: true
+        })
+      }
     }
     
     client.onclose = () => {
@@ -1819,11 +1826,7 @@ export const requestShift = acct => {
           required: shiftParams.required,
           complete: true
         })
-      } else {
-        dispatch({
-          type: CLOSEDIALOG
-        })
-      }
+      } 
     }
   }
 }

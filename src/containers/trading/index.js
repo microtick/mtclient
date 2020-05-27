@@ -258,7 +258,6 @@ class Home extends React.Component {
     }
     //if (dialog === null && props.market !== '') {
       var instructions = <div id="instructions">
-        <h4>Instructions</h4>
         <div className="row">
           <div className="section">
             <h5>Place Quote</h5>
@@ -348,7 +347,7 @@ class Home extends React.Component {
         <ReactToolTip/>
         <p id="spottext" className="actual">Consensus = @{Math.round10(props.spot, props.constants.SPOT_PRECISION)}</p>
         <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} {props.token}</p>
-        <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)}</p>
+        <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)} {props.token}/unit</p>
       </div>
     }
     var markets = props.markets.map(m => {
@@ -358,38 +357,36 @@ class Home extends React.Component {
       }
     })
     return <div id="div-trading">
-      <div>
-        <div className="row">
-          <div id="marketSelect">
-            <div className="row">
-              <div id="div-market">
-                <h4>Market</h4>
-                <Select
-                  id="market-select"
-                  onChange={props.selectMarket}
-                  value={props.market}
-                  options={markets}
-                />
-              </div>
-              {action}
-              {orderbook}
-              <div id="controldiv">
-                {spot}
-              </div>
+      <div className="row">
+        <div id="marketSelect">
+          <div className="row">
+            <div id="div-market">
+              <h4>Market</h4>
+              <Select
+                id="market-select"
+                onChange={props.selectMarket}
+                value={props.market}
+                options={markets}
+              />
             </div>
-            <div className="row">
-              <div id="chartdiv">
-                {dialog}
-                <Chart token={props.token}/>
-              </div>
+            {action}
+            {orderbook}
+            <div id="controldiv">
+              {spot}
+            </div>
+          </div>
+          <div className="row">
+            <div id="chartdiv">
+              {dialog}
+              <Chart token={props.token}/>
             </div>
           </div>
         </div>
-        <ActiveTrades token={props.token}/>
-        <ActiveQuotes token={props.token}/>
-        <div className="row">
-          {instructions}
-        </div>
+      </div>
+      <ActiveTrades token={props.token}/>
+      <ActiveQuotes token={props.token}/>
+      <div className="row">
+        {instructions}
       </div>
     </div>
   }
