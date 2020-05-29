@@ -286,19 +286,49 @@ svg .loading {
 }
 
 #strikeline.quote {
-  stroke: #ffc;
+  stroke: #3bf;
+  stroke-dasharray: none;
 }
 
 #strikeline.call {
-  stroke: #0f0;
+  stroke: #3bf;
+  stroke-dasharray: none;
 }
 
 #strikeline.put {
-  stroke: #f00;
+  stroke: #3bf;
+  stroke-dasharray: none;
 }
 
 #strikeline.info {
   stroke: #3bf;
+  stroke-dasharray: none;
+}
+
+#consensustext {
+  font-size: 14px;
+}
+
+#consensusrect {
+  fill: #3bf;
+}
+
+circle.consensus {
+  stroke: none;
+  fill: #3bf;
+}
+
+#finaltext {
+  font-size: 14px;
+}
+
+#finalrect {
+  fill: #b2e;
+}
+
+circle.final {
+  stroke: none;
+  fill: #b2e;
 }
 
 #settleline {
@@ -322,7 +352,8 @@ svg .loading {
 
 .axis_qty {
   stroke: #ccf;
-  stroke-dasharray: 1,1;
+  stroke-dasharray: 1,2;
+  stroke-width: 1px;
 }
 
 .axis_qty_tip {
