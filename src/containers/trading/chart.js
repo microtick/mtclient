@@ -781,6 +781,7 @@ const buildInfoOverlay = props => {
       if (!isNumber(spot)) spot = props.spot
       var tmpy1 = layout.height - layout.height * (spot - minp) / (maxp - minp)
     } else {
+      spot = props.spot
       tmpy1 = lasty
     }
     const strike_price = minp - (tmpy1 - layout.height) * (maxp - minp) / layout.height
@@ -914,6 +915,38 @@ const buildInfoOverlay = props => {
         textProps = putprofitamt.getBoundingClientRect()
         putprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
       }
+      const consensustext = document.getElementById('consensustext')
+      if (consensustext) {
+        textProps = consensustext.getBoundingClientRect()
+        var consensusWidth = textProps.width
+        const rect = document.getElementById('consensusrect')
+        rect.setAttribute('y', tmpy1-textProps.height/2)
+        rect.setAttribute('width', textProps.width)
+        rect.setAttribute('height', textProps.height)
+        const c1 = document.getElementById('consensus1')
+        c1.setAttribute('r', textProps.height/2)
+        const c2 = document.getElementById('consensus2')
+        c2.setAttribute('cx', layout.info_left+50+textProps.width)
+        c2.setAttribute('r', textProps.height/2)
+      }
+      const finaltext = document.getElementById('finaltext')
+      if (finaltext) {
+        textProps = finaltext.getBoundingClientRect()
+        //var finalX = layout.info_left+80+consensusWidth
+        var finalX = layout.info_left + layout.info_width - textProps.width - 50
+        finaltext.setAttribute('x', finalX)
+        const rect = document.getElementById('finalrect')
+        rect.setAttribute('x', finalX)
+        rect.setAttribute('y', tmpy2-textProps.height/2)
+        rect.setAttribute('width', textProps.width)
+        rect.setAttribute('height', textProps.height)
+        const c1 = document.getElementById('final1')
+        c1.setAttribute('cx', finalX)
+        c1.setAttribute('r', textProps.height/2)
+        const c2 = document.getElementById('final2')
+        c2.setAttribute('cx', finalX+textProps.width)
+        c2.setAttribute('r', textProps.height/2)
+      }
     })
     if (props.dialog.showinline) {
       if (props.mousestate === MOUSESTATE_QUOTE) {
@@ -940,6 +973,14 @@ const buildInfoOverlay = props => {
           <text className="infoprofit" x={layout.info_left+5} y={startput+36}>Put profit</text>
           <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+36}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
           
+          <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
+          <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
+          <rect id="consensusrect" x={layout.info_left+50} y={tmpy1} width={0} height={0}/>
+          <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignment-baseline="central">strike {Math.round10(spot,-4)}</text>
+          <circle id="final1" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
+          <circle id="final2" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
+          <rect id="finalrect" x={layout.info_left+150} y={tmpy2} width={0} height={0}/>
+          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignment-baseline="central">future {Math.round10(settle_price,-4)}</text>
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
           <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
@@ -967,6 +1008,14 @@ const buildInfoOverlay = props => {
           <text id="infocostamt" className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>- {Math.round10(info_cost,-2)} {tokenType}</text>
           <text className="infoprofit" x={layout.info_left+5} y={starty+72}>Projected profit</text>
           <text id="infoprofitamt" className="infoprofit" x={layout.info_left+5} y={starty+72}>= {Math.round10(ret-info_cost,-2)} {tokenType}</text>
+          <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
+          <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
+          <rect id="consensusrect" x={layout.info_left+50} y={tmpy1} width={0} height={0}/>
+          <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignment-baseline="central">strike {Math.round10(spot,-4)}</text>
+          <circle id="final1" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
+          <circle id="final2" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
+          <rect id="finalrect" x={layout.info_left+150} y={tmpy2} width={0} height={0}/>
+          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignment-baseline="central">future {Math.round10(settle_price,-4)}</text>
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
           <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
@@ -1047,6 +1096,10 @@ const buildInfoOverlay = props => {
         <line id="strikeline" className="info tip" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1-3}/>
         <line id="strikeline" className="info tip" x1={layout.info_left+3} y1={tmpy1} x2={layout.info_left+6} y2={tmpy1+3}/>
         {trades}
+        <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
+        <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
+        <rect id="consensusrect" x={layout.info_left+50} y={tmpy1} width={0} height={0}/>
+        <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignment-baseline="central">consensus {Math.round10(spot,-4)}</text>
         <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
         <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
         <line className="futuretimetip" x1={layout.info_left+3} y1={layout.height-10} x2={layout.info_left+6} y2={layout.height-7}/>
