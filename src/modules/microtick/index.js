@@ -1759,7 +1759,12 @@ export const requestShift = acct => {
     }
     const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
     
+    var timeout
     const close = () => {
+      clearTimeout(timeout)
+      dispatch({
+        type: CLOSEDIALOG
+      })
       client.close()
     }
     
@@ -1775,15 +1780,28 @@ export const requestShift = acct => {
     client.onmessage = msg => {
       const obj = JSON.parse(msg.data)
       if (obj.type === "start") {
-        dispatch({
-          type: SHIFTSTART,
-          account: globals.account,
-          from: ethaccount,
-          to: obj.to,
-          close: close
-        })
+        const countdown = () => {
+          const remain = obj.timeout - Math.floor(Date.now() / 1000)
+          dispatch({
+            type: SHIFTSTART,
+            account: globals.account,
+            from: ethaccount,
+            to: obj.to,
+            close: close,
+            remain: remain
+          })
+          timeout = setTimeout(() => {
+            if (remain > 0) {
+              countdown()
+            } else {
+              close()
+            }
+          }, 1000)
+        }
+        countdown()
       }
       if (obj.type === "received") {
+        clearTimeout(timeout)
         shiftParams.received = true
         shiftParams.block = obj.block
         shiftParams.amount = obj.amount
@@ -1797,6 +1815,7 @@ export const requestShift = acct => {
         })
       }
       if (obj.type === "update") {
+        clearTimeout(timeout)
         if (shiftParams.received) {
           shiftParams.confirmations = obj.block > shiftParams.block ? obj.block - shiftParams.block : 0
           dispatch({
@@ -1925,10 +1944,22 @@ export const withdrawAccount = () => {
               }
             })
           }
+          
+          if (obj.type === "withdrawerror") {
+            close()
+            createErrorNotification(dispatch, "Withdrawal failed: " + obj.error)
+          }
         }
         
         client.onclose = () => {
           console.log("shift closed")
+        }
+        
+        client.onerror = () => {
+          dispatch({
+            type: CLOSEDIALOG
+          })
+          createErrorNotification(dispatch, "Bridge connection failed")
         }
       }
     })

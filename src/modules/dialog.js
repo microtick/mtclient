@@ -171,6 +171,7 @@ export default (state = initialState, action) => {
         from: action.from,
         to: action.to,
         account: action.account,
+        remain: action.remain,
         close: action.close
       }
     case SHIFTSTATUS:

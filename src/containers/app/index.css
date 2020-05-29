@@ -553,7 +553,7 @@ body {
   top: 50%;
   left: 50%;
   margin-top: -10%;
-  margin-left: -15%;
+  margin-left: -25%;
   width: 40%;
   background: #ddd;
   border: 2px solid #fff;
@@ -563,6 +563,7 @@ body {
   flex-direction: column;
   justify-content: center;
   padding: 10px;
+  min-width: 500px;
 }
 
 #modal.update {
@@ -594,6 +595,7 @@ body {
 
 #modal input {
   font-size: 16px;
+  font-size: 14px;
 }
 
 #modal .buttons {
@@ -605,27 +607,64 @@ body {
   margin-left: 5px;
 }
 
+#modal .countdown {
+  color: #246;
+  font-weight: bold;
+}
+
 #modal a {
   color: #158;
   text-decoration: none;
 }
 
 #sendprompt {
-  display: grid;
-  grid-template-rows: 2em;
-  grid-template-columns: 1fr auto;
+  display: flex;
   width: 80%;
   margin: auto;
 }
 
 #sendprompt input {
+  display: block;
   border-width: 0px;
   background: transparent;
-  text-align: center;
+  text-align: right;
+  font-size: 14px;
+  font-weight: bold;
+  color: #246;
   padding: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: elipsis;
+  min-width: 360px;
+  flex: 4;
 }
 
 #sendprompt button {
+  display: flex;
+  align-items: center;
+  text-align: left;
   border-width: 0px;
   cursor: pointer;
+  flex: 1;
+}
+
+#sendprompt button:focus {
+  outline: none;
+}
+
+#copied {
+  color: #555;
+}
+
+#senditems {
+  text-align: center;
+}
+
+#senditems ul {
+  text-align: left;
+  border: 1px solid #fff;
+  background: #666;
+  color: #fff;
+  border-radius: 5px;
+  padding-top: 10px;
 }

@@ -288,12 +288,12 @@ const App = props => {
           not.msg.includes("insufficient account funds") ||
           not.msg.includes("invalid address")) {
         message = "Insufficient account funds"
-	if (props.token === "mt") {
+    	  if (props.token === "mt") {
           var button = <button id="requestbutton" onClick={() => {
             props.closeNotification(not.id)
             props.requestTokens()
           }}>Request tokens</button>
-	}
+    	  }
       }
       return <div key={id} className="outer error">
         <div className="inner">
@@ -359,7 +359,8 @@ const App = props => {
         <div className="title">Deposit Ethereum ERC-20 DAI to Microtick</div>
         <div className="content">
           <p><b>Step 1</b></p>
-          <p>Enter the Ethereum address you will be sending DAI from: <input type="string" size={42} id="eth-account"/></p>
+          <p>Enter the Ethereum address you will be sending DAI from:</p>
+          <p><input type="string" size={42} id="eth-account" autoComplete="off"/></p>
         </div>
       </div>
       action = <button className="button" onClick={() => props.requestShift()}>Submit</button>
@@ -378,7 +379,7 @@ const App = props => {
       header = <div className="header">
         <div className="title">Withdraw Microtick DAI to Ethereum ERC-20 DAI</div>
         <div className="content">
-          <p>Ethereum address to receive DAI: <input type="string" size={42} id="eth-account"/></p>
+          <p>Ethereum address to receive DAI: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
           <p>Amount to withdraw: <input id="dai-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
         </div>
       </div>
@@ -396,6 +397,8 @@ const App = props => {
   }
   if (props.dialog.showshift) {
     if (props.dialog.type === "start") {
+      const minutesRemain = Math.floor(props.dialog.remain / 60)
+      const secondsRemain = props.dialog.remain % 60
       header = <div className="header">
         <div className="title">Send ERC-20 DAI</div>
         <div className="content">
@@ -404,11 +407,23 @@ const App = props => {
           <p id="sendprompt">
             <input size={40} value={props.dialog.to} readOnly disabled="disabled"/>
             <ClipBoard text={props.dialog.to}>
-              <button><img src={ClipImage} alt="clipboard"/></button>
+              <button onClick={()=>{document.getElementById('copied').style.display='inline-block'}}><img src={ClipImage} alt="clipboard"/>&nbsp;<span id="copied" style={{display:'none'}}>copied</span></button>
             </ClipBoard>
           </p>
-          <p>Funds will be deposited to Microtick account: {props.dialog.account}</p>
-          <p>In order to correctly receive the funds, make sure they are sent from: {props.dialog.from}</p>
+          <p>You have <span className="countdown">{minutesRemain}:{("0" + secondsRemain).slice(-2)}</span> seconds to complete the transaction</p>
+          <p id="senditems">
+            <ul>
+              <li>
+                <p>Funds will be deposited to Microtick account: {props.dialog.account}</p>
+              </li>
+              <li>
+                <p>In order to correctly receive the funds, make sure they are sent from: {props.dialog.from}</p>
+              </li>
+              <li>
+                <p>Deposits are limited to 500 DAI</p>
+              </li>
+            </ul>
+          </p>
         </div>
       </div>
     }
@@ -524,7 +539,12 @@ const App = props => {
     var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
     var withdraw = <button id="withdrawbutton" onClick={() => props.sendTokens()}>Send Tokens</button>
   } else {
-    fund = <button id="requestbutton" onClick={() => props.fundAccountDialog()}>Fund Account</button>
+    if (props.balance > 500) {
+      var disabled = true
+    } else {
+      disabled = false
+    }
+    fund = <button id="requestbutton" onClick={() => props.fundAccountDialog()} disabled={disabled}>Fund Account</button>
     withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
   }
   return <div>
