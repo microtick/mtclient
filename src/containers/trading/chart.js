@@ -918,7 +918,6 @@ const buildInfoOverlay = props => {
       const consensustext = document.getElementById('consensustext')
       if (consensustext) {
         textProps = consensustext.getBoundingClientRect()
-        var consensusWidth = textProps.width
         const rect = document.getElementById('consensusrect')
         rect.setAttribute('y', tmpy1-textProps.height/2)
         rect.setAttribute('width', textProps.width)
