@@ -1096,6 +1096,13 @@ const buildInfoOverlay = props => {
             {final}
           </g>
         })
+      if (props.mousestate === MOUSESTATE_QUOTE) {
+        const delta = spot - props.spot
+        const sign = delta > 0 ? "+" : ""
+        var constext = "consensus " + Math.round10(spot,-4) + " " + sign + Math.round10(delta, -4) 
+      } else {
+        constext = "consensus " + Math.round10(spot,-4)
+      }
       return <g id="info">
         <text id="infotitle" x={layout.info_left+20} y={15}>Trade View</text>
         <line id="strikeline" className="info" x1={layout.info_left} y1={tmpy1} x2={info_x2} y2={tmpy1}/>
@@ -1105,7 +1112,7 @@ const buildInfoOverlay = props => {
         <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
         <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
         <rect id="consensusrect" x={layout.info_left+50} y={tmpy1} width={0} height={0}/>
-        <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignmentBaseline="central">consensus {Math.round10(spot,-4)}</text>
+        <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignmentBaseline="central">{constext}</text>
         <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
         <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
         <line className="futuretimetip" x1={layout.info_left+3} y1={layout.height-10} x2={layout.info_left+6} y2={layout.height-7}/>
