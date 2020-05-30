@@ -450,7 +450,7 @@ const App = props => {
   if (props.dialog.showconfirm) {
     if (props.dialog.type === "shiftstatus") {
       if (props.dialog.complete) {
-        var wait = <p>Transfer received, sending Microtick DAI</p>
+        var wait = <p>Completing transfer...</p>
       } else {
         wait = <p>Waiting for confirmations: {props.dialog.confirmations} / {props.dialog.required}</p>
       }
