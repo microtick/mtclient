@@ -350,6 +350,11 @@ circle.final {
   fill: #ccc !important;
 }
 
+#total_quantity {
+  fill: #ccc !important;
+  font-size: 12px;
+}
+
 .axis_qty {
   stroke: #ccf;
   stroke-dasharray: 1,2;

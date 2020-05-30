@@ -1218,7 +1218,7 @@ export const changeBacking = event => {
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / (10 * globals.quote.premium)
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
+    chartCursorPos(backing, qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
 
@@ -1234,7 +1234,7 @@ export const changeSpot = event => {
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / (10 * globals.quote.premium)
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
+    chartCursorPos(globals.quote.backing, qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
 
@@ -1248,7 +1248,7 @@ export const changePremium = event => {
     })
     newQuoteParams(dispatch)
     const qty = globals.quote.backing / (10 * globals.quote.premium)
-    chartCursorPos(qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
+    chartCursorPos(globals.quote.backing, qty, globals.quote.spot, globals.quote.premium, globals.quote.newspot)
   }
 }
 

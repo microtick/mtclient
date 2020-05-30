@@ -346,7 +346,7 @@ class Home extends React.Component {
       var spot = <div id="spot">
         <ReactToolTip/>
         <p id="spottext" className="actual">Consensus = @{Math.round10(props.spot, props.constants.SPOT_PRECISION)}</p>
-        <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} {props.token}</p>
+        <p id="mass" className="consensus-data" data-tip={tooltip_marketmass}>Token Mass = {Math.round10(props.backing, props.constants.TOKEN_PRECISION)} {props.token}</p>
         <p id="weight" className="consensus-data" data-tip={tooltip_marketweight}>Weight = ⚖ {Math.round10(props.weight, props.constants.UNIT_PRECISION)} {props.token}/unit</p>
       </div>
     }

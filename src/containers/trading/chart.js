@@ -68,7 +68,7 @@ const randn_bm = () => {
   return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v )
 }
 
-export const chartCursorPos = function(qty, spot, prem, newspot) {
+export const chartCursorPos = function(back, qty, spot, prem, newspot) {
   if (typeof spot === 'string') spot = parseFloat(spot)
   if (typeof prem === 'string') prem = parseFloat(prem)
   if (typeof newspot === 'string') newspot = parseFloat(newspot)
@@ -94,6 +94,11 @@ export const chartCursorPos = function(qty, spot, prem, newspot) {
     qcbottom.setAttribute('y2', y - delta) 
   }
   const rtPrice = Math.round10(spot, -4)
+  const qback = document.getElementById('qcback')
+  if (qback) {
+    qback.innerHTML = "backing=" + Math.round10(back, -2) + " " + tokenType
+    qback.setAttribute('y', y+5)
+  }
   const qtext = document.getElementById('qcspot')
   if (qtext) {
     qtext.innerHTML = "@" + rtPrice + "  ⚖ " + Math.round10(qty, -4)
@@ -465,7 +470,7 @@ const buildBackground = props => {
     
     dynamicWeight = weight
     props.orderbook.setQuotePremiums(qty, price, prem, weight, newspot, call, put)
-    chartCursorPos(qty, price, prem, newspot, minp)
+    chartCursorPos(props.quote.backing, qty, price, prem, newspot, minp)
   }
   
   const chMouseClick = event => {
@@ -620,6 +625,7 @@ const buildBackground = props => {
   }
   
   const right = layout.chart_ob_left + layout.chart_ob_width
+  const totalQty = props.orderbook.totalWeight[props.dur]
   return <g>
     <rect id="chartback" x={0} width={layout.chartwidth} y={0} height={layout.height}
       onMouseEnter={mouseEnter} onMouseLeave={mouseLeave} 
@@ -627,6 +633,7 @@ const buildBackground = props => {
       
     <text className="info" x={layout.chart_mp_left+20} y={15}>Order Book</text>
     <text id="axis_quantity" x={layout.chart_mp_left+20} y={layout.height-20}>quantity</text>
+    <text id="total_quantity" x={layout.chart_ob_left+layout.chart_ob_width-100} y={layout.height-15}>total qty={Math.round10(totalQty, -2)}</text>
     <line className="axis_qty" x1={layout.chart_mp_left+2} y1={layout.height-10} x2={right-2} y2={layout.height-10}/>
     <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-7}/>
     <line className="axis_qty_tip" x1={right-2} y1={layout.height-10} x2={right-5} y2={layout.height-13}/>
@@ -975,11 +982,11 @@ const buildInfoOverlay = props => {
           <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
           <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
           <rect id="consensusrect" x={layout.info_left+50} y={tmpy1} width={0} height={0}/>
-          <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignment-baseline="central">strike {Math.round10(spot,-4)}</text>
+          <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignmentBaseline="central">strike {Math.round10(spot,-4)}</text>
           <circle id="final1" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <circle id="final2" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <rect id="finalrect" x={layout.info_left+150} y={tmpy2} width={0} height={0}/>
-          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignment-baseline="central">future {Math.round10(settle_price,-4)}</text>
+          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignmentBaseline="central">future {Math.round10(settle_price,-4)}</text>
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
           <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
@@ -1010,11 +1017,11 @@ const buildInfoOverlay = props => {
           <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
           <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
           <rect id="consensusrect" x={layout.info_left+50} y={tmpy1} width={0} height={0}/>
-          <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignment-baseline="central">strike {Math.round10(spot,-4)}</text>
+          <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignmentBaseline="central">strike {Math.round10(spot,-4)}</text>
           <circle id="final1" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <circle id="final2" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <rect id="finalrect" x={layout.info_left+150} y={tmpy2} width={0} height={0}/>
-          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignment-baseline="central">future {Math.round10(settle_price,-4)}</text>
+          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignmentBaseline="central">future {Math.round10(settle_price,-4)}</text>
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
           <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
@@ -1098,7 +1105,7 @@ const buildInfoOverlay = props => {
         <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
         <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
         <rect id="consensusrect" x={layout.info_left+50} y={tmpy1} width={0} height={0}/>
-        <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignment-baseline="central">consensus {Math.round10(spot,-4)}</text>
+        <text id="consensustext" x={layout.info_left+50} y={tmpy1} alignmentBaseline="central">consensus {Math.round10(spot,-4)}</text>
         <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
         <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
         <line className="futuretimetip" x1={layout.info_left+3} y1={layout.height-10} x2={layout.info_left+6} y2={layout.height-7}/>
@@ -1167,6 +1174,7 @@ const buildForeground = props => {
       <line id="quotecursor" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <line id="qctop" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <line id="qcbottom" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
+      <text id="qcback" className="ordertip" x={50} y={0}></text>
       <text id="qcspot" className="ordertip" x={0} y={0}></text>
       <text id="posprem" className="ordertip" x={0} y={0}></text>
       <text id="negprem" className="ordertip" x={0} y={0}></text>
