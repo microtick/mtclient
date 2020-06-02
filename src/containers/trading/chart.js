@@ -96,20 +96,33 @@ export const chartCursorPos = function(back, qty, spot, prem, newspot) {
   const rtPrice = Math.round10(spot, -4)
   const qback = document.getElementById('qcback')
   if (qback) {
+    const qcby = y + 5
     qback.innerHTML = "backing=" + Math.round10(back, -2) + " " + tokenType
-    qback.setAttribute('y', y+5)
+    const textProps = qback.getBoundingClientRect()
+    qback.setAttribute('y', qcby)
+    const rect = document.getElementById('qcbackrect')
+    rect.setAttribute('y', y-textProps.height/2)
+    rect.setAttribute('width', textProps.width)
+    rect.setAttribute('height', textProps.height)
+    const c1 = document.getElementById('qcback1')
+    c1.setAttribute('r', textProps.height/2)
+    c1.setAttribute('cy', y)
+    const c2 = document.getElementById('qcback2')
+    c2.setAttribute('cx', 50+textProps.width)
+    c2.setAttribute('cy', y)
+    c2.setAttribute('r', textProps.height/2)
   }
   const qtext = document.getElementById('qcspot')
   if (qtext) {
-    qtext.innerHTML = "@" + rtPrice + "  ⚖ " + Math.round10(qty, -4)
+    qtext.innerHTML = "@" + rtPrice
     const textProps = qtext.getBoundingClientRect()
-    qtext.setAttribute('x', layout.width - textProps.width-10)
-    qtext.setAttribute('y', y+5)
+    qtext.setAttribute('x', layout.width - textProps.width - 10)
+    qtext.setAttribute('y', y-4)
   }
   const posprem = document.getElementById('posprem')
   if (posprem) {
     //posprem.innerHTML = "Spot + " + Math.round10(prem, -4) + " = " + Math.round10(spot+prem, -4)
-    posprem.innerHTML = "⇑ " + Math.round10(prem, -4)
+    posprem.innerHTML = "+" + Math.round10(prem, -4)
     const textProps = posprem.getBoundingClientRect()
     posprem.setAttribute('x', layout.width - textProps.width-10)
     posprem.setAttribute('y', y-delta-4)
@@ -117,7 +130,7 @@ export const chartCursorPos = function(back, qty, spot, prem, newspot) {
   const negprem = document.getElementById('negprem')
   if (negprem) {
     //negprem.innerHTML = "Spot - " + Math.round10(prem, -4) + " = " + Math.round10(spot-prem, -4)
-    negprem.innerHTML = "⇓ " + Math.round10(prem, -4)
+    negprem.innerHTML = "-" + Math.round10(prem, -4)
     const textProps = negprem.getBoundingClientRect()
     negprem.setAttribute('x', layout.width - textProps.width-10)
     negprem.setAttribute('y', y+delta+14)
@@ -860,6 +873,8 @@ const buildInfoOverlay = props => {
       }
       payout = <rect className="payout" x={info_x2-10} y={tmpy1} width={10} height={tmpy2>tmpy1?tmpy2-tmpy1:0}/>
     }
+    const alignl = layout.info_left + 40 
+    const alignr = layout.info_left + layout.info_width / 2 + 40
     window.requestAnimationFrame(() => {
       var textProps
       //const infotitle = document.getElementById('infotitle')
@@ -875,52 +890,52 @@ const buildInfoOverlay = props => {
       const infoqtyamt = document.getElementById('infoqtyamt')
       if (infoqtyamt) {
         textProps = infoqtyamt.getBoundingClientRect()
-        infoqtyamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        infoqtyamt.setAttribute('x', alignr - textProps.width)
       }
       const infopremamt = document.getElementById('infopremamt')
       if (infopremamt) {
         textProps = infopremamt.getBoundingClientRect()
-        infopremamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        infopremamt.setAttribute('x', alignr - textProps.width)
       }
       const infocostamt = document.getElementById('infocostamt')
       if (infocostamt) {
         textProps = infocostamt.getBoundingClientRect()
-        infocostamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        infocostamt.setAttribute('x', alignr - textProps.width)
       }
       const inforeturnamt = document.getElementById('inforeturnamt')
       if (inforeturnamt) {
         textProps = inforeturnamt.getBoundingClientRect()
-        inforeturnamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        inforeturnamt.setAttribute('x', alignr - textProps.width)
       }
       const inforeturnamt2 = document.getElementById('inforeturnamt2')
       if (inforeturnamt2) {
         textProps = inforeturnamt2.getBoundingClientRect()
-        inforeturnamt2.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        inforeturnamt2.setAttribute('x', alignr - textProps.width)
       }
       const infoprofitamt = document.getElementById('infoprofitamt')
       if (infoprofitamt) {
         textProps = infoprofitamt.getBoundingClientRect()
-        infoprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        infoprofitamt.setAttribute('x', alignr - textProps.width)
       }
       const callpremiumamt = document.getElementById('callpremiumamt')
       if (callpremiumamt) {
         textProps = callpremiumamt.getBoundingClientRect()
-        callpremiumamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        callpremiumamt.setAttribute('x', alignr - textProps.width)
       }
       const callprofitamt = document.getElementById('callprofitamt')
       if (callprofitamt) {
         textProps = callprofitamt.getBoundingClientRect()
-        callprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        callprofitamt.setAttribute('x', alignr - textProps.width)
       }
       const putpremiumamt = document.getElementById('putpremiumamt')
       if (putpremiumamt) {
         textProps = putpremiumamt.getBoundingClientRect()
-        putpremiumamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        putpremiumamt.setAttribute('x', alignr - textProps.width)
       }
       const putprofitamt = document.getElementById('putprofitamt')
       if (putprofitamt) {
         textProps = putprofitamt.getBoundingClientRect()
-        putprofitamt.setAttribute('x', layout.info_left + layout.info_width - textProps.width - 5)
+        putprofitamt.setAttribute('x', alignr - textProps.width)
       }
       const consensustext = document.getElementById('consensustext')
       if (consensustext) {
@@ -963,20 +978,20 @@ const buildInfoOverlay = props => {
           {payout}
           {info}
           <line id="strikeline" className="quote" x1={layout.info_left} y1={tmpy1} x2={info_x2} y2={tmpy1}/>
-          <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+          <line id="settleline" x1={layout.info_left} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
           <text id="infotitle" className="info" x={layout.info_left+20} y={15}>Outcome Visualizer</text> 
-          <text className="tradecall" x={layout.info_left+5} y={startcall}>Call premium</text>
+          <text className="tradecall" x={alignl} y={startcall}>Call premium</text>
           <text id="callpremiumamt" className="tradecall" x={layout.info_left+5} y={startcall}>{Math.round10(premiumAsCall,-2)} {tokenType}</text>
-          <text className="inforeturn" x={layout.info_left+5} y={startcall+18}>Projected payout</text>
+          <text className="inforeturn" x={alignl} y={startcall+18}>Payout</text>
           <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={startcall+18}>{Math.round10(retcall,-2)} {tokenType}</text>
-          <text className="infoprofit" x={layout.info_left+5} y={startcall+36}>Call profit</text>
+          <text className="infoprofit" x={alignl} y={startcall+36}>Call profit</text>
           <text id="callprofitamt" className="infoprofit" x={layout.info_left+5} y={startcall+36}>{Math.round10(profitAsCall,-2)} {tokenType}</text>
           
-          <text className="tradeput" x={layout.info_left+5} y={startput}>Put premium</text>
+          <text className="tradeput" x={alignl} y={startput}>Put premium</text>
           <text id="putpremiumamt" className="tradeput" x={layout.info_left} y={startput}>= {Math.round10(premiumAsPut,-2)} {tokenType}</text>
-          <text className="inforeturn" x={layout.info_left+5} y={startput+18}>Projected payout</text>
+          <text className="inforeturn" x={alignl} y={startput+18}>Payout</text>
           <text id="inforeturnamt2" className="inforeturn" x={layout.info_left+5} y={startput+18}>{Math.round10(retput,-2)} {tokenType}</text>
-          <text className="infoprofit" x={layout.info_left+5} y={startput+36}>Put profit</text>
+          <text className="infoprofit" x={alignl} y={startput+36}>Put profit</text>
           <text id="putprofitamt" className="infoprofit" x={layout.info_left+5} y={startput+36}>= {Math.round10(profitAsPut,-2)} {tokenType}</text>
           
           <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
@@ -986,7 +1001,7 @@ const buildInfoOverlay = props => {
           <circle id="final1" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <circle id="final2" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <rect id="finalrect" x={layout.info_left+150} y={tmpy2} width={0} height={0}/>
-          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignmentBaseline="central">future {Math.round10(settle_price,-4)}</text>
+          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignmentBaseline="central">settle {Math.round10(settle_price,-4)}</text>
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
           <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
@@ -1002,17 +1017,17 @@ const buildInfoOverlay = props => {
           {payout}
           {info}
           <line id="strikeline" className={props.mousestate === MOUSESTATE_CALL ? "call" : "put"} x1={layout.info_left} y1={tmpy1} x2={info_x2} y2={tmpy1}/>
-          <line id="settleline" x1={0} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
+          <line id="settleline" x1={layout.info_left} y1={tmpy2} x2={layout.chart_ob_left+layout.chart_ob_width} y2={tmpy2}/>
           <text id="infotitle" x={layout.info_left+20} y={15}>Outcome Visualizer</text>
-          <text className="inforeturn" x={layout.info_left+5} y={starty}>Projected payout</text>
+          <text className="inforeturn" x={alignl} y={starty}>Payout</text>
           <text id="inforeturnamt" className="inforeturn" x={layout.info_left+5} y={starty}>{Math.round10(ret,-2)} {tokenType}</text>
-          <text x={layout.info_left+15} y={starty+18}>Avg Premium</text>
+          <text x={alignl+10} y={starty+18}>Avg Premium</text>
           <text id="infopremamt" x={layout.info_left+5} y={starty+18}>{Math.round10(info_prem,-2)}</text>
-          <text x={layout.info_left+15} y={starty+36}>Quantity</text>
+          <text x={alignl+10} y={starty+36}>Quantity</text>
           <text id="infoqtyamt" x={layout.info_left+5} y={starty+36}>x {Math.round10(info_qty,-2)}</text>
-          <text className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>Position cost</text>
+          <text className={"infocost"+infoclass} x={alignl} y={starty+54}>Position cost</text>
           <text id="infocostamt" className={"infocost"+infoclass} x={layout.info_left+5} y={starty+54}>- {Math.round10(info_cost,-2)} {tokenType}</text>
-          <text className="infoprofit" x={layout.info_left+5} y={starty+72}>Projected profit</text>
+          <text className="infoprofit" x={alignl} y={starty+72}>Profit</text>
           <text id="infoprofitamt" className="infoprofit" x={layout.info_left+5} y={starty+72}>= {Math.round10(ret-info_cost,-2)} {tokenType}</text>
           <circle id="consensus1" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
           <circle id="consensus2" className="consensus" cx={layout.info_left+50} cy={tmpy1} r={2}/>
@@ -1021,7 +1036,7 @@ const buildInfoOverlay = props => {
           <circle id="final1" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <circle id="final2" className="final" cx={layout.info_left+150} cy={tmpy2} r={2}/>
           <rect id="finalrect" x={layout.info_left+150} y={tmpy2} width={0} height={0}/>
-          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignmentBaseline="central">future {Math.round10(settle_price,-4)}</text>
+          <text id="finaltext" x={layout.info_left+150} y={tmpy2} alignmentBaseline="central">settle {Math.round10(settle_price,-4)}</text>
           <text id="infotime" x={layout.info_left+5} y={layout.height-20}>{commonName[props.dur]} (future)</text>
           <line className="futuretime" x1={layout.info_left+2} y1={layout.height-10} x2={info_x2-2} y2={layout.height-10}/>
           <line className="futuretimetip" x1={layout.info_left+2} y1={layout.height-10} x2={layout.info_left+5} y2={layout.height-7}/>
@@ -1181,10 +1196,13 @@ const buildForeground = props => {
       <line id="quotecursor" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <line id="qctop" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <line id="qcbottom" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
-      <text id="qcback" className="ordertip" x={50} y={0}></text>
-      <text id="qcspot" className="ordertip" x={0} y={0}></text>
-      <text id="posprem" className="ordertip" x={0} y={0}></text>
-      <text id="negprem" className="ordertip" x={0} y={0}></text>
+      <circle id="qcback1" className="charttip" cx={50} cy={0} r={2}/>
+      <circle id="qcback2" className="charttip" cx={50} cy={0} r={2}/>
+      <rect id="qcbackrect" x={50} y={0} width={0} height={0}/>
+      <text id="qcback" className="charttip" x={50} y={0}></text>
+      <text id="qcspot" className="charttip" x={0} y={0}></text>
+      <text id="posprem" className="charttip" x={0} y={0}></text>
+      <text id="negprem" className="charttip" x={0} y={0}></text>
     </g>
   }
   if (props.mousestate === MOUSESTATE_CALL || props.mousestate === MOUSESTATE_PUT) {

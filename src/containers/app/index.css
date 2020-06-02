@@ -377,6 +377,14 @@ body {
   border-radius: 4px;
 }
 
+#dialog input {
+  border: none;
+}
+
+#dialog input:focus {
+  outline: none;
+}
+
 #dialog h3 {
   color: #fff;
   margin-left: 10px;

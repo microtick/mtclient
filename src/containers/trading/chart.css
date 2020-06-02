@@ -255,7 +255,7 @@ svg .loading {
 }
 
 .infoprofit {
-  fill: #ffc !important;
+  fill: #fff !important;
 }
 
 #infotime {
@@ -305,6 +305,32 @@ svg .loading {
   stroke-dasharray: none;
 }
 
+#quotecursor {
+  stroke: #ed4;
+  stroke-dasharray: none;
+}
+
+#qcbottom {
+  stroke: #ffc;
+}
+
+#qctop {
+  stroke: #ffc;
+}
+
+#qcback {
+  fill: #000;
+}
+
+#qcbackrect {
+  fill: #ed4;
+}
+
+circle.ordertip {
+  stroke: none;
+  fill: #ed4;
+}
+
 #consensustext {
   font-size: 14px;
 }
@@ -320,6 +346,7 @@ circle.consensus {
 
 #finaltext {
   font-size: 14px;
+  fill: #000 !important;
 }
 
 #finalrect {
@@ -451,11 +478,17 @@ line.ordertip {
 }
 
 text.ordertip {
+  fill: #333;
+  font-size: 14px;
+}
+
+circle.charttip {
+  stroke: none;
+  fill: #ed4;
+}
+
+text.charttip {
   fill: #fff;
   font-size: 14px;
 }
 
-#quotecursor {
-  stroke: #e3f;
-  stroke-dasharray: none;
-}
