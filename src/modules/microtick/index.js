@@ -1740,12 +1740,12 @@ export const sendTokens = () => {
   }
 }
 
-export const requestShift = acct => {
+export const requestShift = () => {
   return async dispatch => {
     
-    const ethaccount = document.getElementById("eth-account").value.toLowerCase()
     const shiftParams = {
       received: false,
+      confirmed: false,
       amount: 0,
       startBlock: 0,
       required: 0,
@@ -1759,9 +1759,7 @@ export const requestShift = acct => {
     }
     const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
     
-    var timeout
     const close = () => {
-      clearTimeout(timeout)
       dispatch({
         type: CLOSEDIALOG
       })
@@ -1771,37 +1769,21 @@ export const requestShift = acct => {
     client.onopen = () => {
       client.send(JSON.stringify({
         type: "deposit",
-        from: ethaccount,
-        dest: globals.account,
-        close: close
+        dest: globals.account
       }))
     }
     
     client.onmessage = msg => {
       const obj = JSON.parse(msg.data)
-      if (obj.type === "start") {
-        const countdown = () => {
-          const remain = obj.timeout - Math.floor(Date.now() / 1000)
-          dispatch({
-            type: SHIFTSTART,
-            account: globals.account,
-            from: ethaccount,
-            to: obj.to,
-            close: close,
-            remain: remain
-          })
-          timeout = setTimeout(() => {
-            if (remain > 0) {
-              countdown()
-            } else {
-              close()
-            }
-          }, 1000)
-        }
-        countdown()
+      if (obj.type === "startdeposit") {
+        dispatch({
+          type: SHIFTSTART,
+          account: globals.account,
+          to: obj.eth_dst,
+          close: close
+        })
       }
       if (obj.type === "received") {
-        clearTimeout(timeout)
         shiftParams.received = true
         shiftParams.block = obj.block
         shiftParams.amount = obj.amount
@@ -1815,9 +1797,9 @@ export const requestShift = acct => {
         })
       }
       if (obj.type === "update") {
-        clearTimeout(timeout)
         if (shiftParams.received) {
           shiftParams.confirmations = obj.block > shiftParams.block ? obj.block - shiftParams.block : 0
+          if (shiftParams.confirmations > shiftParams.required) shiftParams.confirmations = shiftParams.required
           dispatch({
             type: SHIFTSTATUS,
             amount: shiftParams.amount,
@@ -1828,24 +1810,20 @@ export const requestShift = acct => {
         }
       }
       if (obj.type === "confirmed") {
+        shiftParams.confirmed = true
         dispatch({
           type: SHIFTSTATUS,
           amount: shiftParams.amount,
           complete: true
         })
       }
+      if (obj.type === "failed") {
+        close()
+        createErrorNotification(dispatch, obj.error)
+      }
     }
     
     client.onclose = () => {
-      if (shiftParams.confirmations >= shiftParams.required && shiftParams.confirmations > 0) {
-        dispatch({
-          type: SHIFTSTATUS,
-          amount: shiftParams.amount,
-          confirmations: shiftParams.confirmations,
-          required: shiftParams.required,
-          complete: true
-        })
-      } 
     }
   }
 }
@@ -1918,7 +1896,7 @@ export const withdrawAccount = () => {
                         gas: "200000"
                       },
                       signatures: null,
-                      memo: obj.id
+                      memo: ethaccount
                     }
                   }
                   api.postTx(Object.assign(data, envelope))
@@ -1947,7 +1925,7 @@ export const withdrawAccount = () => {
           
           if (obj.type === "withdrawerror") {
             close()
-            createErrorNotification(dispatch, "Withdrawal failed: " + obj.error)
+            createErrorNotification(dispatch, obj.error)
           }
         }
         

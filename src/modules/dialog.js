@@ -11,7 +11,6 @@ const UPDATEPREMIUMDIALOG = "dialog/updatepremium"
 const DEPOSITQUOTEDIALOG = "dialog/depositquote"
 const CANCELQUOTEDIALOG = "dialog/cancelquote"
 const SETTLETRADEDIALOG = "dialog/settletrade"
-const FUNDACCOUNTDIALOG = "dialog/fundaccount"
 const SENDTOKENSDIALOG = "dialog/sendtokens"
 const WITHDRAWACCOUNTDIALOG = "dialog/withdrawaccount"
 const CONFIRMWITHDRAW = "dialog/confirmwithdraw"
@@ -127,16 +126,6 @@ export default (state = initialState, action) => {
         showconfirm: false,
         type: "settle",
         id: action.id
-      }
-    case FUNDACCOUNTDIALOG:
-      return {
-        ...state,
-        showinline: false,
-        showmodal: true,
-        showshift: false,
-        showconfirm: false,
-        account: action.account,
-        type: "fund"
       }
     case WITHDRAWACCOUNTDIALOG:
       return {
@@ -357,14 +346,6 @@ export const settleTrade = id => {
     mtSettleTrade(dispatch, id)
     dispatch({
       type: CLOSEDIALOG
-    })
-  }
-}
-
-export const fundAccountDialog = () => {
-  return async dispatch => {
-    dispatch({
-      type: FUNDACCOUNTDIALOG
     })
   }
 }

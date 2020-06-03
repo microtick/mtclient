@@ -367,8 +367,9 @@ body {
 
 #dialog {
   margin: 10px;
-  background: #987;
-  border: 10px solid #987;
+  padding: 10px;
+  background: #999;
+  border: 2px solid #000;
   border-radius: 8px;
 }
 
@@ -389,6 +390,7 @@ body {
   color: #fff;
   margin-left: 10px;
   margin-bottom: 10px;
+  text-shadow: 1px 1px #666;
 }
 
 #dialog table {
@@ -423,6 +425,7 @@ body {
   font-weight: bold;
   font-size: 20px;
   color: #06b;
+  text-shadow: 1px 1px #aaa;
 }
 
 #dialog button {
@@ -599,6 +602,7 @@ body {
 #modal .content {
   vertical-align: center;
   text-align: center;
+  padding: 10px;
 }
 
 #modal input {
@@ -653,6 +657,7 @@ body {
   text-align: left;
   border-width: 0px;
   cursor: pointer;
+  background-color: #ddd;
   flex: 1;
 }
 
@@ -661,7 +666,8 @@ body {
 }
 
 #copied {
-  color: #555;
+  color: #811;
+  font-weight: bold;
 }
 
 #senditems {

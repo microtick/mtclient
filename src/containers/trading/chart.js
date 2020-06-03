@@ -83,6 +83,11 @@ export const chartCursorPos = function(back, qty, spot, prem, newspot) {
     qc.setAttribute('y1', y)
     qc.setAttribute('y2', y) 
   }
+  const qcrect = document.getElementById('quotebackground')
+  if (qcrect) {
+    qcrect.setAttribute('y', y-delta)
+    qcrect.setAttribute('height', 2*delta)
+  }
   const qctop = document.getElementById('qctop')
   if (qctop) {
     qctop.setAttribute('y1', y + delta)
@@ -1193,6 +1198,7 @@ const buildTradesOverlay = props => {
 const buildForeground = props => {
   if (props.mousestate === MOUSESTATE_QUOTE) {
     var ret = <g>
+      <rect id="quotebackground" className="cursor" x={0} y={0} width={layout.width} height={0}/>
       <line id="quotecursor" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <line id="qctop" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
       <line id="qcbottom" className="cursor" x1={0} y1={0} x2={layout.width} y2={0}/>
@@ -1426,7 +1432,7 @@ class Chart extends React.Component {
       }
       var chart =
         <div id="chartwrap">
-          <svg id="chart" width="640" height="480">
+          <svg id="chart">
             {background}
             {oblock}
             {timegrid}

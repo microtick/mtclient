@@ -91,6 +91,7 @@ svg .loading {
 #chart {
   display: block;
   width: 100%;
+  height: 500px;
   margin: auto;
 }
 
@@ -308,6 +309,11 @@ svg .loading {
 #quotecursor {
   stroke: #ed4;
   stroke-dasharray: none;
+}
+
+#quotebackground {
+  fill: #ffc;
+  fill-opacity: 0.1;
 }
 
 #qcbottom {

@@ -143,7 +143,7 @@ div#marketSelect {
   right: 10px;
 }
 
-#dialog.buy button {
+#dialog button {
   float: right;
 }
 
@@ -261,11 +261,11 @@ div#marketSelect {
   padding: 10px;
 }
 
-.green {
+.hint_call {
   color: #0f0;
 }
 
-.red {
+.hint_put {
   color: #f00;
 }
 
@@ -273,8 +273,8 @@ div#marketSelect {
   color: #000;
 }
 
-.blue {
-  color: #e3f;
+.hint_quote {
+  color: #fe2;
 }
 
 .warn {
@@ -318,20 +318,36 @@ div#marketSelect {
 
 #instructions h5 {
   font-size: 16px;
-  color: #ff8;
+  color: #fff;
   text-align: center;
   margin-top: 5px;
   margin-bottom: 10px;
 }
 
+#instructions h6 {
+  font-size: 14px;
+  margin: 2px;
+  left: 60%;
+  color: #ccc;
+  margin-bottom: 10px;
+}
+
 #instructions p {
-  text-align: center;
-  color: #f00;
+  text-align: left;
+  color: #fff;
+  font-size: 16px;
+  margin-bottom: 20px;
 }
 
 #instructions ol {
-  color: #fff;
+  width: 60%;
+  margin-left: 0px;
+  color: #ccc;
   margin-top: 0px;
   margin-bottom: 0px;
+}
+
+#instructions li {
+  padding: 2px;
 }
 

@@ -56,7 +56,7 @@ class Home extends React.Component {
         dialog = <div id="dialog" className="buy">
           <ReactToolTip/>
           <div className="inner call">
-            <h3>Buy Call?</h3>
+            <h3><span className="hint_call">Buy Call?</span></h3>
             <table>
               <tbody>
                 <tr>
@@ -108,7 +108,7 @@ class Home extends React.Component {
         dialog = <div id="dialog" className="buy">
           <ReactToolTip/>
           <div className="inner put">
-            <h3>Buy Put?</h3>
+            <h3><span className="hint_put">Buy Put?</span></h3>
             <table>
               <tbody>
                 <tr>
@@ -159,15 +159,15 @@ class Home extends React.Component {
           </div>
         } else {
           actions = <div>
-            <button onClick={() => { props.closeDialog(); props.placeQuote() }}>Place Quote</button>
             <button onClick={() => { props.closeDialog(); props.cancelDialog() }}>Cancel</button>
+            <button onClick={() => { props.closeDialog(); props.placeQuote() }}>Place Quote</button>
           </div>
         }
         const backingStep = Math.pow(10, Math.floor(Math.log10(props.quote.backing))-1)
         dialog = <div id="dialog" className="quote">
           <ReactToolTip/>
           <div className="inner quote">
-            <h3>Place Quote?</h3>
+            <h3><span className="hint_quote">Place Quote?</span></h3>
             <table>
               <tbody>
                 <tr>
@@ -224,7 +224,7 @@ class Home extends React.Component {
           var action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
-                <p className="blue">Place Quote</p>
+                <p className="hint_quote">Place Quote</p>
               </div>
               <p>⬅ / ➡ increase or decrease premium</p>
               <p>⬆ / ⬇ select your spot</p>
@@ -236,7 +236,7 @@ class Home extends React.Component {
           action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
-                <p className="green">Buy Call</p>
+                <p className="hint_call">Buy Call</p>
               </div>
               <p>⬅ / ➡ increase or decrease ⚖ quantity</p>
               <p>Click to fine tune and place order</p>
@@ -247,7 +247,7 @@ class Home extends React.Component {
           action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
-                <p className="red">Buy Put</p>
+                <p className="hint_put">Buy Put</p>
               </div>
               <p>⬅ / ➡ increase or decrease ⚖ quantity</p>
               <p>Click to fine tune and place order</p>
@@ -256,15 +256,20 @@ class Home extends React.Component {
         }
       }
     }
-    //if (dialog === null && props.market !== '') {
+    if (props.market !== '') {
       var instructions = <div id="instructions">
         <div className="row">
           <div className="section">
-            <h5>Place Quote</h5>
+            <h5><span className="hint_quote">Place Quote</span></h5>
+            <p>By placing a quote you are making a price assertion that you expect the price
+            to be in the range you specify at the end of the time duration of the quote. The
+            green and red ranges in the Order Book to the right show the adjusted premiums based
+            on how far your quote's spot price is from the current consensus.</p>
+            <h6>Instructions</h6>
             <ol>
               <li>Select the market you are interested in above.</li>
               <li>Select the time duration you are interested in from the table.</li>
-              <li>Place a quote by hovering the mouse over the left hand side of the chart. 
+              <li>Place a quote by hovering the mouse over the left hand side of the price chart. 
                  Choose the approximate spot price (center line) and premium (top and bottom lines) for
                  your quote.</li>
               <li>Click and a dialog will appear allowing you to specify the backing for the
@@ -273,7 +278,12 @@ class Home extends React.Component {
             </ol>
           </div>
           <div className="section">
-            <h5>Buy Call or Put</h5>
+            <h5><span className="hint_call">⇑ Buy Call</span> / <span className="hint_put">Buy Put ⇓</span></h5>
+            <p>By buying a call you make a multiple of the premium you pay based on how far the
+            consensus price moves higher than the current value. Buying a put works the same way but
+            you make a multiple of the premium based on how far the consensus price moves lower from the 
+            current value.</p>
+            <h6>Instructions</h6>
             <ol>
               <li>Select the market you are interested in above.</li>
               <li>Select the time duration you are interested in from the table.</li>
@@ -286,7 +296,7 @@ class Home extends React.Component {
           </div>
         </div>
       </div>
-    //}
+    }
     if (props.orderbook) {
       var elems = props.durs.reduce((res,d,n) => {
         const intval = parseInt(d, 10)
