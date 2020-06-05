@@ -1895,6 +1895,10 @@ export const withdrawAccount = () => {
               close: close,
               confirm: async () => {
                 try {
+                  const accountInfo = await api.getAccountInfo(globals.account)
+                  if (obj.amount > accountInfo.balance) {
+                    throw new Error("Not enough funds, idiot")
+                  }
                   const envelope = await api.postEnvelope()
                   const data = {
                     tx: {
@@ -1926,7 +1930,8 @@ export const withdrawAccount = () => {
                     type: WAITWITHDRAW
                   })
                 } catch (err) {
-                  console.log("err=" + err)
+                  close()
+                  createErrorNotification(dispatch, err.message)
                 }
               }
             })
