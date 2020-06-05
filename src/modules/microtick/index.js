@@ -1896,8 +1896,8 @@ export const withdrawAccount = () => {
               confirm: async () => {
                 try {
                   const accountInfo = await api.getAccountInfo(globals.account)
-                  if (obj.amount > accountInfo.balance) {
-                    throw new Error("Not enough funds, idiot")
+                  if (obj.amount / 1000000 > accountInfo.balance) {
+                    throw new Error("Withdrawal amount greater than funds in account")
                   }
                   const envelope = await api.postEnvelope()
                   const data = {
