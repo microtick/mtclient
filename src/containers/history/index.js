@@ -119,7 +119,7 @@ function buildPageAccountHistory(props) {
         return <tr key={n} className={n%2?'even':'odd'}>
           {ct}
           <td>{c.height}</td>
-          <td>Send</td>
+          <td>Withdraw</td>
           <td colSpan={3}></td>
           <td>{amount} {props.token}</td>
           <td>---</td>
