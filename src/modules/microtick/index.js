@@ -366,7 +366,7 @@ async function processTradeEnd(trade) {
       await api.unsubscribe(globals.accountSubscriptions[trade.id])
       delete globals.accountSubscriptions[trade.id]
     }
-    return true;
+    return true
   })
 }
 
@@ -708,6 +708,7 @@ async function updateHistory() {
   store.dispatch({
     type: LOADHIST
   })
+  const now = Date.now()
   // Get historic data
   const currentBlock = await api.blockInfo()
   var startBlock = currentBlock.block - globals.chart.size / BLOCKTIME
@@ -715,9 +716,9 @@ async function updateHistory() {
   var min = Number.MAX_VALUE, max = 0
   const currentSpot = await api.getMarketSpot(globals.market)
   const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.block, 100)
-  const startTime = Date.now() - globals.chart.size * 1000
-  const history = rawHistory.filter(hist => {
-    return hist.time > startTime
+  const startTime = now - globals.chart.size * 1000
+  const filteredHistory = rawHistory.filter(hist => {
+    return hist.time > startTime && hist.time < now
   }).map(hist => {
     const value = hist.consensus
     if (min > value) min = value
@@ -728,15 +729,36 @@ async function updateHistory() {
       value: value
     }
   })
-  if (history.length === 0) {
+  if (filteredHistory.length === 0) {
     min = globals.spot
     max = globals.spot
   }
-  history.push({
+  filteredHistory.push({
     block: currentBlock.block,
-    time: Date.now(),
+    time: now,
     value: currentSpot.consensus
   })
+  // Insert trade points for display purposes
+  if (globals.trades.length > 0) {
+    var i = 0
+    var history = filteredHistory.reduce((acc, hist) => {
+      while (i < globals.trades.length && globals.trades[i].startBlock < hist.block) {
+        if (globals.trades[i].market === globals.market) {
+          acc.push({
+            block: globals.trades[i].startBlock,
+            time: globals.trades[i].start.getTime(),
+            value: globals.trades[i].strike
+          })
+        }
+        i++
+      }
+      acc.push(hist)
+      return acc
+    }, [])
+    console.log(JSON.stringify(history, null, 2))
+  } else {
+    history = filteredHistory
+  }
   var height = max - min
   const minp = min - height * .05
   const maxp = max + height * .05
