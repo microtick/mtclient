@@ -1866,7 +1866,7 @@ export const withdrawAccount = () => {
           }
           
           const accountInfo = await api.getAccountInfo(globals.account)
-          if (dai > accountInfo.balance || dai < 0) {
+          if (isNaN(dai) || dai > accountInfo.balance || dai <= 0) {
             throw new Error("Invalid withdrawal amount")
           }
                   
