@@ -1858,7 +1858,7 @@ export const withdrawAccount = () => {
       submit: async () => {
         try {
           const ethaccount = document.getElementById("eth-account").value.toLowerCase()
-          const dai = document.getElementById("dai-amount").value
+          const dai = parseFloat(document.getElementById("dai-amount").value)
           
           // Sanity check form fields
           if (!/^(0x)?[0-9a-f]{40}$/i.test(ethaccount)) {
@@ -1866,8 +1866,8 @@ export const withdrawAccount = () => {
           }
           
           const accountInfo = await api.getAccountInfo(globals.account)
-          if (parseFloat(dai) > accountInfo.balance) {
-            throw new Error("Withdrawal amount greater than funds in account")
+          if (dai > accountInfo.balance || dai < 0) {
+            throw new Error("Invalid withdrawal amount")
           }
                   
           // connect to server
