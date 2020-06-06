@@ -1855,116 +1855,130 @@ export const withdrawAccount = () => {
     dispatch({
       type: WITHDRAWACCOUNT,
       max: globals.accountInfo.balance,
-      submit: () => {
-        const ethaccount = document.getElementById("eth-account").value.toLowerCase()
-        const dai = document.getElementById("dai-amount").value
-        
-        // connect to server
-        var proto = "ws://"
-        if (window.location.protocol === "https:") {
-          proto = "wss://"
-        }
-        const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
-        
-        const close = () => {
-          dispatch({
-            type: CLOSEDIALOG
-          })
-          client.close()
-        }
-    
-        client.onopen = () => {
-          client.send(JSON.stringify({
-            type: "withdraw",
-            from: globals.account,
-            to: ethaccount,
-            amount: dai,
-          }))
-        }
-        
-        client.onmessage = msg => {
-          //console.log(msg.data)
-          const obj = JSON.parse(msg.data)
+      submit: async () => {
+        try {
+          const ethaccount = document.getElementById("eth-account").value.toLowerCase()
+          const dai = document.getElementById("dai-amount").value
           
-          if (obj.type === "startwithdraw") {
-            const sendTo = obj.sendTo
-            dispatch({
-              type: CONFIRMWITHDRAW,
-              amount: dai,
-              account: ethaccount,
-              close: close,
-              confirm: async () => {
-                try {
-                  const accountInfo = await api.getAccountInfo(globals.account)
-                  if (obj.amount / 1000000 > accountInfo.balance) {
-                    throw new Error("Withdrawal amount greater than funds in account")
-                  }
-                  const envelope = await api.postEnvelope()
-                  const data = {
-                    tx: {
-                      msg: [
-                        {
-                          type: "cosmos-sdk/MsgSend",
-                          value: {
-                            from_address: globals.account,
-                            to_address: sendTo,
-                            amount: [
-                              {
-                                amount: obj.amount,
-                                denom: "udai"
-                              }
-                            ]
-                          }
-                        }
-                      ],
-                      fee: {
-                        amount: [],
-                        gas: "200000"
-                      },
-                      signatures: null,
-                      memo: ethaccount
-                    }
-                  }
-                  api.postTx(Object.assign(data, envelope))
-                  dispatch({
-                    type: WAITWITHDRAW
-                  })
-                } catch (err) {
-                  close()
-                  createErrorNotification(dispatch, err.message)
-                }
-              }
-            })
+          // Sanity check form fields
+          if (!/^(0x)?[0-9a-f]{40}$/i.test(ethaccount)) {
+            throw new Error("Invalid Ethereum account")
           }
           
-          if (obj.type === "withdrawcomplete") {
+          const accountInfo = await api.getAccountInfo(globals.account)
+          if (parseFloat(dai) > accountInfo.balance) {
+            throw new Error("Withdrawal amount greater than funds in account")
+          }
+                  
+          // connect to server
+          var proto = "ws://"
+          if (window.location.protocol === "https:") {
+            proto = "wss://"
+          }
+          const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
+          
+          const close = () => {
+            dispatch({
+              type: CLOSEDIALOG
+            })
             client.close()
-            dispatch({
-              type: WITHDRAWCOMPLETE,
-              hash: obj.hash,
-              close: () => {
-                dispatch({
-                  type: CLOSEDIALOG
-                })
-              }
-            })
+          }
+      
+          client.onopen = () => {
+            client.send(JSON.stringify({
+              type: "withdraw",
+              from: globals.account,
+              to: ethaccount,
+              amount: dai,
+            }))
           }
           
-          if (obj.type === "withdrawerror") {
-            close()
-            createErrorNotification(dispatch, obj.error)
+          client.onmessage = msg => {
+            //console.log(msg.data)
+            const obj = JSON.parse(msg.data)
+            
+            if (obj.type === "startwithdraw") {
+              const sendTo = obj.sendTo
+              dispatch({
+                type: CONFIRMWITHDRAW,
+                amount: dai,
+                account: ethaccount,
+                close: close,
+                confirm: async () => {
+                  try {
+                    const envelope = await api.postEnvelope()
+                    const data = {
+                      tx: {
+                        msg: [
+                          {
+                            type: "cosmos-sdk/MsgSend",
+                            value: {
+                              from_address: globals.account,
+                              to_address: sendTo,
+                              amount: [
+                                {
+                                  amount: obj.amount,
+                                  denom: "udai"
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        fee: {
+                          amount: [],
+                          gas: "200000"
+                        },
+                        signatures: null,
+                        memo: ethaccount
+                      }
+                    }
+                    api.postTx(Object.assign(data, envelope))
+                    dispatch({
+                      type: WAITWITHDRAW
+                    })
+                  } catch (err) {
+                    close()
+                    createErrorNotification(dispatch, err.message)
+                  }
+                }
+              })
+            }
+            
+            if (obj.type === "withdrawcomplete") {
+              client.close()
+              dispatch({
+                type: WITHDRAWCOMPLETE,
+                hash: obj.hash,
+                close: () => {
+                  dispatch({
+                    type: CLOSEDIALOG
+                  })
+                }
+              })
+            }
+            
+            if (obj.type === "withdrawerror") {
+              close()
+              createErrorNotification(dispatch, obj.error)
+            }
           }
-        }
-        
-        client.onclose = () => {
-          console.log("shift closed")
-        }
-        
-        client.onerror = () => {
+          
+          client.onclose = () => {
+            console.log("shift closed")
+          }
+          
+          client.onerror = () => {
+            dispatch({
+              type: CLOSEDIALOG
+            })
+            createErrorNotification(dispatch, "Bridge connection failed")
+          }
+          
+        } catch (err) {
           dispatch({
             type: CLOSEDIALOG
           })
-          createErrorNotification(dispatch, "Bridge connection failed")
+          createErrorNotification(dispatch, err.message)
         }
       }
     })
