@@ -261,10 +261,10 @@ class Home extends React.Component {
         <div className="row">
           <div className="section">
             <h5><span className="hint_quote">Place Quote</span></h5>
-            <p>By placing a quote you are making a price assertion that you expect the price
-            to be in the range you specify at the end of the time duration of the quote. The
-            green and red ranges in the Order Book to the right show the adjusted premiums based
-            on how far your quote's spot price is from the current consensus.</p>
+            <p>By placing a quote you are making a price assertion for the asset, backed by tokens,
+            as well as a choosing a premium that reflects how fast you expect the asset's price to change over the duration of the quote. The
+            green and red rectangles displayed in the Order Book to the right show the adjusted premiums based
+            on how far your quote's price assertion is from the current consensus.</p>
             <h6>Instructions</h6>
             <ol>
               <li>Select the market you are interested in above.</li>

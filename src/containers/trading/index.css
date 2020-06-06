@@ -305,6 +305,7 @@ div#marketSelect {
 }
 
 #instructions .row {
+  display: flex;
   flex-direction: row;
 }
 
@@ -314,6 +315,7 @@ div#marketSelect {
   background: #555;
   border-radius: 4px;
   margin-bottom: 20px;
+  flex: 1;
 }
 
 #instructions h5 {
