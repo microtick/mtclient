@@ -386,8 +386,6 @@ const App = props => {
   }
   if (props.dialog.showshift) {
     if (props.dialog.type === "start") {
-      const minutesRemain = Math.floor(props.dialog.remain / 60)
-      const secondsRemain = props.dialog.remain % 60
       header = <div className="header">
         <div className="title">Fund Account</div>
         <div className="content">
