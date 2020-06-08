@@ -755,7 +755,6 @@ async function updateHistory() {
       acc.push(hist)
       return acc
     }, [])
-    console.log(JSON.stringify(history, null, 2))
   } else {
     history = filteredHistory
   }
