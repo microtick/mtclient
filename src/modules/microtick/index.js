@@ -743,7 +743,7 @@ async function updateHistory() {
     var i = 0
     var history = filteredHistory.reduce((acc, hist) => {
       while (i < globals.trades.length && globals.trades[i].startBlock < hist.block) {
-        if (globals.trades[i].market === globals.market) {
+        if (globals.trades[i].market === globals.market && globals.trades[i].startBlock >= startBlock) {
           acc.push({
             block: globals.trades[i].startBlock,
             time: globals.trades[i].start.getTime(),
