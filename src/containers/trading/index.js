@@ -298,7 +298,11 @@ class Home extends React.Component {
       </div>
     }
     if (props.orderbook) {
-      var elems = props.durs.reduce((res,d,n) => {
+      var elems = props.durs.sort((a,b) => {
+        const intvalA = parseInt(a, 10)
+        const intvalB = parseInt(b, 10)
+        return intvalA - intvalB
+      }).reduce((res,d,n) => {
         const intval = parseInt(d, 10)
         const clazz = parseInt(props.dur, 10) === intval ? " durselected" : ""
         const col = ((n%2) === 0) ? "odd" : "even"
