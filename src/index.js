@@ -5,11 +5,7 @@ import App from './App'
 
 const target = document.querySelector('#root')
 
-if (process.env.MICROTICK_PROD === 'true') {
-  var token = "dai"
-} else {
-  token = "mt"
-}
+var token = "dai"
 
 render(
   <App token={token}/>,
