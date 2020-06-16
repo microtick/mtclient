@@ -279,6 +279,11 @@ body {
   width: 70%;
 }
 
+#div-chain a {
+  color: #fe9;
+  text-decoration: none;
+}
+
 #div-account {
   background: #3ae;
   color: #fff;

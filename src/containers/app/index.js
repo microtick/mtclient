@@ -516,8 +516,23 @@ const App = props => {
     } else {
       disabled = false
     }
-    fund = <button id="requestbutton" onClick={() => props.requestShift()} disabled={disabled}>Fund Account</button>
-    withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
+    //fund = <button id="requestbutton" onClick={() => props.requestShift()} disabled={disabled}>Fund Account</button>
+    //withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
+    const left = 100 + window.screenX
+    const top = 100 + window.screenY
+    const strWindowFeatures = 'toolbar=no,menubar=no,width=400,height=800,left=' + left + ',top=' + top
+    const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=2029f310-444e-44aa-b6da-c389b4431f9d&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
+    //const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=b8982b43-4e3d-4ba8-b648-794461abaa4c&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
+    //const url = 'https://auth.shapeshift.io.staging.chiefhappinessofficerellie.org/oauth/authorize?client_id=0038641c-28ff-4366-aea9-212b2bf3e6e3&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
+    fund = <button id="requestbutton" onClick={() => window.open(url, "", strWindowFeatures)} disabled={disabled}>Fund Account</button>
+    withdraw = <button id="withdrawbutton" onClick={() => window.open(url, "", strWindowFeatures)}>Withdraw</button>
+  }
+  if (process.env.MICROTICK_EXPLORER !== "off") {
+    var block_height = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER + "/blocks/" + props.block}>{props.block}</a>
+    var chain_id = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER}>{props.chainid}</a>
+  } else {
+    block_height = props.block
+    chain_id = props.chainid
   }
   return <div>
     {interact}
@@ -540,8 +555,8 @@ const App = props => {
     <div id="page-subheader">
       <div id="div-chain">
         <h3>Chain Information</h3>
-        <p>Chain = {props.chainid}</p>
-        <p>Block height = {props.block} <span className="right">{props.time}</span></p>
+        <p>Chain = {chain_id}</p>
+        <p>Block height = {block_height} <span className="right">{props.time}</span></p>
         <p>Block hash = <span className="sm">{props.hash}</span></p>
       </div>
       <div id="div-account">

@@ -178,15 +178,17 @@ api.addTickHandler(async (market, data) => {
     })
     fetchOrderBook()
   }
-  for (var i=0; i<globals.trades.length; i++) {
-    const trade = globals.trades[i]
-    if (trade.market === market) {
-      trade.spot = data.consensus
-      trade.current = (trade.type === 0) ? 
-        (trade.spot > trade.strike ? (trade.spot - trade.strike) * trade.qty : 0) :
-        (trade.spot < trade.strike ? (trade.strike - trade.spot) * trade.qty : 0)
-      if (trade.current > trade.backing) trade.current = trade.backing
-      trade.profit = trade.dir === 'long' ? trade.current - trade.premium : trade.premium - trade.current
+  if (globals.trades !== undefined) {
+    for (var i=0; i<globals.trades.length; i++) {
+      const trade = globals.trades[i]
+      if (trade.market === market) {
+        trade.spot = data.consensus
+        trade.current = (trade.type === 0) ? 
+          (trade.spot > trade.strike ? (trade.spot - trade.strike) * trade.qty : 0) :
+          (trade.spot < trade.strike ? (trade.strike - trade.spot) * trade.qty : 0)
+        if (trade.current > trade.backing) trade.current = trade.backing
+        trade.profit = trade.dir === 'long' ? trade.current - trade.premium : trade.premium - trade.current
+      }
     }
   }
   store.dispatch({
@@ -739,7 +741,7 @@ async function updateHistory() {
     value: currentSpot.consensus
   })
   // Insert trade points for display purposes
-  if (globals.trades.length > 0) {
+  if (globals.trades !== undefined && globals.trades.length > 0) {
     var i = 0
     var history = filteredHistory.reduce((acc, hist) => {
       while (i < globals.trades.length && globals.trades[i].startBlock < hist.block) {
@@ -1120,7 +1122,8 @@ export const buyCall = () => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance
+        balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
     } catch (err) {
       dispatch({
@@ -1163,7 +1166,8 @@ export const buyPut = () => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance
+        balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
     } catch (err) {
       dispatch({
@@ -1313,6 +1317,7 @@ export const placeQuote = () => {
         reason: "quote",
         acct: globals.account, 
         balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
     } catch (err) {
       dispatch({
@@ -1350,7 +1355,8 @@ export const cancelQuote = async (dispatch, id) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance
+      balance: globals.accountInfo.balance,
+      stake: globals.accountInfo.stake
     })
   } catch (err) {
     dispatch({

@@ -6,11 +6,13 @@ export MICROTICK_PROD=true
 export MICROTICK_WEBSOCKET=$IP:1320
 export MICROTICK_FAUCET=$IP:8888
 export MICROTICK_LEADERBOARD=off
+export MICROTICK_EXPLORER=off
 
 echo prod=$MICROTICK_PROD
 echo websocket=$MICROTICK_WEBSOCKET
 echo faucet=$MICROTICK_FAUCET
 echo leader=$MICROTICK_LEADERBOARD
+echo explorer=$MICROTICK_EXPLORER
 
 npm run start
 
