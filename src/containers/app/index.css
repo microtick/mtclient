@@ -296,6 +296,11 @@ body {
   padding-left: 10px;
 }
 
+#div-account a {
+  color: #fe9;
+  text-decoration: none;
+}
+
 #div-account .Select {
   margin-bottom: 10px;
 }

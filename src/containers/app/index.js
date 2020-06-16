@@ -530,9 +530,11 @@ const App = props => {
   if (process.env.MICROTICK_EXPLORER !== "off") {
     var block_height = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER + "/blocks/" + props.block}>{props.block}</a>
     var chain_id = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER}>{props.chainid}</a>
+    var account_addr = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER + "/account/" + props.account}>{props.account}</a>
   } else {
     block_height = props.block
     chain_id = props.chainid
+    account_addr = props.account
   }
   return <div>
     {interact}
@@ -565,7 +567,7 @@ const App = props => {
           {fund}
           {withdraw}
         </div>
-        <p>Address = {props.account} {props.account !== undefined ? (props.ledger ? "(hw)" : "(sw)") : ""}</p>
+        <p>Address = {account_addr} {props.account !== undefined ? (props.ledger ? "(hw)" : "(sw)") : ""}</p>
         {acctInfo}
       </div>
     </div>
