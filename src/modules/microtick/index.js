@@ -102,6 +102,7 @@ const initialState = {
   ledger: false,
   blocktime: BLOCKTIME,
   balance: 0,
+  stake: 0,
   wallet: "none",
   password: {
     prompt: true,
@@ -208,6 +209,7 @@ api.addAccountHandler(async (key, data) => {
         reason: key === "deposit" ? "receive" : "send",
         acct: globals.account, 
         balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
     }
     if (key.startsWith("trade")) {
@@ -364,6 +366,7 @@ async function processTradeEnd(trade) {
         reason: "trade",
         acct: globals.account, 
         balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
       await api.unsubscribe(globals.accountSubscriptions[trade.id])
       delete globals.accountSubscriptions[trade.id]
@@ -626,6 +629,7 @@ export default (state = initialState, action) => {
         ...state,
         account: action.acct,
         balance: action.balance,
+        stake: action.stake
         //available: action.available
       }
     case TRADELIST:
@@ -903,6 +907,7 @@ const selectAccount = async () => {
     reason: "accountselect",
     acct: globals.account,
     balance: globals.accountInfo.balance,
+    stake: globals.accountInfo.stake
   })
 }
 
@@ -1394,6 +1399,7 @@ export const backQuote = async (dispatch, id, amount) => {
       reason: "quote",
       acct: globals.account, 
       balance: globals.accountInfo.balance,
+      stake: globals.accountInfo.stake
     })
   } catch (err) {
     dispatch({

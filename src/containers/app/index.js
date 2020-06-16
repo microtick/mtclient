@@ -477,6 +477,7 @@ const App = props => {
     var acctInfo = <div>
       <p>Available balance = {Math.round10(props.balance, -6)} {props.token}</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} {props.token}</span></p>
+      <p>Stake = {Math.round10(props.stake, -6)} tick</p>
     </div>
   }
   switch (props.menu.selected) {
@@ -600,6 +601,7 @@ const mapStateToProps = state => ({
   accounts: state.tendermint.accounts,
   account: state.microtick.account,
   balance: state.microtick.balance,
+  stake: state.microtick.stake,
   available: state.microtick.available,
   notifications: state.notifications.list,
   dialog: state.dialog,
