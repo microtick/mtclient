@@ -10,6 +10,7 @@
  */
 
 import React from 'react';
+import ReactToolTip from 'react-tooltip'
 import { bindActionCreators } from 'redux'
 
 import Leaderboard from '../leaderboard'
@@ -474,10 +475,11 @@ const App = props => {
       return false
     })
     const total = props.status.quoteBacking + props.status.tradeBacking + long - short
+    const staketip = "Stake is earned with every commission (delegation coming soon)."
     var acctInfo = <div>
       <p>Available balance = {Math.round10(props.balance, -6)} {props.token}</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} {props.token}</span></p>
-      <p>Stake = {Math.round10(props.stake, -6)} tick</p>
+      <p data-tip={staketip}>Stake = {Math.round10(props.stake, -6)} tick</p>
     </div>
   }
   switch (props.menu.selected) {
@@ -563,6 +565,7 @@ const App = props => {
         <p>Block hash = <span className="sm">{props.hash}</span></p>
       </div>
       <div id="div-account">
+        <ReactToolTip/>
         <h3>Account Information</h3>
         <div id="transact">
           {fund}
