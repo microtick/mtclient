@@ -510,7 +510,7 @@ const App = props => {
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>
       <div className={props.menu.selected === 'about' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('about')}>About</div>
     </div>
-  if (process.env.MICROTICK_PROD === "true") {
+  if (process.env.MICROTICK_PROD !== "true") {
     var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
     var withdraw = <button id="withdrawbutton" onClick={() => props.sendTokens()}>Send Tokens</button>
   } else {
