@@ -479,7 +479,7 @@ const App = props => {
     var acctInfo = <div>
       <p>Available balance = {Math.round10(props.balance, -6)} {props.token}</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} {props.token}</span></p>
-      <p data-tip={staketip}>Stake = {Math.round10(props.stake, -6)} tick</p>
+      <p data-tip={staketip}>Stake = {Math.round10(props.stake, -6)} tick (undelegated)</p>
     </div>
   }
   switch (props.menu.selected) {
