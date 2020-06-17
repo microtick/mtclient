@@ -289,7 +289,7 @@ const App = props => {
           not.msg.includes("insufficient account funds") ||
           not.msg.includes("invalid address")) {
         message = "Insufficient account funds"
-    	  if (props.token === "mt") {
+    	  if (process.env.MICROTICK_PROD !== "true") {
           var button = <button id="requestbutton" onClick={() => {
             props.closeNotification(not.id)
             props.requestTokens()
@@ -510,7 +510,7 @@ const App = props => {
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>
       <div className={props.menu.selected === 'about' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('about')}>About</div>
     </div>
-  if (props.token === "mt") {
+  if (process.env.MICROTICK_PROD === "true") {
     var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
     var withdraw = <button id="withdrawbutton" onClick={() => props.sendTokens()}>Send Tokens</button>
   } else {
