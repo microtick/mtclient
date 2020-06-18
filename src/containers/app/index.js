@@ -28,6 +28,7 @@ import { selectWallet, choosePassword, enterPassword, newAccount, recoverAccount
 
 import ClipBoard from 'react-copy-to-clipboard'
 import ClipImage from './Clipboard.svg'
+import Fox from './fox.svg'
 import Ledger from './ledger.svg'
 import Software from './software.svg'
 import logo from './mtlogo-sm.png'
@@ -586,6 +587,7 @@ const App = props => {
         <ReactToolTip/>
         <h3>Account Information</h3>
         <div id="transact">
+          <a target="_blank" rel="noopener noreferrer" href="https://shapeshift.com"><img src={Fox} alt="ShapeShift"/></a>
           {fund}
           {withdraw}
         </div>
