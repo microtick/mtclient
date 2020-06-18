@@ -1773,7 +1773,7 @@ export const sendTokens = () => {
   }
 }
 
-export const requestShift = () => {
+export const requestShift = code => {
   return async dispatch => {
     
     const shiftParams = {
@@ -1801,13 +1801,20 @@ export const requestShift = () => {
     
     client.onopen = () => {
       client.send(JSON.stringify({
-        type: "deposit",
-        dest: globals.account
+        type: "authenticate",
+        code: code
       }))
     }
     
     client.onmessage = msg => {
       const obj = JSON.parse(msg.data)
+      if (obj.type === "authenticated") {
+        client.send(JSON.stringify({
+          type: "deposit",
+          auth: code,
+          dest: globals.account
+        }))
+      }
       if (obj.type === "startdeposit") {
         dispatch({
           type: SHIFTSTART,
@@ -1856,142 +1863,155 @@ export const requestShift = () => {
       }
     }
     
+    client.onerror = () => {
+      dispatch({
+        type: CLOSEDIALOG
+      })
+      createErrorNotification(dispatch, "Bridge connection failed")
+    }
+    
     client.onclose = () => {
     }
   }
 }
 
-export const withdrawAccount = () => {
+export const withdrawAccount = code => {
   return async dispatch => {
-    dispatch({
-      type: WITHDRAWACCOUNT,
-      max: globals.accountInfo.balance,
-      submit: async () => {
-        try {
-          const ethaccount = document.getElementById("eth-account").value.toLowerCase()
-          const dai = parseFloat(document.getElementById("dai-amount").value)
+    var ethaccount
+    var dai
+    
+    // connect to server
+    var proto = "ws://"
+    if (window.location.protocol === "https:") {
+      proto = "wss://"
+    }
+    const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
+    
+    const close = () => {
+      dispatch({
+        type: CLOSEDIALOG
+      })
+      client.close()
+    }
+
+    client.onopen = () => {
+      client.send(JSON.stringify({
+        type: "authenticate",
+        code: code
+      }))
+    }
+    
+    client.onmessage = msg => {
+      //console.log(msg.data)
+      const obj = JSON.parse(msg.data)
+      if (obj.type === "authenticated") {
+        dispatch({
+          type: WITHDRAWACCOUNT,
+          max: globals.accountInfo.balance,
+          submit: async () => {
+            ethaccount = document.getElementById("eth-account").value.toLowerCase()
+            dai = parseFloat(document.getElementById("dai-amount").value)
+    
+            try {
+              // Sanity check form fields
+              if (!/^(0x)?[0-9a-f]{40}$/i.test(ethaccount)) {
+                throw new Error("Invalid Ethereum account")
+              }
           
-          // Sanity check form fields
-          if (!/^(0x)?[0-9a-f]{40}$/i.test(ethaccount)) {
-            throw new Error("Invalid Ethereum account")
-          }
-          
-          const accountInfo = await api.getAccountInfo(globals.account)
-          if (isNaN(dai) || dai > accountInfo.balance || dai <= 0) {
-            throw new Error("Invalid withdrawal amount")
-          }
-                  
-          // connect to server
-          var proto = "ws://"
-          if (window.location.protocol === "https:") {
-            proto = "wss://"
-          }
-          const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
-          
-          const close = () => {
-            dispatch({
-              type: CLOSEDIALOG
-            })
-            client.close()
-          }
-      
-          client.onopen = () => {
-            client.send(JSON.stringify({
-              type: "withdraw",
-              from: globals.account,
-              to: ethaccount,
-              amount: dai,
-            }))
-          }
-          
-          client.onmessage = msg => {
-            //console.log(msg.data)
-            const obj = JSON.parse(msg.data)
-            
-            if (obj.type === "startwithdraw") {
-              const sendTo = obj.sendTo
-              dispatch({
-                type: CONFIRMWITHDRAW,
+              const accountInfo = await api.getAccountInfo(globals.account)
+              if (isNaN(dai) || dai > accountInfo.balance || dai <= 0) {
+                throw new Error("Invalid withdrawal amount")
+              }
+              
+              client.send(JSON.stringify({
+                type: "withdraw",
+                from: globals.account,
+                to: ethaccount,
                 amount: dai,
-                account: ethaccount,
-                close: close,
-                confirm: async () => {
-                  try {
-                    const envelope = await api.postEnvelope()
-                    const data = {
-                      tx: {
-                        msg: [
+              }))
+            } catch (err) {
+              close()
+              createErrorNotification(dispatch, err.message)
+            }
+          }
+        })
+      }
+      
+      if (obj.type === "startwithdraw") {
+        const sendTo = obj.sendTo
+        dispatch({
+          type: CONFIRMWITHDRAW,
+          amount: dai,
+          account: ethaccount,
+          close: close,
+          confirm: async () => {
+            try {
+              const envelope = await api.postEnvelope()
+              const data = {
+                tx: {
+                  msg: [
+                    {
+                      type: "cosmos-sdk/MsgSend",
+                      value: {
+                        from_address: globals.account,
+                        to_address: sendTo,
+                        amount: [
                           {
-                            type: "cosmos-sdk/MsgSend",
-                            value: {
-                              from_address: globals.account,
-                              to_address: sendTo,
-                              amount: [
-                                {
-                                  amount: obj.amount,
-                                  denom: "udai"
-                                }
-                              ]
-                            }
+                            amount: obj.amount,
+                            denom: "udai"
                           }
-                        ],
-                        fee: {
-                          amount: [],
-                          gas: "200000"
-                        },
-                        signatures: null,
-                        memo: ethaccount
+                        ]
                       }
                     }
-                    api.postTx(Object.assign(data, envelope))
-                    dispatch({
-                      type: WAITWITHDRAW
-                    })
-                  } catch (err) {
-                    close()
-                    createErrorNotification(dispatch, err.message)
-                  }
+                  ],
+                  fee: {
+                    amount: [],
+                    gas: "200000"
+                  },
+                  signatures: null,
+                  memo: ethaccount
                 }
-              })
-            }
-            
-            if (obj.type === "withdrawcomplete") {
-              client.close()
+              }
+              api.postTx(Object.assign(data, envelope))
               dispatch({
-                type: WITHDRAWCOMPLETE,
-                hash: obj.hash,
-                close: () => {
-                  dispatch({
-                    type: CLOSEDIALOG
-                  })
-                }
+                type: WAITWITHDRAW
               })
-            }
-            
-            if (obj.type === "withdrawerror") {
+            } catch (err) {
               close()
-              createErrorNotification(dispatch, obj.error)
+              createErrorNotification(dispatch, err.message)
             }
           }
-          
-          client.onclose = () => {
-            console.log("shift closed")
-          }
-          
-          client.onerror = () => {
+        })
+      }
+      
+      if (obj.type === "withdrawcomplete") {
+        client.close()
+        dispatch({
+          type: WITHDRAWCOMPLETE,
+          hash: obj.hash,
+          close: () => {
             dispatch({
               type: CLOSEDIALOG
             })
-            createErrorNotification(dispatch, "Bridge connection failed")
           }
-          
-        } catch (err) {
-          dispatch({
-            type: CLOSEDIALOG
-          })
-          createErrorNotification(dispatch, err.message)
-        }
+        })
       }
-    })
+      
+      if (obj.type === "withdrawerror") {
+        close()
+        createErrorNotification(dispatch, obj.error)
+      }
+    }
+
+    client.onclose = () => {
+    }
+    
+    client.onerror = () => {
+      dispatch({
+        type: CLOSEDIALOG
+      })
+      createErrorNotification(dispatch, "Bridge connection failed")
+    }
+
   }
 }

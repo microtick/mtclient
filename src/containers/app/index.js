@@ -35,6 +35,28 @@ import "./index.css"
 
 import { menuSelected } from '../../modules/app'
 
+function confirmAuth(cb) {
+  const clientID = "5a6dd0ac-0039-4561-95c4-87e0a2b35390"
+  const redirect = "https://devnet.microtick.zone/authenticated.html"
+  const left = window.screenX + window.innerWidth / 2 - 200
+  const top = window.screenY + window.innerHeight / 2 - 400
+  const strWindowFeatures = 'width=400,height=800,left=' + left + ',top=' + top
+  const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=' + clientID + '&scope=users:read&response_type=code&redirect_uri=' + redirect
+  //const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=b8982b43-4e3d-4ba8-b648-794461abaa4c&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
+  //const url = 'https://auth.shapeshift.io.staging.chiefhappinessofficerellie.org/oauth/authorize?client_id=0038641c-28ff-4366-aea9-212b2bf3e6e3&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
+  const ref = window.open(url, "microtick.com_federate_shapeshift.io", strWindowFeatures)
+  function listener(ev) {
+    if (ref.closed) {
+      window.removeEventListener("message", listener)
+    }
+    if (ev.data.oauth_msg !== undefined) {
+      cb(ev.data.code)
+      window.removeEventListener("message", listener)
+    }
+  }
+  window.addEventListener("message", listener)
+}
+
 const App = props => {
   if (props.dialog.showinteract && props.ledger) {
     var interact = <div id="interact">
@@ -519,16 +541,12 @@ const App = props => {
     } else {
       disabled = false
     }
-    //fund = <button id="requestbutton" onClick={() => props.requestShift()} disabled={disabled}>Fund Account</button>
-    //withdraw = <button id="withdrawbutton" onClick={() => props.withdrawAccount()}>Withdraw</button>
-    const left = 100 + window.screenX
-    const top = 100 + window.screenY
-    const strWindowFeatures = 'toolbar=no,menubar=no,width=400,height=800,left=' + left + ',top=' + top
-    const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=2029f310-444e-44aa-b6da-c389b4431f9d&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
-    //const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=b8982b43-4e3d-4ba8-b648-794461abaa4c&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
-    //const url = 'https://auth.shapeshift.io.staging.chiefhappinessofficerellie.org/oauth/authorize?client_id=0038641c-28ff-4366-aea9-212b2bf3e6e3&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
-    fund = <button id="requestbutton" onClick={() => window.open(url, "", strWindowFeatures)} disabled={disabled}>Fund Account</button>
-    withdraw = <button id="withdrawbutton" onClick={() => window.open(url, "", strWindowFeatures)}>Withdraw</button>
+    fund = <button id="requestbutton" onClick={() => {confirmAuth(code => {
+      props.requestShift(code)
+    })}} disabled={disabled}>Fund Account</button>
+    withdraw = <button id="withdrawbutton" onClick={() => {confirmAuth(code => {
+      props.withdrawAccount(code)
+    })}}>Withdraw</button>
   }
   if (process.env.MICROTICK_EXPLORER !== "off") {
     var block_height = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER + "/blocks/" + props.block}>{props.block}</a>
