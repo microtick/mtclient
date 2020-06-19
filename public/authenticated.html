@@ -1,0 +1,24 @@
+<html>
+<head>
+<script>
+function getUrlParameter(name) {
+  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
+  var regex = new RegExp('[\\?&]' + name + '=([^&#]*)')
+  var results = regex.exec(location.search)
+  return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '))
+}
+function onLoad() {
+  const code = getUrlParameter('code')
+  document.getElementById('res').innerHTML=code
+  window.opener.postMessage({
+    oauth_msg: true,
+    code: code
+  }, "*")
+  window.close()
+}
+</script>
+</head>
+<body onload="onLoad()">
+  <p id="res">Authenticating token...</p>
+</body>
+</html>
