@@ -313,7 +313,7 @@ body {
 
 #transact {
   float: right;
-  width: 190px;
+  width: 160px;
   border: 1px solid #fff;
   border-radius: 10px;
   padding: 10px;
@@ -321,7 +321,8 @@ body {
 
 #transact img {
   float: left;
-  height: 50px;
+  height: 30px;
+  padding-top: 10px;
 }
 
 #requestbutton {
