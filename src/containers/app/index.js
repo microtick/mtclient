@@ -587,7 +587,9 @@ const App = props => {
         <ReactToolTip/>
         <h3>Account Information</h3>
         <div id="transact">
-          <a target="_blank" rel="noopener noreferrer" href="https://shapeshift.com"><img src={Fox} alt="ShapeShift"/></a>
+          <a target="_blank" rel="noopener noreferrer" href="https://shapeshift.com">
+            <img data-tip="Deposits / withdrawals of ERC-20 DAI sponsored by ShapeShift, prior to on-chain IBC support." src={Fox} alt="ShapeShift"/>
+          </a>
           {fund}
           {withdraw}
         </div>
