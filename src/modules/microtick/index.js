@@ -1777,6 +1777,7 @@ export const requestShift = code => {
   return async dispatch => {
     
     const shiftParams = {
+      expected: false,
       received: false,
       confirmed: false,
       amount: 0,
@@ -1793,6 +1794,7 @@ export const requestShift = code => {
     const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
     
     const close = () => {
+      shiftParams.expected = true
       dispatch({
         type: CLOSEDIALOG
       })
@@ -1811,7 +1813,6 @@ export const requestShift = code => {
       if (obj.type === "authenticated") {
         client.send(JSON.stringify({
           type: "deposit",
-          auth: code,
           dest: globals.account
         }))
       }
@@ -1850,6 +1851,7 @@ export const requestShift = code => {
         }
       }
       if (obj.type === "confirmed") {
+        shiftParams.expected = true
         shiftParams.confirmed = true
         dispatch({
           type: SHIFTSTATUS,
@@ -1864,6 +1866,7 @@ export const requestShift = code => {
     }
     
     client.onerror = () => {
+      shiftParams.expected = true
       dispatch({
         type: CLOSEDIALOG
       })
@@ -1871,6 +1874,12 @@ export const requestShift = code => {
     }
     
     client.onclose = () => {
+      if (!shiftParams.expected) {
+        dispatch({
+          type: CLOSEDIALOG
+        })
+        createErrorNotification(dispatch, "Connection timed out or closed unexpectedly")
+      }
     }
   }
 }
@@ -1886,8 +1895,10 @@ export const withdrawAccount = code => {
       proto = "wss://"
     }
     const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
+    var expected = false
     
     const close = () => {
+      expected = true
       dispatch({
         type: CLOSEDIALOG
       })
@@ -1985,6 +1996,7 @@ export const withdrawAccount = code => {
       }
       
       if (obj.type === "withdrawcomplete") {
+        expected = true
         client.close()
         dispatch({
           type: WITHDRAWCOMPLETE,
@@ -2004,9 +2016,16 @@ export const withdrawAccount = code => {
     }
 
     client.onclose = () => {
+      if (!expected) {
+        dispatch({
+          type: CLOSEDIALOG
+        })
+        createErrorNotification(dispatch, "Connection timed out or closed unexpectedly")
+      }
     }
     
     client.onerror = () => {
+      expected = true
       dispatch({
         type: CLOSEDIALOG
       })
