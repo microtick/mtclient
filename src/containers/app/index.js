@@ -502,6 +502,7 @@ const App = props => {
     var acctInfo = <div>
       <p>Available balance = {Math.round10(props.balance, -6)} {props.token}</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} {props.token}</span></p>
+      <p data-tip={staketip}>Stake = {Math.round10(props.stake, -6)} tick (undelegated)</p>
     </div>
   }
   switch (props.menu.selected) {
@@ -584,6 +585,7 @@ const App = props => {
       </div>
       <div id="div-account">
         <ReactToolTip/>
+        <h3>Account Information</h3>
         <div id="transact">
           <a target="_blank" rel="noopener noreferrer" href="https://shapeshift.com">
             <img data-tip="Deposits / withdrawals of ERC-20 DAI sponsored by ShapeShift, prior to on-chain IBC support." src={Fox} alt="ShapeShift"/>
@@ -591,7 +593,6 @@ const App = props => {
           {fund}
           {withdraw}
         </div>
-        <h3>Account Information</h3>
         <p>Address = {account_addr} {props.account !== undefined ? (props.ledger ? "(hw)" : "(sw)") : ""}</p>
         {acctInfo}
       </div>

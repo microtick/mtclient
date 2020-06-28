@@ -65,6 +65,7 @@ const WITHDRAWCOMPLETE = 'shift/withdrawcomplete'
 const ENABLELEDGER = 'microtick/ledger'
 const INTERACTLEDGER = 'dialog/interactledger'
 const CLOSEDIALOG = 'dialog/close'
+const ACCOUNTSTAKE = 'microtick/stake'
 
 const globals = {
   accountSubscriptions: {},
@@ -208,8 +209,7 @@ api.addAccountHandler(async (key, data) => {
         type: ACCOUNT,
         reason: key === "deposit" ? "receive" : "send",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balance
       })
     }
     if (key.startsWith("trade")) {
@@ -365,8 +365,7 @@ async function processTradeEnd(trade) {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balance
       })
       await api.unsubscribe(globals.accountSubscriptions[trade.id])
       delete globals.accountSubscriptions[trade.id]
@@ -493,6 +492,11 @@ export default (state = initialState, action) => {
           ...action
         }
       })
+    case ACCOUNTSTAKE:
+      return {
+        ...state,
+        stake: action.stake
+      }
     case DONELOADING:
       return {
         ...state,
@@ -628,8 +632,7 @@ export default (state = initialState, action) => {
       return {
         ...state,
         account: action.acct,
-        balance: action.balance,
-        stake: action.stake
+        balance: action.balance
         //available: action.available
       }
     case TRADELIST:
@@ -897,6 +900,7 @@ const selectAccount = async () => {
   api.accountSync(startBlock, globals.blockNumber)
   
   fetchActiveQuotes()
+  fetchStake()
 
   store.dispatch({
     type: ACCOUNTSELECT,
@@ -906,8 +910,7 @@ const selectAccount = async () => {
     type: ACCOUNT,
     reason: "accountselect",
     acct: globals.account,
-    balance: globals.accountInfo.balance,
-    stake: globals.accountInfo.stake
+    balance: globals.accountInfo.balance
   })
 }
 
@@ -1088,6 +1091,14 @@ async function fetchActiveQuotes() {
     type: QUOTELIST
   })
 }
+
+async function fetchStake() {
+  const res = await api.getStake(globals.account)
+  store.dispatch({
+    type: ACCOUNTSTAKE,
+    stake: res / 1000000.0
+  })
+}
     
 export const buyParams = () => {
   return {
@@ -1127,9 +1138,9 @@ export const buyCall = () => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balance
       })
+      fetchStake()
     } catch (err) {
       dispatch({
         type: INTERACTLEDGER,
@@ -1171,9 +1182,9 @@ export const buyPut = () => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balance
       })
+      fetchStake()
     } catch (err) {
       dispatch({
         type: INTERACTLEDGER,
@@ -1321,9 +1332,9 @@ export const placeQuote = () => {
         type: ACCOUNT,
         reason: "quote",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balance
       })
+      fetchStake()
     } catch (err) {
       dispatch({
         type: INTERACTLEDGER,
@@ -1360,9 +1371,9 @@ export const cancelQuote = async (dispatch, id) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance,
-      stake: globals.accountInfo.stake
+      balance: globals.accountInfo.balance
     })
+    fetchStake()
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
@@ -1398,9 +1409,9 @@ export const backQuote = async (dispatch, id, amount) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance,
-      stake: globals.accountInfo.stake
+      balance: globals.accountInfo.balance
     })
+    fetchStake()
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
@@ -1431,6 +1442,7 @@ export const updateSpot = async (dispatch, id, newspot) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActiveQuotes()
     fetchOrderBook()
+    fetchStake()
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
@@ -1461,6 +1473,7 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActiveQuotes()
     fetchOrderBook()
+    fetchStake()
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
