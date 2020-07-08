@@ -650,8 +650,17 @@ body {
 
 #sendprompt {
   display: flex;
+  flex-wrap: wrap;
   width: 80%;
-  margin: auto;
+  margin-top: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+  border: 1px solid #999;
+  border-style: dotted;
+  border-radius: 10px;
+  padding: 5px;
+  background: #bbb;
 }
 
 #sendprompt input {
@@ -672,16 +681,39 @@ body {
 
 #sendprompt button {
   display: flex;
+  justify-content: center;
   align-items: center;
   text-align: left;
   border-width: 0px;
   cursor: pointer;
-  background-color: #ddd;
+  background-color: #bbb;
   flex: 1;
 }
 
 #sendprompt button:focus {
   outline: none;
+}
+
+.instructions {
+  width: 80%;
+  margin: auto;
+}
+
+.warning {
+  width: 80%;
+  margin: auto;
+  background: #333;
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.warning a {
+  color: #fc0 !important;
+}
+
+.warning a:visited {
+  color: #fc0 !important;
 }
 
 #copied {

@@ -413,13 +413,14 @@ const App = props => {
       header = <div className="header">
         <div className="title">Fund Account</div>
         <div className="content">
-          <p>To fund your trading account, send Ethereum ERC-20 DAI tokens to the following Ethereum address:</p>
+          <p className="instructions">To fund your trading account, send Ethereum ERC-20 DAI tokens to the following Ethereum address:</p>
           <p id="sendprompt">
             <input size={40} value={props.dialog.to} readOnly disabled="disabled"/>
             <ClipBoard text={props.dialog.to}>
               <button onClick={()=>{document.getElementById('copied').style.display='inline-block'}}><img src={ClipImage} alt="clipboard"/>&nbsp;<span id="copied" style={{display:'none'}}>copied</span></button>
             </ClipBoard>
           </p>
+          <p className="warning">Note: Deposits must be between 10 and 500 DAI to be accepted, otherwise you will need to contact <a href="mailto:support@microtick.com">support@microtick.com</a> for a refund.</p>
         </div>
       </div>
     }
