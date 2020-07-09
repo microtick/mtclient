@@ -1957,7 +1957,8 @@ export const withdrawAccount = code => {
               close()
               createErrorNotification(dispatch, err.message)
             }
-          }
+          },
+          close: close
         })
       }
       

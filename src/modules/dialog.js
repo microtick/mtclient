@@ -131,12 +131,13 @@ export default (state = initialState, action) => {
       return {
         ...state,
         showinline: false,
-        showmodal: true,
-        showshift: false,
+        showmodal: false,
+        showshift: true,
         showconfirm: false,
         type: "withdraw",
         max: action.max,
-        submit: action.submit
+        submit: action.submit,
+        close: action.close
       }
     case SENDTOKENSDIALOG:
       return {
