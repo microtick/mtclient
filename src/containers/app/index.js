@@ -45,6 +45,7 @@ function confirmAuth(cb) {
   const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=' + clientID + '&scope=users:read&response_type=code&redirect_uri=' + redirect
   //const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=b8982b43-4e3d-4ba8-b648-794461abaa4c&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
   //const url = 'https://auth.shapeshift.io.staging.chiefhappinessofficerellie.org/oauth/authorize?client_id=0038641c-28ff-4366-aea9-212b2bf3e6e3&scope=users:read&response_type=code&redirect_uri=https://devnet.microtick.zone/authenticated.html'
+  window.addEventListener("message", listener)
   const ref = window.open(url, "microtick.com_federate_shapeshift.io", strWindowFeatures)
   function listener(ev) {
     if (ref.closed) {
@@ -55,7 +56,6 @@ function confirmAuth(cb) {
       window.removeEventListener("message", listener)
     }
   }
-  window.addEventListener("message", listener)
 }
 
 const App = props => {
