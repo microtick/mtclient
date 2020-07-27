@@ -403,7 +403,7 @@ const App = props => {
       header = <div className="header">
         <div className="title">Withdraw DAI to Ethereum</div>
         <div className="content">
-          <p>Ethereum ERC-20 address to receive <a href={daiLink}>DAI</a>: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
+          <p>Ethereum ERC-20 address to receive <a href={daiLink} target="_blank">DAI</a>: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
           <p>Amount to withdraw: <input id="dai-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
         </div>
       </div>
@@ -413,7 +413,7 @@ const App = props => {
       header = <div className="header">
         <div className="title">Fund Account</div>
         <div className="content">
-          <p className="instructions">To fund your Microtick trading account, send <a href={daiLink}>Ethereum ERC-20 DAI</a> tokens to the following Ethereum address:</p>
+          <p className="instructions">To fund your Microtick trading account, send <a href={daiLink} target="_blank">Ethereum ERC-20 DAI</a> tokens to the following Ethereum address:</p>
           <p id="sendprompt">
             <input size={40} value={props.dialog.to} readOnly disabled="disabled"/>
             <ClipBoard text={props.dialog.to}>
