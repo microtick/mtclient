@@ -405,6 +405,7 @@ const App = props => {
         <div className="content">
           <p>Ethereum ERC-20 address to receive <a href={daiLink} target="_blank">DAI</a>: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
           <p>Amount to withdraw: <input id="dai-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
+          <p className="warning">Note: Deposits must be between 10 and 500 DAI to be accepted, otherwise you will need to contact <a href="mailto:support@microtick.com">support@microtick.com</a> for a refund.</p>
         </div>
       </div>
       action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
