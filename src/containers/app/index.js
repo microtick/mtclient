@@ -574,7 +574,7 @@ const App = props => {
         <a href="http://microtick.com">Home</a>
         <a href="http://microtick.com/background-information.html">Learn More</a>
         <a href="http://microtick.com/how-to-table-of-contents.html">How To</a>
-        <span className="current">Try the Testnet</span>
+        <span className="current">Get Started</span>
         <a href="http://microtick.com/contact.html">Contact</a>
       </nav>
     </div>
