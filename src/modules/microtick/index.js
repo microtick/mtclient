@@ -1997,11 +1997,23 @@ export const withdrawAccount = code => {
                   memo: ethaccount
                 }
               }
+              dispatch({
+                type: INTERACTLEDGER,
+                value: true
+              })
               api.postTx(Object.assign(data, envelope))
+              dispatch({
+                type: INTERACTLEDGER,
+                value: false
+              })
               dispatch({
                 type: WAITWITHDRAW
               })
             } catch (err) {
+              dispatch({
+                type: INTERACTLEDGER,
+                value: false
+              })
               close()
               createErrorNotification(dispatch, err.message)
             }
