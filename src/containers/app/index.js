@@ -472,7 +472,7 @@ const App = props => {
       header = <div className="header">
         <div className="title">Withdrawal Complete</div>
         <div className="content">
-          <p>Ethereum confirmation: <a target="_blank" href={"https://goerli.etherscan.io/tx/" + props.dialog.hash} rel="noopener noreferrer">{props.dialog.hash}</a></p>
+          <p>Ethereum confirmation: <a target="_blank" href={"https://etherscan.io/tx/" + props.dialog.hash} rel="noopener noreferrer">{props.dialog.hash}</a></p>
         </div>
       </div>
       action = <button className="button" onClick={() => props.dialog.close()}>Dismiss</button>
