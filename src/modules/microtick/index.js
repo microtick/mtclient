@@ -2001,7 +2001,7 @@ export const withdrawAccount = code => {
                 type: INTERACTLEDGER,
                 value: true
               })
-              api.postTx(Object.assign(data, envelope))
+              await api.postTx(Object.assign(data, envelope))
               dispatch({
                 type: INTERACTLEDGER,
                 value: false
