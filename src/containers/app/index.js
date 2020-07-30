@@ -32,6 +32,7 @@ import Fox from './fox.svg'
 import Ledger from './ledger.svg'
 import Software from './software.svg'
 import logo from './mtlogo-sm.png'
+import QRCode from 'qrcode.react'
 import "./index.css"
 
 import { menuSelected } from '../../modules/app'
@@ -420,6 +421,9 @@ const App = props => {
             <ClipBoard text={props.dialog.to}>
               <button onClick={()=>{document.getElementById('copied').style.display='inline-block'}}><img src={ClipImage} alt="clipboard"/>&nbsp;<span id="copied" style={{display:'none'}}>copied</span></button>
             </ClipBoard>
+          </p>
+          <p>
+            <QRCode value={props.dialog.to}/>
           </p>
           <p className="warning">Note: Deposits must be between 10 and 500 DAI to be accepted, otherwise you will need to contact <a href="mailto:support@microtick.com">support@microtick.com</a> for a refund.</p>
         </div>
