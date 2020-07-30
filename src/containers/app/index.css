@@ -36,6 +36,24 @@ body {
   width: 150px;
 }
 
+#wallet-select h3 {
+  text-align: left;
+  margin-left: 0px;
+}
+
+#wallet-select .kyc {
+  margin-top: 20px;
+}
+
+#wallet-select .kyc p {
+  text-align: left;
+}
+
+#wallet-select a {
+  text-decoration: none;
+  color: #28c;
+}
+
 #interact {
   position: absolute;
   display: flex;
