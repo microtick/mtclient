@@ -912,6 +912,11 @@ const selectAccount = async () => {
     acct: globals.account,
     balance: globals.accountInfo.balance
   })
+  
+  if (globals.markets.length > 0) {
+    const cb = selectMarket(globals.markets[0].name)
+    cb(store.dispatch)
+  }
 }
 
 async function fetchOrderBook() {
