@@ -1,5 +1,14 @@
 <html>
 <head>
+<style>
+body {
+  background-color: #dcb;
+}
+#res {
+  margin-top: 20px;
+  margin-left: 10px;
+}
+</style>
 <script>
 function getUrlParameter(name) {
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
@@ -9,16 +18,17 @@ function getUrlParameter(name) {
 }
 function onLoad() {
   const code = getUrlParameter('code')
-  document.getElementById('res').innerHTML=code
   window.opener.postMessage({
     oauth_msg: true,
     code: code
   }, "*")
-  window.close()
+  setTimeout(() => {
+    window.close()
+  }, 1500)
 }
 </script>
 </head>
 <body onload="onLoad()">
-  <p id="res">Authenticating token...</p>
+  <p id="res">Verifying authentication...</p>
 </body>
 </html>
