@@ -415,7 +415,7 @@ const App = props => {
           <p>Ethereum ERC-20 address to receive <a href={daiLink} target="_blank">DAI</a>: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
           <p>Amount to withdraw: <input id="dai-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
           <p className="warning">Note: Withdrawals must be between 10 and 500 DAI to be accepted, otherwise you will need to 
-          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new">support ticket</a> for a refund.</p>
+          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank">support ticket</a> for a refund.</p>
         </div>
       </div>
       action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
@@ -435,7 +435,7 @@ const App = props => {
             <QRCode value={props.dialog.to}/>
           </p>
           <p className="warning">Note: Deposits must be between 10 and 500 DAI to be accepted, otherwise you will need to 
-          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new">support ticket</a> for a refund.</p>
+          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank">support ticket</a> for a refund.</p>
         </div>
       </div>
     }
