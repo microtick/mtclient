@@ -85,7 +85,7 @@ const App = props => {
           <h3>Please note:</h3>
           <p>Use of the DAI-to-MTDAI bridge for account funding requires KYC approval.</p>
           <p>Please download the ShapeShift app (<a href="https://shapeshift.com/download" target="_blank">https://shapeshift.com/download</a>) and complete the KYC process. Then, come back to this page and login using your credentials.</p>
-          <p>KYC approval generally takes 8 hours, but in some cases may take 5 business days. If more than 5 business days have passed since you KYC'd, please submit a support ticket here:
+          <p>KYC approval generally a few minutes, but in some cases may take between 8 hours and 5 business days. If more than 5 business days have passed since you KYC'd, please submit a support ticket here:
           <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank">https://shapeshift.zendesk.com/hc/en-us/requests/new</a></p>
           <p>For all non-KYC Microtick-specific support questions, please visit our telegram channel: <a href="https://t.me/microtick_general" target="_blank">https://t.me/microtick_general</a></p>
         </div>
@@ -598,6 +598,7 @@ const App = props => {
         <p>Chain = {chain_id}</p>
         <p>Block height = {block_height} <span className="right">{props.time}</span></p>
         <p>Block hash = <span className="sm">{props.hash}</span></p>
+        <p>Microtick community: <a href="https://t.me/microtick_general" target="_blank">https://t.me/microtick_general</a></p>
       </div>
       <div id="div-account">
         <ReactToolTip/>
