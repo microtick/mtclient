@@ -84,10 +84,10 @@ const App = props => {
         <div className="kyc">
           <h3>Please note:</h3>
           <p>Use of the DAI-to-MTDAI bridge for account funding requires KYC approval.</p>
-          <p>Please download the ShapeShift app (<a href="https://shapeshift.com/download" target="_blank">https://shapeshift.com/download</a>) and complete the KYC process. Then, come back to this page and login using your credentials.</p>
+          <p>Please download the ShapeShift app (<a href="https://shapeshift.com/download" target="_blank" rel="noopener noreferrer">https://shapeshift.com/download</a>) and complete the KYC process. Then, come back to this page and login using your credentials.</p>
           <p>KYC approval generally takes only a few minutes, but in some cases may take between 8 hours and 5 business days. If more than 5 business days have passed since you KYC'd, please submit a support ticket here:
-          <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank">https://shapeshift.zendesk.com/hc/en-us/requests/new</a></p>
-          <p>For all non-KYC Microtick-specific support questions, please visit our telegram channel: <a href="https://t.me/microtick_general" target="_blank">https://t.me/microtick_general</a></p>
+          <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer">https://shapeshift.zendesk.com/hc/en-us/requests/new</a></p>
+          <p>For all non-KYC Microtick-specific support questions, please visit our telegram channel: <a href="https://t.me/microtick_general" target="_blank" rel="noopener noreferrer">https://t.me/microtick_general</a></p>
         </div>
       </div>
     </div>
@@ -412,10 +412,10 @@ const App = props => {
       header = <div className="header">
         <div className="title">Withdraw DAI to Ethereum</div>
         <div className="content">
-          <p>Ethereum ERC-20 address to receive <a href={daiLink} target="_blank">DAI</a>: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
+          <p>Ethereum ERC-20 address to receive <a href={daiLink} target="_blank" rel="noopener noreferrer">DAI</a>: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
           <p>Amount to withdraw: <input id="dai-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
           <p className="warning">Note: Withdrawals must be between 10 and 500 DAI to be accepted, otherwise you will need to 
-          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank">support ticket</a> for a refund.</p>
+          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer">support ticket</a> for a refund.</p>
         </div>
       </div>
       action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
@@ -424,7 +424,7 @@ const App = props => {
       header = <div className="header">
         <div className="title">Fund Account</div>
         <div className="content">
-          <p className="instructions">To fund your Microtick trading account, send <a href={daiLink} target="_blank">Ethereum ERC-20 DAI</a> tokens to the following Ethereum address:</p>
+          <p className="instructions">To fund your Microtick trading account, send <a href={daiLink} target="_blank" rel="noopener noreferrer">Ethereum ERC-20 DAI</a> tokens to the following Ethereum address:</p>
           <p id="sendprompt">
             <input size={40} value={props.dialog.to} readOnly disabled="disabled"/>
             <ClipBoard text={props.dialog.to}>
@@ -435,7 +435,7 @@ const App = props => {
             <QRCode value={props.dialog.to}/>
           </p>
           <p className="warning">Note: Deposits must be between 10 and 500 DAI to be accepted, otherwise you will need to 
-          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank">support ticket</a> for a refund.</p>
+          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer">support ticket</a> for a refund.</p>
         </div>
       </div>
     }
@@ -598,7 +598,7 @@ const App = props => {
         <p>Chain = {chain_id}</p>
         <p>Block height = {block_height} <span className="right">{props.time}</span></p>
         <p>Block hash = <span className="sm">{props.hash}</span></p>
-        <p>Microtick community: <a href="https://t.me/microtick_general" target="_blank">https://t.me/microtick_general</a></p>
+        <p>Microtick community: <a href="https://t.me/microtick_general" target="_blank" rel="noopener noreferrer">https://t.me/microtick_general</a></p>
       </div>
       <div id="div-account">
         <ReactToolTip/>
