@@ -565,7 +565,9 @@ const App = props => {
       props.withdrawAccount(code)
     })}}>Withdraw</button>
   }
-  if (process.env.MICROTICK_EXPLORER !== "off") {
+  const urlParams = new URLSearchParams(window.location.search)
+  const apiServer = urlParams.get('apiServer')
+  if (process.env.MICROTICK_EXPLORER !== "off" && apiServer === null) {
     var block_height = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER + "/blocks/" + props.block}>{props.block}</a>
     var chain_id = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER}>{props.chainid}</a>
     var account_addr = <a target="_blank" rel="noopener noreferrer" href={process.env.MICROTICK_EXPLORER + "/account/" + props.account}>{props.account}</a>
