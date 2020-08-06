@@ -219,6 +219,10 @@ svg .loading {
   pointer-events: auto;
 }
 
+#leftamt {
+  fill: #e2f;
+}
+
 #costamt.call {
   fill: #0f0;
 }
