@@ -66,11 +66,19 @@ const ActiveTrades = props => {
         <button onClick={() => props.settleTradeDialog(tr.id)}>Settle</button>
       </td>
     }
+    if (tr.taker) {
+      if (tr.order === "buy-call") action = "Buy Call"
+      if (tr.order === "sell-call") action = "Sell Call"
+      if (tr.order === "buy-put") action = "Buy Put"
+      if (tr.order === "sell-put") action = "Sell Put"
+    } else {
+      var action = tr.dir === 'long' ? 'Long' : 'Short'
+      action += tr.type === 0 ? " Call" : " Put"
+    }
     return <tr className={(id%2 === 0) ? "odd" : "even"} key={id}>
       <td><span className="count">{id+1}</span></td>
       <td><button onClick={() => props.viewTrade(tr.id)}>T-{tr.id}</button></td>
-      <td>{tr.dir === 'long' ? 'Long' : 'Short'}</td>
-      <td>{tr.type === 0 ? "Call" : "Put"}</td>
+      <td>{action}</td>
       <td><button onClick={() => { props.selectMarket(tr.market); props.selectDur(durIntVal[tr.dur]) }}>{tr.market}</button></td>
       <td>{tr.dur}</td>
       <td>{tr.start.toLocaleTimeString()}</td>
@@ -100,7 +108,6 @@ const ActiveTrades = props => {
             <td></td>
             <td>ID</td>
             <td>Position</td>
-            <td>Type</td>
             <td>Market</td>
             <td>Dur</td>
             <td>Start</td>
@@ -120,7 +127,7 @@ const ActiveTrades = props => {
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan={13}><span className="right">Total:</span></td>
+            <td colSpan={12}><span className="right">Total:</span></td>
             <td><span>{Math.round10(totalPremium, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
             <td><span>{Math.round10(totalCurrent, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
             <td><span className={totalCl}>{Math.round10(totalProfit, props.constants.TOKEN_PRECISION)} {props.token}</span></td>

@@ -65,7 +65,6 @@ const WITHDRAWCOMPLETE = 'shift/withdrawcomplete'
 const ENABLELEDGER = 'microtick/ledger'
 const INTERACTLEDGER = 'dialog/interactledger'
 const CLOSEDIALOG = 'dialog/close'
-const ACCOUNTSTAKE = 'microtick/stake'
 
 const globals = {
   accountSubscriptions: {},
@@ -209,10 +208,11 @@ api.addAccountHandler(async (key, data) => {
         type: ACCOUNT,
         reason: key === "deposit" ? "receive" : "send",
         acct: globals.account, 
-        balance: globals.accountInfo.balance
+        balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
     }
-    if (key.startsWith("trade")) {
+    if (key === "trade.start") {
       await processTradeStart(data)
       store.dispatch({
         type: TRADELIST
@@ -222,16 +222,12 @@ api.addAccountHandler(async (key, data) => {
         await fetchActiveQuotes()
       }
     }
-    if (key.startsWith("settle")) {
+    if (key === "trade.end") {
       await processTradeEnd(data)
       store.dispatch({
         type: TRADELIST
       })
     }
-    //if (key.startsWith("quote")) {
-      //await fetchActiveQuotes()
-      //await fetchOrderBook()
-    //}
   })
 })
     
@@ -303,8 +299,7 @@ function calcMinMax(obj) {
 }
 
 async function processTradeStart(trade) {
-  //console.log("processTradeStart: " + trade.id)
-  //console.log("processTrade=" + JSON.stringify(trade, null, 2))
+  const start = new Date(trade.start)
   const end = new Date(trade.expiration)
   var active = true
   if (!globals.accountInfo.activeTrades.includes(trade.id)) {
@@ -313,40 +308,102 @@ async function processTradeStart(trade) {
   if (Date.parse(end) > Date.now()) {
     active = true
   }
-  const dir = trade.long === globals.account ? 'long' : 'short'
-  const id = trade.id
-  //console.log("Trade start: " + id)
-  const type = trade.option === "call" ? BuyCall : BuyPut
-  const market = trade.market
-  const start = new Date(trade.start)
   const spot = await api.getMarketSpot(trade.market)
-  var current = (type === 0) ? (spot.consensus > trade.strike ? 
-    (spot.consensus - trade.strike) * trade.quantity : 0) : 
-    (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * trade.quantity : 0) 
-  if (current > trade.backing) current = trade.backing
-  const profit = dir === 'long' ? current - trade.cost : trade.cost - current
-  const tradeData = {
-    id: id,
-    dir: dir,
-    type: type,
-    active: active,
-    market: market,
-    dur: trade.duration,
-    spot: spot.consensus,
-    startBlock: trade.height,
-    start: start, 
-    end: end,
-    strike: trade.strike,
-    backing: trade.backing,
-    qty: trade.quantity,
-    premium: trade.cost,
-    current: current,
-    profit: profit,
-    final: trade.strike
+  var dir, type
+  if (globals.account === trade.taker) {
+    // Display trade as single entry
+    const data = trade.legs.reduce((acc, leg) => {
+      var current = (leg.type === "call") ? 
+        (spot.consensus > trade.strike ? (spot.consensus - trade.strike) * leg.quantity : 0) : 
+        (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * leg.quantity : 0) 
+      if (current > trade.backing) current = trade.backing
+      const profit = globals.account === leg.long ? current - leg.premium : leg.premium - current
+      acc.backing += leg.backing
+      acc.qty += leg.quantity
+      acc.premium += leg.premium
+      acc.current += current
+      acc.profit += profit
+      return acc
+    }, {
+      backing: 0,
+      qty: 0,
+      premium: 0,
+      current: 0,
+      profit: 0
+    })
+    if (trade.order === "buy-call") {
+      dir = "long"
+      type = Call
+    }
+    if (trade.order === "sell-call") {
+      dir = "short"
+      type = Call
+    }
+    if (trade.order === "buy-put") {
+      dir = "long"
+      type = Put
+    }
+    if (trade.order === "sell-put") {
+      dir = "short"
+      type = Put
+    }
+    const tradeData = {
+      id: trade.id,
+      taker: true,
+      dir: dir,
+      type: type,
+      order: trade.order,
+      active: active,
+      market: trade.market,
+      dur: trade.duration,
+      spot: spot.consensus,
+      startBlock: trade.height,
+      start: start,
+      end: end,
+      strike: trade.strike,
+      backing: data.backing,
+      qty: data.qty,
+      premium: data.premium,
+      current: data.current,
+      profit: data.profit,
+      final: trade.strike
+    }
+    globals.trades.push(tradeData)
+  } else {
+    // Display individual trade legs
+    trade.legs.map(async leg => {
+      if (globals.account === leg.long || globals.account === leg.short) {
+        var current = (leg.type === "call") ? 
+          (spot.consensus > trade.strike ? (spot.consensus - trade.strike) * leg.quantity : 0) : 
+          (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * leg.quantity : 0) 
+        if (current > trade.backing) current = trade.backing
+        const profit = globals.account === leg.long ? current - leg.premium : leg.premium - current
+        const tradeData = {
+          id: trade.id + "." + leg.leg_id,
+          taker: false,
+          dir: globals.account === leg.long ? "long" : "short",
+          type: leg.type === "call" ? Call : Put,
+          active: active,
+          market: trade.market,
+          dur: trade.duration,
+          spot: spot.consensus,
+          startBlock: trade.height,
+          start: start,
+          end: end,
+          strike: trade.strike,
+          backing: leg.backing,
+          qty: leg.quantity,
+          premium: leg.premium,
+          current: current,
+          profit: profit,
+          final: trade.strike
+        }
+        globals.trades.push(tradeData)
+      }
+    })
   }
-  globals.trades.push(tradeData)
-  globals.accountSubscriptions[id] = market
-  await api.subscribe(market)
+  globals.accountSubscriptions[trade.id] = trade.market
+  await api.subscribe(trade.market)
 }
 
 async function processTradeEnd(trade) {
@@ -365,7 +422,8 @@ async function processTradeEnd(trade) {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance
+        balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
       await api.unsubscribe(globals.accountSubscriptions[trade.id])
       delete globals.accountSubscriptions[trade.id]
@@ -492,11 +550,6 @@ export default (state = initialState, action) => {
           ...action
         }
       })
-    case ACCOUNTSTAKE:
-      return {
-        ...state,
-        stake: action.stake
-      }
     case DONELOADING:
       return {
         ...state,
@@ -632,7 +685,8 @@ export default (state = initialState, action) => {
       return {
         ...state,
         account: action.acct,
-        balance: action.balance
+        balance: action.balance,
+        stake: action.stake
         //available: action.available
       }
     case TRADELIST:
@@ -900,7 +954,6 @@ const selectAccount = async () => {
   api.accountSync(startBlock, globals.blockNumber)
   
   fetchActiveQuotes()
-  fetchStake()
 
   store.dispatch({
     type: ACCOUNTSELECT,
@@ -910,7 +963,8 @@ const selectAccount = async () => {
     type: ACCOUNT,
     reason: "accountselect",
     acct: globals.account,
-    balance: globals.accountInfo.balance
+    balance: globals.accountInfo.balance,
+    stake: globals.accountInfo.stake
   })
   
   if (globals.markets.length > 0) {
@@ -947,48 +1001,36 @@ async function fetchOrderBook() {
     obj.cursorY = 0
     obj.quotes = []
     try {
-      const consensusData = await api.getMarketSpot(market)
-      const marketSpot = consensusData.consensus
       const orderBookInfo = await api.getOrderbookInfo(market, api.durationFromSeconds(dur))
       var q1 = 0.0 // quantity
       var c = 0.0 // cost
       if (type === CallAsk) {
-        var quotes = orderBookInfo.calls
+        var quotes = orderBookInfo.callAsks
       } else {
-        quotes = orderBookInfo.puts
+        quotes = orderBookInfo.putAsks
       }
       for (var i=0; i<quotes.length; i++) {
-        const id = parseInt(quotes[i], 10)
-        if (id !== 0) {
-          const data = await api.getLiveQuote(id)
-          const quoteQty = data.quantity
-          const quoteSpot = data.spot
-          const quotePrem = data.premium
-          if (type === CallAsk) {
-            var prem = quotePrem - (marketSpot - quoteSpot) / 2
-          } else {
-            prem = quotePrem + (marketSpot - quoteSpot) / 2
-          }
-          if (prem < 0) prem = 0
-          const q2 = q1 + quoteQty
-          if (obj.maxPrem < prem) obj.maxPrem = prem
-          if (colormap[id] === undefined) {
-            colormap[id] = colorizeCount++
-          }
-          const tmp = {
-            id: id,
-            color: colormap[id],
-            premium: prem,
-            qty: quoteQty,
-            c: c,
-            q1: q1,
-            q2: q2,
-          }
-          q1 = q2
-          c = c + prem * quoteQty 
-          if (obj.maxCost < c) obj.maxCost = c
-          obj.quotes.push(tmp)
+        const id = quotes[i].id
+        const quoteQty = quotes[i].quantity
+        const quotePrem = quotes[i].premium
+        const q2 = q1 + quoteQty
+        if (obj.maxPrem < quotePrem) obj.maxPrem = quotePrem
+        if (colormap[id] === undefined) {
+          colormap[id] = colorizeCount++
         }
+        const tmp = {
+          id: id,
+          color: colormap[id],
+          premium: quotePrem,
+          qty: quoteQty,
+          c: c,
+          q1: q1,
+          q2: q2,
+        }
+        q1 = q2
+        c = c + quotePrem * quoteQty 
+        if (obj.maxCost < c) obj.maxCost = c
+        obj.quotes.push(tmp)
       }
     } catch (err) {
       console.log("Error fetching order book: " + err)
@@ -1097,14 +1139,6 @@ async function fetchActiveQuotes() {
   })
 }
 
-async function fetchStake() {
-  const res = await api.getStake(globals.account)
-  store.dispatch({
-    type: ACCOUNTSTAKE,
-    stake: res / 1000000.0
-  })
-}
-    
 export const buyParams = () => {
   return {
     qty: globals.qty.toFixed(18),
@@ -1128,7 +1162,7 @@ export const buyCall = () => {
         type: INTERACTLEDGER,
         value: true
       })
-      await api.marketTrade(market, dur, "call", qty + "quantity")
+      await api.marketTrade(market, dur, "buy-call", qty + "quantity")
       dispatch({
         type: INTERACTLEDGER,
         value: false
@@ -1143,9 +1177,9 @@ export const buyCall = () => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance
+        balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
-      fetchStake()
     } catch (err) {
       dispatch({
         type: INTERACTLEDGER,
@@ -1172,7 +1206,7 @@ export const buyPut = () => {
         type: INTERACTLEDGER,
         value: true
       })
-      await api.marketTrade(market, dur, "put", qty + "quantity")
+      await api.marketTrade(market, dur, "buy-put", qty + "quantity")
       dispatch({
         type: INTERACTLEDGER,
         value: false
@@ -1187,9 +1221,9 @@ export const buyPut = () => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance
+        balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
-      fetchStake()
     } catch (err) {
       dispatch({
         type: INTERACTLEDGER,
@@ -1337,9 +1371,9 @@ export const placeQuote = () => {
         type: ACCOUNT,
         reason: "quote",
         acct: globals.account, 
-        balance: globals.accountInfo.balance
+        balance: globals.accountInfo.balance,
+        stake: globals.accountInfo.stake
       })
-      fetchStake()
     } catch (err) {
       dispatch({
         type: INTERACTLEDGER,
@@ -1376,9 +1410,9 @@ export const cancelQuote = async (dispatch, id) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance
+      balance: globals.accountInfo.balance,
+      stake: globals.accountInfo.stake
     })
-    fetchStake()
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
@@ -1414,9 +1448,9 @@ export const backQuote = async (dispatch, id, amount) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance
+      balance: globals.accountInfo.balance,
+      stake: globals.accountInfo.stake
     })
-    fetchStake()
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
@@ -1447,7 +1481,14 @@ export const updateSpot = async (dispatch, id, newspot) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActiveQuotes()
     fetchOrderBook()
-    fetchStake()
+    globals.accountInfo = await api.getAccountInfo(globals.account)
+    dispatch({
+      type: ACCOUNT,
+      reason: "quote",
+      acct: globals.account, 
+      balance: globals.accountInfo.balance,
+      stake: globals.accountInfo.stake
+    })
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
@@ -1478,7 +1519,14 @@ export const updatePremium = async (dispatch, id, newpremium) => {
     createSuccessNotification(dispatch, DIALOG_TIME2, notId)
     fetchActiveQuotes()
     fetchOrderBook()
-    fetchStake()
+    globals.accountInfo = await api.getAccountInfo(globals.account)
+    dispatch({
+      type: ACCOUNT,
+      reason: "quote",
+      acct: globals.account, 
+      balance: globals.accountInfo.balance,
+      stake: globals.accountInfo.stake
+    })
   } catch (err) {
     dispatch({
       type: INTERACTLEDGER,
