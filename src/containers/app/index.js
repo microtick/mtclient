@@ -197,18 +197,31 @@ const App = props => {
         </div>
       </div>
     }
-    if (not.type === 'buy') {
-      if (not.dir === 0) { // Call
+    if (not.type === 'trade') {
+      if (not.dir === 0) { // Buy Call
         var type = "Call"
         var notclass = "call"
-      } else { // Put
+        var dir = "Buying"
+      } 
+      if (not.dir === 1) { // Buy Put
         type = "Put"
         notclass = "put"
+        dir = "Buying"
+      }
+      if (not.dir === 2) { // Sell Call
+        type = "Call"
+        notclass = "call"
+        dir = "Selling"
+      } 
+      if (not.dir === 3) { // Sell Put
+        type = "Put"
+        notclass = "put"
+        dir = "Selling"
       }
       return <div key={id} className={notclass + " outer buynot"}>
         <div className="inner">
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
-          <h3>Buying {type}</h3>
+          <h3>{dir} {type}</h3>
           <p>Market: <span className="info">{not.market}</span></p>
           <p>Duration: <span className="info">{not.dur}</span></p>
           <p>Quantity: <span className="info">⚖ {not.qty}</span></p>

@@ -67,12 +67,13 @@ const ActiveTrades = props => {
       </td>
     }
     if (tr.taker) {
+      var action
       if (tr.order === "buy-call") action = "Buy Call"
       if (tr.order === "sell-call") action = "Sell Call"
       if (tr.order === "buy-put") action = "Buy Put"
       if (tr.order === "sell-put") action = "Sell Put"
     } else {
-      var action = tr.dir === 'long' ? 'Long' : 'Short'
+      action = tr.dir === 'long' ? 'Long' : 'Short'
       action += tr.type === 0 ? " Call" : " Put"
     }
     return <tr className={(id%2 === 0) ? "odd" : "even"} key={id}>
@@ -117,7 +118,7 @@ const ActiveTrades = props => {
             <td>Strike</td>
             <td>Qty</td>
             <td>Backing</td>
-            <td>Cost</td>
+            <td>Premium</td>
             <td>Value</td>
             <td>Profit / Loss</td>
           </tr>

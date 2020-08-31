@@ -1,4 +1,4 @@
-import {createBuyNotification, 
+import {createTradeNotification, 
         createPlaceQuoteNotification,
         createCancelQuoteNotification,
         createBackQuoteNotification,
@@ -65,6 +65,7 @@ const WITHDRAWCOMPLETE = 'shift/withdrawcomplete'
 const ENABLELEDGER = 'microtick/ledger'
 const INTERACTLEDGER = 'dialog/interactledger'
 const CLOSEDIALOG = 'dialog/close'
+const SETOBTYPE = 'microtick/orderbooktype'
 
 const globals = {
   accountSubscriptions: {},
@@ -79,18 +80,18 @@ const globals = {
     backing: 10,
     weight: 0
   },
-  quotes: []
+  quotes: [],
+  orderBookType: 0
 }
-
-// eslint-disable-next-line
-const CallAsk = 0
-// eslint-disable-next-line
-const PutAsk = 1
 
 // eslint-disable-next-line
 const BuyCall = 0
 // eslint-disable-next-line
 const BuyPut = 1
+// eslint-disable-next-line
+const SellCall = 2
+// eslint-disable-next-line
+const SellPut = 3
 
 // eslint-disable-next-line
 const Call = 0
@@ -120,6 +121,7 @@ const initialState = {
     symbol: '',
     dur: globals.dur,
     durs: globals.durs,
+    type: 0,
     qty: 0,
     premiums: [[0], [0]],
     spot: 0
@@ -550,6 +552,14 @@ export default (state = initialState, action) => {
           ...action
         }
       })
+    case SETOBTYPE:
+      return {
+        ...state,
+        market: {
+          ...state.market,
+          type: action.selected
+        }
+      }
     case DONELOADING:
       return {
         ...state,
@@ -1004,10 +1014,18 @@ async function fetchOrderBook() {
       const orderBookInfo = await api.getOrderbookInfo(market, api.durationFromSeconds(dur))
       var q1 = 0.0 // quantity
       var c = 0.0 // cost
-      if (type === CallAsk) {
-        var quotes = orderBookInfo.callAsks
+      if (globals.orderBookType === 0) {
+        if (type === Call) {
+          var quotes = orderBookInfo.callAsks
+        } else {
+          quotes = orderBookInfo.putAsks
+        }
       } else {
-        quotes = orderBookInfo.putAsks
+        if (type === Call) {
+          quotes = orderBookInfo.callBids
+        } else {
+          quotes = orderBookInfo.putBids
+        }
       }
       for (var i=0; i<quotes.length; i++) {
         const id = quotes[i].id
@@ -1049,8 +1067,8 @@ async function fetchOrderBook() {
     return obj
   }
   
-  const calls = await computePricing(CallAsk)
-  const puts = await computePricing(PutAsk)
+  const calls = await computePricing(Call)
+  const puts = await computePricing(Put)
   
   const dispatch = {
     type: ORDERBOOK,
@@ -1147,7 +1165,7 @@ export const buyParams = () => {
   }
 }
 
-export const buyCall = () => {
+export const tradeCall = dir => {
   return async dispatch => {
     dispatch({
       type: MOUSESTATE,
@@ -1156,13 +1174,13 @@ export const buyCall = () => {
     const qty = parseFloat(globals.qty.toFixed(6))
     const market = globals.market
     const dur = api.durationFromSeconds(globals.dur)
-    const notId = createBuyNotification(dispatch, BuyCall, market, dur, qty)
+    const notId = createTradeNotification(dispatch, dir ? BuyCall : SellCall, market, dur, qty)
     try {
       dispatch({
         type: INTERACTLEDGER,
         value: true
       })
-      await api.marketTrade(market, dur, "buy-call", qty + "quantity")
+      await api.marketTrade(market, dur, dir ? "buy-call" : "sell-call", qty + "quantity")
       dispatch({
         type: INTERACTLEDGER,
         value: false
@@ -1191,7 +1209,7 @@ export const buyCall = () => {
   }
 }
 
-export const buyPut = () => {
+export const tradePut = dir => {
   return async dispatch => {
     dispatch({
       type: MOUSESTATE,
@@ -1200,13 +1218,13 @@ export const buyPut = () => {
     const qty = parseFloat(globals.qty.toFixed(6))
     const market = globals.market
     const dur = api.durationFromSeconds(globals.dur)
-    const notId = createBuyNotification(dispatch, BuyPut, market, dur, qty)
+    const notId = createTradeNotification(dispatch, dir ? BuyPut : SellPut, market, dur, qty)
     try {
       dispatch({
         type: INTERACTLEDGER,
         value: true
       })
-      await api.marketTrade(market, dur, "buy-put", qty + "quantity")
+      await api.marketTrade(market, dur, dir ? "buy-put" : "sell-put", qty + "quantity")
       dispatch({
         type: INTERACTLEDGER,
         value: false
@@ -1560,6 +1578,15 @@ export const setLock = lock => {
     type: LOCK,
     lock: lock
   })
+}
+
+export const setOrderBookType = t => {
+  globals.orderBookType = t
+  store.dispatch({
+    type: SETOBTYPE,
+    selected: t
+  })
+  fetchOrderBook()
 }
 
 export const settleTrade = async (dispatch, id) => {

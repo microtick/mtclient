@@ -1,7 +1,7 @@
 import React from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { mouseState, mouseMoveTrigger, setLock } from '../../modules/microtick'
+import { mouseState, mouseMoveTrigger, setLock, setOrderBookType } from '../../modules/microtick'
 import { buyCallDialog, buyPutDialog, placeQuoteDialog } from '../../modules/dialog'
 
 // css
@@ -36,6 +36,7 @@ var minp = 0
 var maxp = 0
 var calls
 var puts
+var obtype = "asks"
 var dynamicWeight = 0
 var mouseEnabled = {
   chart: false,
@@ -53,6 +54,8 @@ const MOUSESTATE_NONE = 0
 const MOUSESTATE_QUOTE = 1
 const MOUSESTATE_CALL = 2
 const MOUSESTATE_PUT = 3
+
+var buttons = []
 
 const isNumber = n => {
   return typeof n === 'number' && !isNaN(n-n)
@@ -186,15 +189,25 @@ export const orderBookCursorPos = function(qty, totalqty, spot, iscall, price) {
   const ctext = document.getElementById('leftamt')
   if (ctext) {
     if (iscall) {
+      if (obtype === "asks") {
+        var arrow = "⇑"
+      } else {
+        arrow = "⇓"
+      }
       const cp = parseFloat(spot) + price / 2
       const cy = layout.height - layout.height * (cp - minp) / (maxp - minp)
-      ctext.innerHTML = "⇑ " + Math.round10(price, -4)
+      ctext.innerHTML = arrow + " " + Math.round10(price, -4)
       ctext.setAttribute('x', layout.chart_ob_left + 5)
       ctext.setAttribute('y', cy + 5)
     } else {
+      if (obtype === "asks") {
+        arrow = "⇓"
+      } else {
+        arrow = "⇑"
+      }
       const pp = parseFloat(spot) - price / 2 
       const py = layout.height - layout.height * (pp - minp) / (maxp - minp)
-      ctext.innerHTML = "⇓ " + Math.round10(price, -4)
+      ctext.innerHTML = arrow + " " + Math.round10(price, -4)
       ctext.setAttribute('x', layout.chart_ob_left + 5)
       ctext.setAttribute('y', py + 5)
     }
@@ -310,6 +323,7 @@ const initDynamicView = props => {
   // HACK - gotta save token type into hacky variable because innerHTML can't
   // contain a <span>
   tokenType = props.token
+  buttons = []
   
   // get layout
   const elem = document.getElementById('chart')
@@ -556,6 +570,16 @@ const buildBackground = props => {
     const x = event.clientX - bounds.left
     const y = event.clientY - bounds.top
     
+    // Check rendered buttons first
+    for (var btn = 0; btn < buttons.length; btn++) {
+      const b = buttons[btn]
+      // Check if mouse within 5 pixels of a button
+      if (x >= b.x - 5 && x <= b.x + b.w + 5 && y >= b.y - 5 && y <= b.y + b.h + 5) {
+        props.mouseState(MOUSESTATE_NONE)
+        return
+      }
+    }
+    
     if (props.dialog.showinline) {
       if (x >= layout.info_left && x < layout.info_left+layout.info_width) { 
         if (mouseEnabled.info) {
@@ -597,9 +621,22 @@ const buildBackground = props => {
   
   const mouseClick = event => {
     if (randomWalk.length === 0) generateRW()
+    
+    // get click x, y
+    const bounds = event.target.getBoundingClientRect()
+    const x = event.clientX - bounds.left
+    const y = event.clientY - bounds.top
+    
+    // Check rendered buttons first
+    for (var btn = 0; btn < buttons.length; btn++) {
+      const b = buttons[btn]
+      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+        b.cb()
+        return
+      }
+    }
+    
     if (props.dialog.showinline) {
-      const bounds = event.target.getBoundingClientRect()
-      const x = event.clientX - bounds.left
       if (props.mousestate === MOUSESTATE_QUOTE) {
         if (x <= layout.width) {
           mouseEnabled.chart = !mouseEnabled.chart
@@ -644,12 +681,48 @@ const buildBackground = props => {
   
   const right = layout.chart_ob_left + layout.chart_ob_width
   const totalQty = props.orderbook.totalWeight[props.dur]
+  
+  // Order book selection choices
+  const btn_asks = {
+    x: layout.chart_ob_left+layout.chart_ob_width-130,
+    y: 5,
+    w: 60,
+    h: 20,
+    cb: () => {
+      setOrderBookType(0)
+    }
+  }
+  const btn_bids = {
+    x: layout.chart_ob_left+layout.chart_ob_width-65,
+    y: 5,
+    w: 60,
+    h: 20,
+    cb: () => {
+      setOrderBookType(1)
+    }
+  }
+  buttons.push(btn_asks)
+  buttons.push(btn_bids)
+  if (props.obtype === 0) {
+    obtype = "asks"
+    var ask_class = "ob_type_button selected"
+    var bid_class = "ob_type_button"
+  } else {
+    obtype = "bids"
+    ask_class = "ob_type_button"
+    bid_class = "ob_type_button selected"
+  }
+  
   return <g>
     <rect id="chartback" x={0} width={layout.chartwidth} y={0} height={layout.height}
       onMouseEnter={mouseEnter} onMouseLeave={mouseLeave} 
       onMouseMove={mouseMove} onClick={mouseClick}/>
       
-    <text className="info" x={layout.chart_mp_left+20} y={15}>Order Book</text>
+    <text className="info" x={layout.chart_mp_left+20} y={15}>Quotes</text>
+    <rect className={ask_class} x={btn_asks.x} y={btn_asks.y} width={btn_asks.w} height={btn_asks.h}/>
+    <text className={ask_class} x={btn_asks.x+15} y="20">Asks</text>
+    <rect className={bid_class} x={btn_bids.x} y={btn_bids.y} width={btn_bids.w} height={btn_bids.h}/>
+    <text className={bid_class} x={btn_bids.x+15} y="20">Bids</text>
     <text id="axis_quantity" x={layout.chart_mp_left+20} y={layout.height-20}>quantity</text>
     <text id="total_quantity" x={layout.chart_ob_left+layout.chart_ob_width-100} y={layout.height-15}>total qty={Math.round10(totalQty, -2)}</text>
     <line className="axis_qty" x1={layout.chart_mp_left+2} y1={layout.height-10} x2={right-2} y2={layout.height-10}/>
@@ -1299,7 +1372,7 @@ const buildOrderbookPremiums = props => {
 
 const buildOrderBook = props => {
   if (props.orderbook.totalWeight[props.dur] > 0) {
-    if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
+    if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE || obtype === "bids") {
       var spot = props.spot
       var sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
       var callquoterects = calls.map((quote, id) => {
@@ -1467,6 +1540,7 @@ const mapStateToProps = state => ({
   loading: state.microtick.loading,
   blocktime: state.microtick.blocktime,
   selected: state.microtick.market.selected,
+  obtype: state.microtick.market.type,
   spot: state.microtick.market.spot,
   data: state.microtick.chart.ticks.data,
   spots: state.microtick.chart.spots.data,
@@ -1486,7 +1560,7 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => bindActionCreators({
-  buyCallDialog, buyPutDialog, placeQuoteDialog, mouseState
+  buyCallDialog, buyPutDialog, placeQuoteDialog, mouseState, setOrderBookType
 }, dispatch)
 
 export default connect(

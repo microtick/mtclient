@@ -1,5 +1,5 @@
 const NOTIFY_TESTTOKENS = "notifications/testtokens"
-const NOTIFY_BUY = "notifications/buy"
+const NOTIFY_TRADE = "notifications/trade"
 const NOTIFY_PLACE = "notifications/place"
 const NOTIFY_CANCEL = "notifications/cancel"
 const NOTIFY_BACK = "notifications/back"
@@ -38,7 +38,7 @@ export default (state = initialState, action) => {
     return {
       list: newdata
     }
-  case NOTIFY_BUY:
+  case NOTIFY_TRADE:
     //console.log("ADD notification: id=" + action.id)
     newdata = state.list.reduce((res, el) => {
       res.push({
@@ -47,7 +47,7 @@ export default (state = initialState, action) => {
       return res
     }, [])
     newdata.push({
-      type: 'buy',
+      type: 'trade',
       id: action.id,
       dir: action.dir,
       market: action.market,
@@ -278,10 +278,10 @@ export const createTestTokensNotification = (dispatch, amt) => {
   return uid
 }
 
-export const createBuyNotification = (dispatch, dir, market, dur, qty) => {
+export const createTradeNotification = (dispatch, dir, market, dur, qty) => {
   const uid = uuid++
   dispatch({
-    type: NOTIFY_BUY,
+    type: NOTIFY_TRADE,
     id: uid,
     dir: dir,
     market: market,

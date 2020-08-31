@@ -502,3 +502,14 @@ text.charttip {
   font-size: 14px;
 }
 
+rect.ob_type_button {
+  fill: #888;
+}
+
+text.ob_type_button {
+  fill: #000;
+}
+
+rect.ob_type_button.selected {
+  fill: #fff;
+}

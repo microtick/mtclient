@@ -2,7 +2,7 @@ import React from 'react'
 import ReactToolTip from 'react-tooltip'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { selectMarket, selectDur, buyCall, buyPut, placeQuote, cancelDialog,
+import { selectMarket, selectDur, tradeCall, tradePut, placeQuote, cancelDialog,
   changeQtyCall, changeQtyPut, changeBacking,
   changeSpot, changePremium } from '../../modules/microtick'
 import { closeDialog } from '../../modules/dialog'
@@ -34,6 +34,11 @@ class Home extends React.Component {
   render() {
     const props = this.props
     var dialog = null
+    if (props.obtype === 0) {
+      var dir = "Buy"
+    } else {
+      dir = "Sell"
+    }
     if (props.dialog.showinline === true) {
       const qty = props.premiums.qty
       const cost = qty * props.premiums.prem
@@ -50,13 +55,13 @@ class Home extends React.Component {
         } else {
           actions = <div>
             <button onClick={() => { props.closeDialog(); props.cancelDialog() }}>Cancel</button>
-            <button onClick={() => { props.closeDialog(); props.buyCall() }}>Buy Call</button>
+            <button onClick={() => { props.closeDialog(); props.tradeCall(props.obtype === 0)}}>{dir} Call</button>
           </div>
         }
         dialog = <div id="dialog" className="buy">
           <ReactToolTip/>
           <div className="inner call">
-            <h3><span className="hint_call">Buy Call?</span></h3>
+            <h3><span className="hint_call">{dir} Call?</span></h3>
             <table>
               <tbody>
                 <tr>
@@ -102,13 +107,13 @@ class Home extends React.Component {
         } else {
           actions = <div>
             <button onClick={() => { props.closeDialog(); props.cancelDialog() }}>Cancel</button>
-            <button onClick={() => { props.closeDialog(); props.buyPut() }}>Buy Put</button>
+            <button onClick={() => { props.closeDialog(); props.tradePut(props.obtype === 0)}}>{dir} Put</button>
           </div>
         }
         dialog = <div id="dialog" className="buy">
           <ReactToolTip/>
           <div className="inner put">
-            <h3><span className="hint_put">Buy Put?</span></h3>
+            <h3><span className="hint_put">{dir} Put?</span></h3>
             <table>
               <tbody>
                 <tr>
@@ -236,7 +241,7 @@ class Home extends React.Component {
           action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
-                <p className="hint_call">Buy Call</p>
+                <p className="hint_call">{dir} Call</p>
               </div>
               <p>⬅ / ➡ increase or decrease ⚖ quantity</p>
               <p>Click to fine tune and place order</p>
@@ -247,7 +252,7 @@ class Home extends React.Component {
           action = <div id="actioncontainer">
             <div id="actionpanel">
               <div id="action">
-                <p className="hint_put">Buy Put</p>
+                <p className="hint_put">{dir} Put</p>
               </div>
               <p>⬅ / ➡ increase or decrease ⚖ quantity</p>
               <p>Click to fine tune and place order</p>
@@ -291,7 +296,7 @@ class Home extends React.Component {
                To buy a call, hover above the current spot price indicated by the horizontal line. To buy a
                put, hover below the spot price.</li>
               <li>Click at the approximate amount and a dialog will appear allowing you to adjust the 
-               quantity. Confirm the trade by clicking "Buy Call" or "Buy Put"</li>
+               quantity. Confirm the trade by clicking "Buy (Sell) Call" or "Buy (Sell) Put"</li>
             </ol>
           </div>
         </div>
@@ -426,6 +431,7 @@ const mapStateToProps = state => ({
   quote: state.microtick.quote,
   mousestate: state.microtick.chart.mouseState,
   orderbook: state.microtick.orderbook,
+  obtype: state.microtick.market.type,
   dialog: state.dialog
 })
 
@@ -437,8 +443,8 @@ const mapDispatchToProps = dispatch => bindActionCreators({
   changeBacking,
   changeSpot,
   changePremium,
-  buyCall,
-  buyPut,
+  tradeCall,
+  tradePut,
   placeQuote,
   cancelDialog,
   closeDialog
