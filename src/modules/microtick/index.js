@@ -190,7 +190,7 @@ api.addTickHandler(async (market, data) => {
           (trade.spot > trade.strike ? (trade.spot - trade.strike) * trade.qty : 0) :
           (trade.spot < trade.strike ? (trade.strike - trade.spot) * trade.qty : 0)
         if (trade.current > trade.backing) trade.current = trade.backing
-        trade.profit = trade.dir === 'long' ? trade.current - trade.premium : trade.premium - trade.current
+        trade.profit = trade.dir === 'long' ? trade.current - trade.cost : trade.cost - trade.current
       }
     }
   }
@@ -268,11 +268,11 @@ function calcMinMax(obj) {
       if (tr.type === BuyCall) {
         const min = tr.strike
         if (minp > min) minp = min
-        const max = tr.strike + tr.premium / tr.qty
+        const max = tr.strike + tr.premium
         if (maxp < max) maxp = max
       }
       if (tr.type === BuyPut) {
-        const min = tr.strike - tr.premium / tr.qty
+        const min = tr.strike - tr.premium
         if (minp > min) minp = min
         const max = tr.strike
         if (maxp < max) maxp = max
@@ -319,17 +319,17 @@ async function processTradeStart(trade) {
         (spot.consensus > trade.strike ? (spot.consensus - trade.strike) * leg.quantity : 0) : 
         (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * leg.quantity : 0) 
       if (current > trade.backing) current = trade.backing
-      const profit = globals.account === leg.long ? current - leg.premium : leg.premium - current
+      const profit = globals.account === leg.long ? current - leg.cost : leg.cost - current
       acc.backing += leg.backing
       acc.qty += leg.quantity
-      acc.premium += leg.premium
+      acc.cost += leg.cost
       acc.current += current
       acc.profit += profit
       return acc
     }, {
       backing: 0,
       qty: 0,
-      premium: 0,
+      cost: 0,
       current: 0,
       profit: 0
     })
@@ -365,7 +365,8 @@ async function processTradeStart(trade) {
       strike: trade.strike,
       backing: data.backing,
       qty: data.qty,
-      premium: data.premium,
+      premium: data.cost / data.qty,
+      cost: data.cost,
       current: data.current,
       profit: data.profit,
       final: trade.strike
@@ -379,7 +380,7 @@ async function processTradeStart(trade) {
           (spot.consensus > trade.strike ? (spot.consensus - trade.strike) * leg.quantity : 0) : 
           (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * leg.quantity : 0) 
         if (current > trade.backing) current = trade.backing
-        const profit = globals.account === leg.long ? current - leg.premium : leg.premium - current
+        const profit = globals.account === leg.long ? current - leg.cost : leg.cost - current
         const tradeData = {
           id: trade.id + "." + leg.leg_id,
           taker: false,
@@ -396,6 +397,7 @@ async function processTradeStart(trade) {
           backing: leg.backing,
           qty: leg.quantity,
           premium: leg.premium,
+          cost: leg.cost,
           current: current,
           profit: profit,
           final: trade.strike
@@ -978,7 +980,7 @@ const selectAccount = async () => {
   })
   
   if (globals.markets.length > 0) {
-    const cb = selectMarket(globals.markets[0].name)
+    const cb = selectMarket(globals.markets[1].name)
     cb(store.dispatch)
   }
 }
@@ -1269,9 +1271,14 @@ function newQuoteParams(dispatch) {
   const qty = globals.quote.backing / (10 * prem)
   const weight = qty
   globals.quote.newspot = (globals.spot * globals.weight + spot * weight) / (weight + globals.weight)
-  var call = prem + (spot - globals.quote.newspot) / 2
+  if (globals.orderBookType === 0) {
+    var call = prem + (spot - globals.quote.newspot) / 2
+    var put = prem - (spot - globals.quote.newspot) / 2
+  } else {
+    call = (spot - globals.quote.newspot) / 2
+    put = (globals.quote.newspot - spot) / 2
+  }
   if (call < 0) call = 0
-  var put = prem - (spot - globals.quote.newspot) / 2
   if (put < 0) put = 0
   dispatch({
     type: PREMIUMS,

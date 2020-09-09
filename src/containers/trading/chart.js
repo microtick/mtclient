@@ -495,9 +495,14 @@ const buildBackground = props => {
     //console.log("weight=" + weight)
     //console.log("market weight=" + props.weight)
     
-    var call = prem + (price - newspot) / 2
+    if (obtype === "bids") {
+      var call = (price - newspot) / 2
+      var put = (newspot - price) / 2
+    } else {
+      call = prem + (price - newspot) / 2
+      put = prem - (price - newspot) / 2
+    }
     if (call < 0) call = 0
-    var put = prem - (price - newspot) / 2
     if (put < 0) put = 0
     
     dynamicWeight = weight
@@ -570,16 +575,6 @@ const buildBackground = props => {
     const x = event.clientX - bounds.left
     const y = event.clientY - bounds.top
     
-    // Check rendered buttons first
-    for (var btn = 0; btn < buttons.length; btn++) {
-      const b = buttons[btn]
-      // Check if mouse within 5 pixels of a button
-      if (x >= b.x - 5 && x <= b.x + b.w + 5 && y >= b.y - 5 && y <= b.y + b.h + 5) {
-        props.mouseState(MOUSESTATE_NONE)
-        return
-      }
-    }
-    
     if (props.dialog.showinline) {
       if (x >= layout.info_left && x < layout.info_left+layout.info_width) { 
         if (mouseEnabled.info) {
@@ -597,6 +592,16 @@ const buildBackground = props => {
         }
       }
       return
+    }
+    
+    // Check rendered buttons
+    for (var btn = 0; btn < buttons.length; btn++) {
+      const b = buttons[btn]
+      // Check if mouse within 5 pixels of a button
+      if (x >= b.x - 5 && x <= b.x + b.w + 5 && y >= b.y - 5 && y <= b.y + b.h + 5) {
+        props.mouseState(MOUSESTATE_NONE)
+        return
+      }
     }
     
     if (x <= layout.width) {
@@ -683,6 +688,15 @@ const buildBackground = props => {
   const totalQty = props.orderbook.totalWeight[props.dur]
   
   // Order book selection choices
+  const btn_synth = {
+    x: layout.chart_ob_left+layout.chart_ob_width-195,
+    y: 5,
+    w: 60,
+    h: 20,
+    cb: () => {
+      setOrderBookType(2)
+    }
+  }
   const btn_asks = {
     x: layout.chart_ob_left+layout.chart_ob_width-130,
     y: 5,
@@ -701,16 +715,24 @@ const buildBackground = props => {
       setOrderBookType(1)
     }
   }
+  buttons.push(btn_synth)
   buttons.push(btn_asks)
   buttons.push(btn_bids)
   if (props.obtype === 0) {
     obtype = "asks"
     var ask_class = "ob_type_button selected"
     var bid_class = "ob_type_button"
-  } else {
+    var synth_class = "ob_type_button"
+  } else if (props.obtype === 1) {
     obtype = "bids"
     ask_class = "ob_type_button"
     bid_class = "ob_type_button selected"
+    synth_class = "ob_type_button"
+  } else {
+    obtype = "synth"
+    ask_class = "ob_type_button"
+    bid_class = "ob_type_button"
+    synth_class = "ob_type_button selected"
   }
   
   return <g>
@@ -723,6 +745,8 @@ const buildBackground = props => {
     <text className={ask_class} x={btn_asks.x+15} y="20">Asks</text>
     <rect className={bid_class} x={btn_bids.x} y={btn_bids.y} width={btn_bids.w} height={btn_bids.h}/>
     <text className={bid_class} x={btn_bids.x+15} y="20">Bids</text>
+    <rect className={synth_class} x={btn_synth.x} y={btn_synth.y} width={btn_synth.w} height={btn_synth.h}/>
+    <text className={synth_class} x={btn_synth.x+15} y="20">Synth</text>
     <text id="axis_quantity" x={layout.chart_mp_left+20} y={layout.height-20}>quantity</text>
     <text id="total_quantity" x={layout.chart_ob_left+layout.chart_ob_width-100} y={layout.height-15}>total qty={Math.round10(totalQty, -2)}</text>
     <line className="axis_qty" x1={layout.chart_mp_left+2} y1={layout.height-10} x2={right-2} y2={layout.height-10}/>
@@ -1131,8 +1155,8 @@ const buildInfoOverlay = props => {
         }).map((t, i) => {
           const strike = t.strike
           const sum = t.type === 0 ? 
-            parseFloat(t.strike) + parseFloat(t.premium) / parseFloat(t.qty) : 
-            parseFloat(t.strike) - parseFloat(t.premium) / parseFloat(t.qty)
+            parseFloat(t.strike) + parseFloat(t.premium) : 
+            parseFloat(t.strike) - parseFloat(t.premium)
           const x1 = layout.info_left
           var x2 = layout.info_left + layout.info_width * 2 * (t.end.getTime() - mint) / view.dur
           if (x2 > layout.info_left + layout.info_width) {
@@ -1226,8 +1250,8 @@ const buildTradesOverlay = props => {
   }).map((t, i) => {
     const strike = t.strike
     const sum = t.type === 0 ? 
-      parseFloat(t.strike) + parseFloat(t.premium) / parseFloat(t.qty) : 
-      parseFloat(t.strike) - parseFloat(t.premium) / parseFloat(t.qty)
+      parseFloat(t.strike) + parseFloat(t.premium) : 
+      parseFloat(t.strike) - parseFloat(t.premium)
     const x1 = layout.width * (t.start.getTime() - mint) / view.dur
     //const x1 = width * (t.startBlock - view.minb) / (view.maxb - view.minb)
     if (t.endBlock !== undefined) {
@@ -1372,7 +1396,7 @@ const buildOrderbookPremiums = props => {
 
 const buildOrderBook = props => {
   if (props.orderbook.totalWeight[props.dur] > 0) {
-    if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE || obtype === "bids") {
+    if (props.premiums.buy || props.mousestate !== MOUSESTATE_QUOTE) {
       var spot = props.spot
       var sy = layout.height - layout.height * (spot - minp) / (maxp - minp)
       var callquoterects = calls.map((quote, id) => {
@@ -1400,8 +1424,13 @@ const buildOrderBook = props => {
       callquoterects = calls.map((quote, id) => {
         var x1 = layout.chart_ob_left + quote.q1 * layout.chart_ob_width / totalWeight
         var x2 = layout.chart_ob_left + quote.q2 * layout.chart_ob_width / totalWeight
-        const callPremium = quote.premium - (spot - props.spot) / 2
-        if (props.premiums.indicatedCallPremium < callPremium) {
+        var callPremium = quote.premium - (spot - props.spot) / 2
+        if (obtype === "bids") {
+          var test = props.premiums.indicatedCallPremium > callPremium
+        } else {
+          test = props.premiums.indicatedCallPremium < callPremium
+        }
+        if (test) {
           x1 += shift
           x2 += shift
         } else {
@@ -1419,8 +1448,13 @@ const buildOrderBook = props => {
       putquoterects = puts.map((quote, id) => {
         var x1 = layout.chart_ob_left + quote.q1 * layout.chart_ob_width / totalWeight
         var x2 = layout.chart_ob_left + quote.q2 * layout.chart_ob_width / totalWeight
-        const putPremium = quote.premium + (spot - props.spot) / 2
-        if (props.premiums.indicatedPutPremium < putPremium) {
+        var putPremium = quote.premium + (spot - props.spot) / 2
+        if (obtype === "bids") {
+          var test = props.premiums.indicatedPutPremium > putPremium
+        } else {
+          test = props.premiums.indicatedPutPremium < putPremium
+        }
+        if (test) {
           x1 += shift
           x2 += shift
         } else {

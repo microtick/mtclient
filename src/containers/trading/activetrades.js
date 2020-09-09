@@ -89,7 +89,7 @@ const ActiveTrades = props => {
       <td>@{Math.round10(tr.strike, props.constants.SPOT_PRECISION)}</td>
       <td>⚖ {Math.round10(tr.qty, props.constants.UNIT_PRECISION)}</td>
       <td>{Math.round10(tr.backing, props.constants.TOKEN_PRECISION)} {props.token}</td>
-      <td><span>{Math.round10(tr.premium, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
+      <td><span>{Math.round10(tr.cost, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
       <td><span>{Math.round10(tr.current, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
       <td><span className={cl}>{Math.round10(tr.profit, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
     </tr>
@@ -118,7 +118,7 @@ const ActiveTrades = props => {
             <td>Strike</td>
             <td>Qty</td>
             <td>Backing</td>
-            <td>Premium</td>
+            <td>Cost</td>
             <td>Value</td>
             <td>Profit / Loss</td>
           </tr>
