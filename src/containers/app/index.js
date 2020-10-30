@@ -585,13 +585,14 @@ const App = props => {
     </section>
     {dialog}
     <div id="page-header">
-      <a href="http://microtick.com" alt="Microtick"><img src={logo} alt="logo"/></a>
+      <a href="https://microtick.com" alt="Microtick"><img src={logo} alt="logo"/></a>
       <nav role="navigation">
-        <a href="http://microtick.com">Home</a>
-        <a href="http://microtick.com/background-information.html">Learn More</a>
-        <a href="http://microtick.com/how-to-table-of-contents.html">How To</a>
+        <a href="https://microtick.com">Home</a>
+        <a href="https://microtick.com/background-information.html">Learn More</a>
+        <a href="https://microtick.com/how-to-table-of-contents.html">How To</a>
+	<a href="https://microtick.com/frequently-asked-questions-1.html">FAQ</a>
         <span className="current">Get Started</span>
-        <a href="http://microtick.com/contact.html">Contact</a>
+        <a href="https://microtick.com/contact.html">Contact</a>
       </nav>
     </div>
     <div id="page-subheader">
