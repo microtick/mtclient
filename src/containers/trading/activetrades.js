@@ -68,10 +68,10 @@ const ActiveTrades = props => {
     }
     if (tr.taker) {
       var action
-      if (tr.order === "buy-call") action = "Buy Call"
-      if (tr.order === "sell-call") action = "Sell Call"
-      if (tr.order === "buy-put") action = "Buy Put"
-      if (tr.order === "sell-put") action = "Sell Put"
+      if (tr.order === "buy-call") action = "Long Call"
+      if (tr.order === "sell-call") action = "Short Call"
+      if (tr.order === "buy-put") action = "Long Put"
+      if (tr.order === "sell-put") action = "Short Put"
     } else {
       action = tr.dir === 'long' ? 'Long' : 'Short'
       action += tr.type === 0 ? " Call" : " Put"

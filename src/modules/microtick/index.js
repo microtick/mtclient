@@ -167,9 +167,9 @@ api.addTickHandler(async (market, data) => {
   if (market === globals.market) {
     globals.spot = data.consensus
     const info = await api.getMarketInfo(market)
-    globals.weight = info.sumWeight
-    globals.sumqty = info.sumWeight
-    globals.backing = info.sumBacking
+    globals.weight = info.totalWeight
+    globals.sumqty = info.totalWeight
+    globals.backing = info.totalBacking
     store.dispatch({
       type: TICK,
       block: data.height,
@@ -868,9 +868,9 @@ export const selectMarket = choice => {
     const info = await api.getMarketInfo(globals.market)
     if (info === undefined) return
     globals.spot = info.consensus
-    globals.weight = info.sumWeight
-    globals.sumqty = info.sumWeight
-    globals.backing = info.sumBacking
+    globals.weight = info.totalWeight
+    globals.sumqty = info.totalWeight
+    globals.backing = info.totalBacking
     
     updateHistory()
     
@@ -1030,30 +1030,30 @@ async function fetchOrderBook() {
         }
       }
       for (var i=0; i<quotes.length; i++) {
-        const id = quotes[i].id
-        const quoteQty = quotes[i].quantity
-        const quotePrem = quotes[i].premium
-        const q2 = q1 + quoteQty
-        if (obj.maxPrem < quotePrem) obj.maxPrem = quotePrem
+        const quote = quotes[i]
+        const id = quote.id
+        const q2 = q1 + quote.quantity
+        if (obj.maxPrem < quote.premium) obj.maxPrem = quote.premium
         if (colormap[id] === undefined) {
           colormap[id] = colorizeCount++
         }
         const tmp = {
           id: id,
           color: colormap[id],
-          premium: quotePrem,
-          qty: quoteQty,
+          premium: quote.premium,
+          qty: quote.quantity,
           c: c,
           q1: q1,
-          q2: q2,
+          q2: q2
         }
         q1 = q2
-        c = c + quotePrem * quoteQty 
+        c = c + quote.premium * quote.quantity
         if (obj.maxCost < c) obj.maxCost = c
         obj.quotes.push(tmp)
       }
     } catch (err) {
       console.log("Error fetching order book: " + err)
+      console.log(err)
     }
     obj.price = qty => {
       if (qty === 0) return 0
