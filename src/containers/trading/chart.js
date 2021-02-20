@@ -465,13 +465,8 @@ const buildBackground = props => {
     var price = minp - (y - layout.height) * (maxp - minp) / layout.height
     var prem = delta * (maxp - minp) / layout.height
     
-    const back = isNaN(props.orderbook.totalBacking[props.dur]) ? 0 : props.orderbook.totalBacking[props.dur]
-    const wt = isNaN(props.orderbook.totalWeight[props.dur]) ? 0 : props.orderbook.totalWeight[props.dur]
-    const partialprem = wt === 0 ? 0 : back / (props.constants.LEVERAGE * wt)      
-    
-    if (prem > partialprem * QUOTE_SCALE) {
-      prem = partialprem * QUOTE_SCALE 
-    }
+    //const back = isNaN(props.orderbook.totalBacking[props.dur]) ? 0 : props.orderbook.totalBacking[props.dur]
+    //const wt = isNaN(props.orderbook.totalWeight[props.dur]) ? 0 : props.orderbook.totalWeight[props.dur]
     
     const qty = backing / (props.constants.LEVERAGE * prem)
     const weight = qty
@@ -722,17 +717,14 @@ const buildBackground = props => {
     obtype = "asks"
     var ask_class = "ob_type_button selected"
     var bid_class = "ob_type_button"
-    var synth_class = "ob_type_button"
   } else if (props.obtype === 1) {
     obtype = "bids"
     ask_class = "ob_type_button"
     bid_class = "ob_type_button selected"
-    synth_class = "ob_type_button"
   } else {
     obtype = "synth"
     ask_class = "ob_type_button"
     bid_class = "ob_type_button"
-    synth_class = "ob_type_button selected"
   }
   
   return <g>
@@ -745,8 +737,6 @@ const buildBackground = props => {
     <text className={ask_class} x={btn_asks.x+15} y="20">Asks</text>
     <rect className={bid_class} x={btn_bids.x} y={btn_bids.y} width={btn_bids.w} height={btn_bids.h}/>
     <text className={bid_class} x={btn_bids.x+15} y="20">Bids</text>
-    <rect className={synth_class} x={btn_synth.x} y={btn_synth.y} width={btn_synth.w} height={btn_synth.h}/>
-    <text className={synth_class} x={btn_synth.x+15} y="20">Synth</text>
     <text id="axis_quantity" x={layout.chart_mp_left+20} y={layout.height-20}>quantity</text>
     <text id="total_quantity" x={layout.chart_ob_left+layout.chart_ob_width-100} y={layout.height-15}>total qty={Math.round10(totalQty, -2)}</text>
     <line className="axis_qty" x1={layout.chart_mp_left+2} y1={layout.height-10} x2={right-2} y2={layout.height-10}/>

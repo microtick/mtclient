@@ -128,7 +128,7 @@ const ActiveTrades = props => {
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan={12}><span className="right">Total:</span></td>
+            <td colSpan={12}><span className="right">Totals:</span></td>
             <td><span>{Math.round10(totalPremium, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
             <td><span>{Math.round10(totalCurrent, props.constants.TOKEN_PRECISION)} {props.token}</span></td>
             <td><span className={totalCl}>{Math.round10(totalProfit, props.constants.TOKEN_PRECISION)} {props.token}</span></td>

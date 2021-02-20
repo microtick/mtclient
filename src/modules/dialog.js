@@ -15,18 +15,15 @@ const SENDTOKENSDIALOG = "dialog/sendtokens"
 const WITHDRAWACCOUNTDIALOG = "dialog/withdrawaccount"
 const CONFIRMWITHDRAW = "dialog/confirmwithdraw"
 const INTERACTLEDGER = "dialog/interactledger"
-const SHIFTSTART = "shift/start"
-const SHIFTSTATUS = "shift/status"
-const WAITWITHDRAW = "shift/waitwithdraw"
-const WITHDRAWCOMPLETE = "shift/withdrawcomplete"
 const ACCOUNT = "tendermint/account"
+const IBCDEPOSIT = "ibc/deposit"
+const IBCWITHDRAW = "ibc/withdraw"
 
 const CLOSEDIALOG = "dialog/close"
 
 const initialState = {
   showinline: false,
   showmodal: false,
-  showshift: false,
   showconfirm: false
 }
 
@@ -42,7 +39,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: true,
         showmodal: false,
-        showshift: false,
         showconfirm: false,
         type: "call"
       }
@@ -51,7 +47,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: true,
         showmodal: false,
-        showshift: false,
         showconfirm: false,
         type: "put"
       }
@@ -60,7 +55,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: true,
         showmodal: false,
-        showshift: false,
         showconfirm: false,
         type: "quote"
       }
@@ -69,7 +63,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: false,
         showmodal: false,
-        showshift: false,
         showconfirm: false
       }
     case UPDATESPOTDIALOG:
@@ -77,7 +70,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: false,
         showmodal: true,
-        showshift: false,
         showconfirm: false,
         type: "spot",
         id: action.id,
@@ -89,7 +81,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: false,
         showmodal: true,
-        showshift: false,
         showconfirm: false,
         type: "premium",
         id: action.id,
@@ -101,7 +92,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: false,
         showmodal: true,
-        showshift: false,
         showconfirm: false,
         type: "deposit",
         id: action.id,
@@ -112,7 +102,6 @@ export default (state = initialState, action) => {
         ...state,
         showinline: false,
         showmodal: true,
-        showshift: false,
         showconfirm: false,
         type: "cancel",
         id: action.id
@@ -122,105 +111,32 @@ export default (state = initialState, action) => {
         ...state,
         showinline: false,
         showmodal: true,
-        showshift: false,
         showconfirm: false,
         type: "settle",
         id: action.id
       }
-    case WITHDRAWACCOUNTDIALOG:
+    case IBCDEPOSIT:
       return {
         ...state,
         showinline: false,
         showmodal: false,
-        showshift: true,
-        showconfirm: false,
-        type: "withdraw",
-        max: action.max,
-        submit: action.submit,
-        close: action.close
-      }
-    case SENDTOKENSDIALOG:
-      return {
-        ...state,
-        showinline: false,
-        showmodal: true,
-        showshift: false,
-        showconfirm: false,
-        type: "send",
-        max: action.max,
+        showconfirm: true,
+        type: "deposit",
+        params: action.params,
+        handlers: action.handlers,
         submit: action.submit
       }
-    case SHIFTSTART:
+    case IBCWITHDRAW:
       return {
         ...state,
         showinline: false,
         showmodal: false,
-        showshift: true,
-        showconfirm: false,
-        type: "start",
-        from: action.from,
-        to: action.to,
-        account: action.account,
-        remain: action.remain,
-        close: action.close
-      }
-    case SHIFTSTATUS:
-      return {
-        ...state,
-        showinline: false,
-        showmodal: false,
-        showshift: false,
         showconfirm: true,
-        type: "shiftstatus",
-        amount: action.amount,
-        confirmations: action.confirmations,
-        required: action.required,
-        complete: action.complete
+        type: "withdraw",
+        params: action.params,
+        handlers: action.handlers,
+        submit: action.submit
       }
-    case CONFIRMWITHDRAW:
-      return {
-        ...state,
-        showinline: false,
-        showmodal: false,
-        showshift: true,
-        showconfirm: false,
-        type: "confirm",
-        amount: action.amount,
-        account: action.account,
-        close: action.close,
-        confirm: action.confirm
-      }
-    case WAITWITHDRAW:
-      return {
-        ...state,
-        showinline: false,
-        showmodal: false,
-        showshift: false,
-        showconfirm: true,
-        type: "waitwithdraw"
-      }
-    case WITHDRAWCOMPLETE:
-      return {
-        ...state,
-        showinline: false,
-        showmodal: false,
-        showshift: false,
-        showconfirm: true,
-        type: "withdrawcomplete",
-        hash: action.hash,
-        close: action.close
-      }
-    case ACCOUNT:
-      if (action.reason === "receive") {
-        return {
-          ...state,
-          showinline: false,
-          showmodal: false,
-          showshift: false,
-          showconfirm: false
-        }
-      }
-      return state
     default:
       return state
   }

@@ -11,6 +11,7 @@
 
 import React from 'react';
 import ReactToolTip from 'react-tooltip'
+import Select from 'react-select'
 import { bindActionCreators } from 'redux'
 
 import Leaderboard from '../leaderboard'
@@ -22,13 +23,11 @@ import About from '../about'
 import { connect } from 'react-redux'
 import { closeNotification } from '../../modules/notifications'
 import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, closeDialog } from '../../modules/dialog'
-import { selectWallet, choosePassword, enterPassword, newAccount, recoverAccount,
-    requestTokens, sendTokens, requestShift, withdrawAccount } from '../../modules/microtick'
+import { selectWallet, choosePassword, enterPassword, newAccount, recoverAccount, IBCDeposit, IBCWithdraw } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
 import ClipBoard from 'react-copy-to-clipboard'
 import ClipImage from './Clipboard.svg'
-import Fox from './fox.svg'
 import Ledger from './ledger.svg'
 import Software from './software.svg'
 import logo from './mtlogo-sm.png'
@@ -37,27 +36,7 @@ import "./index.css"
 
 import { menuSelected } from '../../modules/app'
 
-const daiLink = "https://etherscan.io/address/0x6b175474e89094c44da98b954eedeac495271d0f"
-
-function confirmAuth(cb) {
-  const clientID = process.env.MICROTICK_CLIENTID
-  const redirect = process.env.MICROTICK_REDIRECT
-  const left = window.screenX + window.innerWidth / 2 - 200
-  const top = window.screenY + window.innerHeight / 2 - 400
-  const strWindowFeatures = 'width=400,height=800,left=' + left + ',top=' + top
-  const url = 'https://auth.shapeshift.io/oauth/authorize?client_id=' + clientID + '&scope=users:read&response_type=code&redirect_uri=' + redirect
-  window.addEventListener("message", listener)
-  const ref = window.open(url, "microtick.com_federate_shapeshift.io", strWindowFeatures)
-  function listener(ev) {
-    if (ref.closed) {
-      window.removeEventListener("message", listener)
-    }
-    if (ev.data.oauth_msg !== undefined) {
-      cb(ev.data.code)
-      window.removeEventListener("message", listener)
-    }
-  }
-}
+import IBC from './ibc-brand.svg'
 
 const App = props => {
   if (props.dialog.showinteract && props.ledger) {
@@ -80,14 +59,6 @@ const App = props => {
             <h2>Software Wallet</h2>
             <button className="button" autoFocus onClick={() => {props.selectWallet(false)}}><img id="wallet-software-logo" src={Software} alt="software wallet"/></button>
           </div>
-        </div>
-        <div className="kyc">
-          <h3>Please note:</h3>
-          <p>Use of the DAI-to-MTDAI bridge for account funding requires KYC approval.</p>
-          <p>Please download the ShapeShift app (<a href="https://shapeshift.com/download" target="_blank" rel="noopener noreferrer">https://shapeshift.com/download</a>) and complete the KYC process. Then, come back to this page and login using your credentials.</p>
-          <p>KYC approval generally takes only a few minutes, but in some cases may take between 8 hours and 5 business days. If more than 5 business days have passed since you KYC'd, please submit a support ticket here:
-          <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer">https://shapeshift.zendesk.com/hc/en-us/requests/new</a></p>
-          <p>For all non-KYC Microtick-specific support questions, please visit our telegram channel: <a href="https://t.me/microtick_general" target="_blank" rel="noopener noreferrer">https://t.me/microtick_general</a></p>
         </div>
       </div>
     </div>
@@ -282,25 +253,6 @@ const App = props => {
         </div>
       </div>
     }
-    if (not.type === 'faucet') {
-      return <div key={id} className={"outer faucet"}>
-        <div className="inner">
-          <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
-          <h3>Requesting tokens</h3>
-          <p className="footnote">Requesting faucet tokens for account: {not.acct}</p>
-        </div>
-      </div>
-    }
-    if (not.type === 'faucetlimit') {
-      return <div key={id} className="outer error">
-        <div className="inner">
-          <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
-          <h3>Error</h3>
-          <p className="message">Account has reached its automatic funding limit.</p>
-          <p>Visit the <a target="_blank" rel="noopener noreferrer" href="https://t.me/microtick_general">Microtick telegram channel</a> to request more.</p>
-        </div>
-      </div>
-    }
     if (not.type === 'register') {
       return <div key={id} className={"outer register"}>
         <div className="inner">
@@ -334,18 +286,12 @@ const App = props => {
           not.msg.includes("insufficient account funds") ||
           not.msg.includes("invalid address")) {
         message = "Insufficient account funds"
-    	  if (process.env.MICROTICK_PROD !== "true") {
-          var button = <button id="requestbutton" onClick={() => {
-            props.closeNotification(not.id)
-            props.requestTokens()
-          }}>Request tokens</button>
-    	  }
       }
       return <div key={id} className="outer error">
         <div className="inner">
           <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
           <h3>Error</h3>
-          <p className="message">{message} {button}</p>
+          <p className="message">{message}</p>
         </div>
       </div>
     }
@@ -420,95 +366,122 @@ const App = props => {
       </div>
     </div>
   }
-  if (props.dialog.showshift) {
-    if (props.dialog.type === "withdraw") {
-      header = <div className="header">
-        <div className="title">Withdraw DAI to Ethereum</div>
-        <div className="content">
-          <p>Ethereum ERC-20 address to receive <a href={daiLink} target="_blank" rel="noopener noreferrer">DAI</a>: <input type="string" size={42} id="eth-account" autoComplete="off"/></p>
-          <p>Amount to withdraw: <input id="dai-amount" type="number" size={12} defaultValue={props.dialog.max}/> dai</p>
-          <p className="warning">Note: Withdrawals must be between 10 and 500 DAI to be accepted, otherwise you will need to 
-          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer">support ticket</a> for a refund.</p>
-        </div>
-      </div>
-      action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
-    }
-    if (props.dialog.type === "start") {
-      header = <div className="header">
-        <div className="title">Fund Account</div>
-        <div className="content">
-          <p className="instructions">To fund your Microtick trading account, send <a href={daiLink} target="_blank" rel="noopener noreferrer">Ethereum ERC-20 DAI</a> tokens to the following Ethereum address:</p>
-          <p id="sendprompt">
-            <input size={40} value={props.dialog.to} readOnly disabled="disabled"/>
-            <ClipBoard text={props.dialog.to}>
-              <button onClick={()=>{document.getElementById('copied').style.display='inline-block'}}><img src={ClipImage} alt="clipboard"/>&nbsp;<span id="copied" style={{display:'none'}}>copied</span></button>
-            </ClipBoard>
-          </p>
-          <p>
-            <QRCode value={props.dialog.to}/>
-          </p>
-          <p className="warning">Note: Deposits must be between 10 and 500 DAI to be accepted, otherwise you will need to 
-          open a <a href="https://shapeshift.zendesk.com/hc/en-us/requests/new" target="_blank" rel="noopener noreferrer">support ticket</a> for a refund.</p>
-        </div>
-      </div>
-    }
-    if (props.dialog.type === "confirm") {
-      header = <div className="header">
-        <div className="title">Confirm Withdrawal</div>
-        <div className="content">
-          <p>Withdraw: {props.dialog.amount} dai</p>
-          <p>to Ethereum ERC-20 address: {props.dialog.account} ?</p>
-        </div>
-      </div>
-      action = <button className="button" onClick={() => props.dialog.confirm()}>Submit</button>
-    }
-    dialog = <div id="fullscreen">
-      <div id="modal" className={props.dialog.type}>
-        {header}
-        <div className="buttons">
-          {action}
-          <button className="button" onClick={() => props.dialog.close()}>Cancel</button>
-        </div>
-      </div>
-    </div>
-  }
   if (props.dialog.showconfirm) {
-    if (props.dialog.type === "shiftstatus") {
-      if (props.dialog.complete) {
-        var wait = <p>Completing transfer...</p>
-      } else {
-        wait = <p>Waiting for confirmations: {props.dialog.confirmations} / {props.dialog.required}</p>
+    if (props.dialog.type === "deposit") {
+      let backingChecked = props.dialog.params.backing ? "checked" : ""
+      let tickChecked = props.dialog.params.tick ? "checked" : ""
+      if (backingChecked || tickChecked) {
+        var chainselect = <div className="select-wrapper">
+          <Select
+            id="ibc-chain-select"
+            onChange={props.dialog.handlers.selectChain}
+            value={props.dialog.params.chain}
+            options={props.dialog.params.chains}
+          />
+        </div>
+        if (props.dialog.params.chain !== undefined) {
+          if (backingChecked) {
+            var note = "This wallet is on the funding chain (" + props.dialog.params.chainid + ") and is controlled by the same signing key as your Microtick wallet. Send " + props.dialog.params.txdenom + " tokens to this address on the funding chain to have funds available for deposit."
+          }
+          if (tickChecked) {
+            var note = "This wallet is on the funding chain (" + props.dialog.params.chainid + ") and is controlled by the same signing key as your Microtick wallet. Send tokens to this address on " + props.dialog.params.chainid + " to have funds available for deposit. TICK shows up as " + props.dialog.params.tokentype + " on " + props.dialog.params.chainid + "."
+          }
+          var wallet = <div className="table-wrapper">
+            <ReactToolTip/>
+            <p className="wallet-address" data-tip={note} data-class="ibc-tip">{props.dialog.params.wallet}</p>
+            <table>
+              <tbody>
+                <tr>
+                </tr>
+                <tr>
+                  <td>Available for deposit</td>
+                  <td>{props.dialog.params.balance} {props.dialog.params.tokenlabel}</td>
+                </tr>
+                <tr>
+                  <td>Amount to deposit</td>
+                  <td><input id="ibc-deposit-amount" type="number" size={12} value={props.dialog.params.transferAmount} onChange={props.dialog.handlers.updateTransferAmount}/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          if (parseFloat(props.dialog.params.transferAmount) > 0) {
+            action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
+          }
+        } 
       }
-      header = <div className="header">
-        <div className="title">Ethereum Transaction Initiated</div>
-        <div className="content">
-          <p>Amount pending: {props.dialog.amount} dai</p>
-          {wait}
+      header = <div className="header ibc">
+        <div className="title ibc">Deposit IBC Tokens</div>
+        <div>
+          Deposit Type:
+          <input type="radio" id="backing" name="ibc-asset" value="backing" checked={backingChecked} onChange={() => props.dialog.handlers.selectTransferAsset(true)}/>
+          <label htmlFor="backing">Backing</label>
+          <input type="radio" id="tick" name="ibc-asset" value="tick" checked={tickChecked} onChange={() => props.dialog.handlers.selectTransferAsset(false)}/>
+          <label htmlFor="tick">Tick</label>
         </div>
+        {chainselect}
+        {wallet}
       </div>
-    }
-    if (props.dialog.type === "waitwithdraw") {
-      header = <div className="header">
-        <div className="title">Withdrawal In Progress...</div>
-        <div className="content">
-          <p>Waiting for outgoing blockchain confirmation...</p>
+    } else if (props.dialog.type === "withdraw") {
+      let backingChecked = props.dialog.params.backing ? "checked" : ""
+      let tickChecked = props.dialog.params.tick ? "checked" : ""
+      if (backingChecked || tickChecked) {
+        chainselect = <div className="select-wrapper">
+          <Select
+            id="ibc-chain-select"
+            onChange={props.dialog.handlers.selectChain}
+            value={props.dialog.params.chain}
+            options={props.dialog.params.chains}
+          />
         </div>
-      </div>
-    }
-    if (props.dialog.type === "withdrawcomplete") {
-      header = <div className="header">
-        <div className="title">Withdrawal Complete</div>
-        <div className="content">
-          <p>Ethereum confirmation: <a target="_blank" href={"https://etherscan.io/tx/" + props.dialog.hash} rel="noopener noreferrer">{props.dialog.hash}</a></p>
+        if (props.dialog.params.chain !== undefined) {
+          if (backingChecked) {
+            note = "This wallet is on the destination chain (" + props.dialog.params.chainid + ") and is controlled by the same signing key as your Microtick wallet."
+          }
+          if (tickChecked) {
+            note = "This wallet is on the destination chain and is controlled by the same signing key as your Microtick wallet. Withdrawn TICK tokens will show up as " + props.dialog.params.tickThere + " on the destination chain (" + props.dialog.params.chainid + ")."
+          }
+          wallet = <div className="table-wrapper">
+            <ReactToolTip/>
+            <p className="wallet-address" data-tip={note} data-class="ibc-tip">{props.dialog.params.wallet}</p>
+            <table>
+              <tbody>
+                <tr>
+                </tr>
+                <tr>
+                  <td>Available for withdrawal</td>
+                  <td>{props.dialog.params.balance} {props.dialog.params.tokenlabel}</td>
+                </tr>
+                <tr>
+                  <td>Amount to withdraw</td>
+                  <td><input id="ibc-withdraw-amount" type="number" size={12} value={props.dialog.params.transferAmount} onChange={props.dialog.handlers.updateTransferAmount}/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          if (parseFloat(props.dialog.params.transferAmount) > 0) {
+            action = <button className="button" onClick={() => props.dialog.submit()}>Submit</button>
+          }
+        }
+      }
+      header = <div className="header ibc">
+        <div className="title ibc">Withdraw IBC Tokens</div> 
+        <div>
+          Withdrawal Type:
+          <input type="radio" id="backing" name="ibc-asset" value="backing" checked={backingChecked} onChange={() => props.dialog.handlers.selectTransferAsset(true)}/>
+          <label htmlFor="backing">Backing</label>
+          <input type="radio" id="tick" name="ibc-asset" value="tick" checked={tickChecked} onChange={() => props.dialog.handlers.selectTransferAsset(false)}/>
+          <label htmlFor="tick">Tick</label>
         </div>
+        {chainselect}
+        {wallet}
       </div>
-      action = <button className="button" onClick={() => props.dialog.close()}>Dismiss</button>
     }
     dialog = <div id="fullscreen">
       <div id="modal" className={props.dialog.type}>
         {header}
         <div className="buttons">
           {action}
+          <button className="button" onClick={() => props.closeDialog()}>Cancel</button>
         </div>
       </div>
     </div>
@@ -531,7 +504,7 @@ const App = props => {
     var acctInfo = <div>
       <p>Available balance = {Math.round10(props.balance, -6)} {props.token}</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} {props.token}</span></p>
-      <p data-tip={staketip}>Stake = {Math.round10(props.stake, -6)} tick (undelegated)</p>
+      <p data-tip={staketip}>Stake = {Math.round10(props.stake, -6)} tick</p>
     </div>
   }
   switch (props.menu.selected) {
@@ -562,22 +535,8 @@ const App = props => {
       <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>
       <div className={props.menu.selected === 'about' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('about')}>About</div>
     </div>
-  if (process.env.MICROTICK_PROD !== "true") {
-    var fund = <button id="requestbutton" onClick={() => props.requestTokens()}>Request Tokens</button>
-    var withdraw = <button id="withdrawbutton" onClick={() => props.sendTokens()}>Send Tokens</button>
-  } else {
-    if (props.balance > 500) {
-      var disabled = true
-    } else {
-      disabled = false
-    }
-    fund = <button id="requestbutton" onClick={() => {confirmAuth(code => {
-      props.requestShift(code)
-    })}} disabled={disabled}>Fund Account</button>
-    withdraw = <button id="withdrawbutton" onClick={() => {confirmAuth(code => {
-      props.withdrawAccount(code)
-    })}}>Withdraw</button>
-  }
+  var deposit = <button id="depositbutton" onClick={() => props.IBCDeposit()}>IBC Deposit</button>
+  var withdraw = <button id="withdrawbutton" onClick={() => props.IBCWithdraw()}>IBC Withdrawal</button>
   const urlParams = new URLSearchParams(window.location.search)
   const apiServer = urlParams.get('apiServer')
   if (process.env.MICROTICK_EXPLORER !== "off" && apiServer === null) {
@@ -589,7 +548,7 @@ const App = props => {
     chain_id = props.chainid
     account_addr = props.account
   }
-  return <div>
+  return <div id="gui">
     {interact}
     <section id="ui"> 
       <div id="notifications">
@@ -603,7 +562,8 @@ const App = props => {
         <a href="https://microtick.com">Home</a>
         <a href="https://microtick.com/background-information.html">Learn More</a>
         <a href="https://microtick.com/how-to-table-of-contents.html">How To</a>
-	<a href="https://microtick.com/frequently-asked-questions-1.html">FAQ</a>
+	      <a href="https://microtick.com/alpha/docs/">Docs</a>
+	      <a href="https://microtick.com/frequently-asked-questions-1.html">FAQ</a>
         <span className="current">Get Started</span>
         <a href="https://microtick.com/contact.html">Contact</a>
       </nav>
@@ -620,10 +580,10 @@ const App = props => {
         <ReactToolTip/>
         <h3>Account Information</h3>
         <div id="transact">
-          <a target="_blank" rel="noopener noreferrer" href="https://shapeshift.com">
-            <img data-tip="Deposits / withdrawals of ERC-20 DAI sponsored by ShapeShift, prior to on-chain IBC support." src={Fox} alt="ShapeShift"/>
+          <a target="_blank" rel="noopener noreferrer" href="https://cosmos.network/ibc">
+            <img data-tip="Deposits / withdrawals now use Cosmos IBC interchain transfers." src={IBC} alt="Cosmos/IBC"/>
           </a>
-          {fund}
+          {deposit}
           {withdraw}
         </div>
         <p>Address = {account_addr} {props.account !== undefined ? (props.ledger ? "(hw)" : "(sw)") : ""}</p>
@@ -634,7 +594,7 @@ const App = props => {
     {login}
     {page}
     <div id="page-footer">
-      <p>Copyright &copy; 2018-2020 Microtick LLC</p>
+      <p>Copyright &copy; 2018-2021 Microtick LLC</p>
       <p>Microtick option standardization U.S. patents 7,856,395 and 8,229,840.</p>
       <p>Microtick blockchain-based oracle patent pending.</p>
     </div>
@@ -674,8 +634,6 @@ const mapDispatchToProps = dispatch => {
     enterPassword,
     newAccount,
     recoverAccount,
-    requestTokens,
-    requestShift,
     closeNotification,
     updateSpot,
     updatePremium,
@@ -683,9 +641,9 @@ const mapDispatchToProps = dispatch => {
     cancelQuote,
     closeDialog,
     settleTrade,
-    sendTokens,
-    withdrawAccount,
-    menuSelected
+    menuSelected,
+    IBCDeposit,
+    IBCWithdraw
   }, dispatch)
 }
 

@@ -1,5 +1,6 @@
 body {
   margin: 0px;
+  background: #cba;
 }
 
 #ui {
@@ -235,6 +236,10 @@ body {
   margin-top: 20px;
 }
 
+#gui {
+  background: #fff;
+}
+
 #page-header {
   display: block;
   width: 940px;
@@ -246,6 +251,7 @@ body {
   background: #fff;
   padding-top: 15px;
   padding-bottom: 10px;
+  max-width: 105px;
 }
 
 #page-header nav {
@@ -332,26 +338,44 @@ body {
 #transact {
   float: right;
   width: 160px;
-  border: 1px solid #fff;
+  border: 1px solid #888;
+  background: #333;
   border-radius: 10px;
   padding: 10px;
 }
 
 #transact img {
   float: left;
-  height: 30px;
+  height: 28px;
+  padding-left: 2px;
   padding-top: 10px;
 }
 
-#requestbutton {
+#depositbutton {
   float: right;
   width: 120px;
+  border-radius: 5px;
+  border-style: solid;
   margin-bottom: 5px;
+  background: #888;
+  color: #ddd;
+  font-weight: bold;
+  outline: none;
 }
 
 #withdrawbutton {
   float: right;
   width: 120px;
+  border-radius: 5px;
+  border-style: solid;
+  background: #888;
+  color: #ddd;
+  font-weight: bold;
+  outline: none;
+}
+
+#withdrawbutton:hover {
+  background: #999;
 }
 
 .funding {
@@ -397,9 +421,8 @@ body {
   font-size: 12px;
   width: 100%;
   text-align: center;
-}
-
-#page-footer p {
+  background: #cba;
+  padding-top: 5px;
 }
 
 #dialog {
@@ -610,11 +633,8 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 10px;
+  padding: 0px 0px 10px 0px;
   min-width: 500px;
-}
-
-#modal.update {
 }
 
 #modal p {
@@ -625,10 +645,16 @@ body {
   flex-grow: 1;
 }
 
+#modal .header.ibc {
+  text-align: center;
+  padding-bottom: 10px;
+}
+
 #modal .title {
   background: #4bf;
   color: #fff;
-  border-radius: 4px;
+  border-radius: 4px 4px 0px 0px;
+  border-bottom: 1px solid #888;
   text-align: center;
   font-size: 20px;
   padding-top: 10px;
@@ -640,6 +666,28 @@ body {
   vertical-align: center;
   text-align: center;
   padding: 10px;
+}
+
+#modal .select-wrapper {
+  display: inline-block;
+  width: 80%;
+}
+
+#modal .ibc-tip {
+  max-width: 300px; 
+  word-wrap: break-word;
+}
+
+#modal .wallet-address:hover {
+  cursor: pointer;
+}
+
+#modal .table-wrapper table {
+  width: 100%;
+}
+
+#modal .table-wrapper td:nth-child(1) {
+  text-align: right;
 }
 
 #modal input {
@@ -664,52 +712,6 @@ body {
 #modal a {
   color: #158;
   text-decoration: none;
-}
-
-#sendprompt {
-  display: flex;
-  flex-wrap: wrap;
-  width: 80%;
-  margin-top: 5px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 20px;
-  border: 1px solid #999;
-  border-style: dotted;
-  border-radius: 10px;
-  padding: 5px;
-  background: #bbb;
-}
-
-#sendprompt input {
-  display: block;
-  border-width: 0px;
-  background: transparent;
-  text-align: right;
-  font-size: 14px;
-  font-weight: bold;
-  color: #246;
-  padding: 5px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: elipsis;
-  min-width: 360px;
-  flex: 4;
-}
-
-#sendprompt button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: left;
-  border-width: 0px;
-  cursor: pointer;
-  background-color: #bbb;
-  flex: 1;
-}
-
-#sendprompt button:focus {
-  outline: none;
 }
 
 .instructions {
@@ -750,4 +752,9 @@ body {
   color: #fff;
   border-radius: 5px;
   padding-top: 10px;
+}
+
+#modal .Select-control {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }

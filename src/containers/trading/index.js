@@ -261,47 +261,6 @@ class Home extends React.Component {
         }
       }
     }
-    if (props.market !== '') {
-      var instructions = <div id="instructions">
-        <div className="row">
-          <div className="section">
-            <h5><span className="hint_quote">Place Quote</span></h5>
-            <p>By placing a quote you are making a price assertion for the asset, backed by tokens,
-            as well as a choosing a premium that reflects how fast you expect the asset's price to change over the duration of the quote. The
-            green and red rectangles displayed in the Order Book to the right show the adjusted premiums based
-            on how far your quote's price assertion is from the current consensus.</p>
-            <h6>Instructions</h6>
-            <ol>
-              <li>Select the market you are interested in above.</li>
-              <li>Select the time duration you are interested in from the table.</li>
-              <li>Place a quote by hovering the mouse over the left hand side of the price chart. 
-                 Choose the approximate spot price (center line) and premium (top and bottom lines) for
-                 your quote.</li>
-              <li>Click and a dialog will appear allowing you to specify the backing for the
-                 quote, and fine-tune the spot and premium you want. Confirm the quote by clicking 
-                 "Place Quote".</li>
-            </ol>
-          </div>
-          <div className="section">
-            <h5><span className="hint_call">⇑ Buy Call</span> / <span className="hint_put">Buy Put ⇓</span></h5>
-            <p>By buying a call you make a multiple of the premium you pay based on how far the
-            consensus price moves higher than the current value. Buying a put works the same way but
-            you make a multiple of the premium based on how far the consensus price moves lower from the 
-            current value.</p>
-            <h6>Instructions</h6>
-            <ol>
-              <li>Select the market you are interested in above.</li>
-              <li>Select the time duration you are interested in from the table.</li>
-              <li>Buy a call or put by hovering the mouse over the Order Book. 
-               To buy a call, hover above the current spot price indicated by the horizontal line. To buy a
-               put, hover below the spot price.</li>
-              <li>Click at the approximate amount and a dialog will appear allowing you to adjust the 
-               quantity. Confirm the trade by clicking "Buy (Sell) Call" or "Buy (Sell) Put"</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    }
     if (props.orderbook) {
       var elems = props.durs.sort((a,b) => {
         const intvalA = parseInt(a, 10)
@@ -372,7 +331,7 @@ class Home extends React.Component {
     var markets = props.markets.map(m => {
       return {
         value: m.name,
-        label: m.name + ": " + m.description
+        label: m.description
       }
     })
     return <div id="div-trading">
@@ -404,9 +363,6 @@ class Home extends React.Component {
       </div>
       <ActiveTrades token={props.token}/>
       <ActiveQuotes token={props.token}/>
-      <div className="row">
-        {instructions}
-      </div>
     </div>
   }
 }

@@ -1,4 +1,4 @@
-import API from 'microtick'
+import microtick from 'mtapi'
 
 var proto = "ws:"
 if (window.location.protocol === "https:") {
@@ -12,9 +12,10 @@ const url = apiServer !== null ? apiServer : proto + "//" + process.env.MICROTIC
 
 const config = {
   ws: url,
-  version: "v0.1.6"
+  version: "v2.0.0"
 }
 
-const api = new API(config.ws)
+const api = new microtick()
+api.setUrl(config.ws)
 
 export default api

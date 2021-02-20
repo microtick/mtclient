@@ -6,7 +6,7 @@ import App from './App'
 
 const target = document.querySelector('#root')
 
-var token = "dai"
+var token = "atom"
 
 render(
   <App token={token}/>,

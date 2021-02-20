@@ -5,20 +5,20 @@ import {createTradeNotification,
         createUpdateSpotNotification,
         createUpdatePremiumNotification,
         createSettleNotification,
-        createFaucetRequestNotification,
         createSuccessNotification,
         createErrorNotification,
-        createFaucetLimitNotification,
         removeNotification} from '../notifications'
 import { chartCursorPos, orderBookCursorPos } from '../../containers/trading/chart'
 import store from '../../store'
-import api from '../api'
 import { init } from '../chain/tendermint'
 import { SequentialTaskQueue } from 'sequential-task-queue'
-import axios from 'axios'
-import { w3cwebsocket } from 'websocket'
-import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
+import sjcl from 'sjcl'
+import BN from 'bignumber.js'
+
+import api from '../api'
+import { SoftwareSigner, LedgerSigner } from 'mtapi'
 import CosmosApp from 'ledger-cosmos-js'
+import Transport from '@ledgerhq/hw-transport-webusb'
 
 const BLOCKTIME = 5
 
@@ -55,17 +55,12 @@ const MOUSESTATE = 'microtick/update'
 const MOUSEMOVE = 'microtick/mousemove'
 const LOCK = 'microtick/lock'
 const DONELOADING = 'microtick/loading'
-const SENDTOKENS = "dialog/sendtokens"
-const SHIFTSTART = 'shift/start'
-const SHIFTSTATUS = 'shift/status'
-const WITHDRAWACCOUNT = 'dialog/withdrawaccount'
-const CONFIRMWITHDRAW = 'dialog/confirmwithdraw'
-const WAITWITHDRAW = 'shift/waitwithdraw'
-const WITHDRAWCOMPLETE = 'shift/withdrawcomplete'
 const ENABLELEDGER = 'microtick/ledger'
 const INTERACTLEDGER = 'dialog/interactledger'
 const CLOSEDIALOG = 'dialog/close'
 const SETOBTYPE = 'microtick/orderbooktype'
+const IBCDEPOSIT = 'ibc/deposit'
+const IBCWITHDRAW = 'ibc/withdraw'
 
 const globals = {
   accountSubscriptions: {},
@@ -210,8 +205,8 @@ api.addAccountHandler(async (key, data) => {
         type: ACCOUNT,
         reason: key === "deposit" ? "receive" : "send",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balances.backing,
+        stake: globals.accountInfo.balances.stake
       })
     }
     if (key === "trade.start") {
@@ -426,8 +421,8 @@ async function processTradeEnd(trade) {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balances.backing,
+        stake: globals.accountInfo.balances.stake
       })
       await api.unsubscribe(globals.accountSubscriptions[trade.id])
       delete globals.accountSubscriptions[trade.id]
@@ -785,12 +780,12 @@ async function updateHistory() {
   })
   const now = Date.now()
   // Get historic data
-  const currentBlock = await api.blockInfo()
-  var startBlock = currentBlock.block - globals.chart.size / BLOCKTIME
+  const currentBlock = await api.getBlockInfo()
+  var startBlock = currentBlock.height - globals.chart.size / BLOCKTIME
   if (startBlock < 0) startBlock = 0
   var min = Number.MAX_VALUE, max = 0
   const currentSpot = await api.getMarketSpot(globals.market)
-  const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.block, 100)
+  const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.height, 100)
   const startTime = now - globals.chart.size * 1000
   const filteredHistory = rawHistory.filter(hist => {
     return hist.time > startTime && hist.time < now
@@ -809,7 +804,7 @@ async function updateHistory() {
     max = globals.spot
   }
   filteredHistory.push({
-    block: currentBlock.block,
+    block: currentBlock.height,
     time: now,
     value: currentSpot.consensus
   })
@@ -817,7 +812,7 @@ async function updateHistory() {
   if (globals.trades !== undefined && globals.trades.length > 0) {
     var i = 0
     var history = filteredHistory.reduce((acc, hist) => {
-      while (i < globals.trades.length && globals.trades[i].startBlock < hist.block) {
+      while (i < globals.trades.length && globals.trades[i].startBlock < hist.height) {
         if (globals.trades[i].market === globals.market && globals.trades[i].startBlock >= startBlock) {
           acc.push({
             block: globals.trades[i].startBlock,
@@ -843,7 +838,7 @@ async function updateHistory() {
     data: history,
     mint: startTime,
     minb: startBlock,
-    maxb: currentBlock.block,
+    maxb: currentBlock.height,
     minp: minp,
     maxp: maxp
   })
@@ -943,13 +938,13 @@ export const selectDur = choice => {
 }
 
 const selectAccount = async () => {
-  globals.markets = api.getMarkets()
+  globals.markets = await api.getMarkets()
   store.dispatch({
     type: MARKETS
   })
   
-  const block = await api.blockInfo()
-  globals.blockNumber = block.block
+  const block = await api.getBlockInfo()
+  globals.blockNumber = block.height
   globals.accountInfo = await api.getAccountInfo(globals.account)
   
   globals.trades = []
@@ -975,12 +970,12 @@ const selectAccount = async () => {
     type: ACCOUNT,
     reason: "accountselect",
     acct: globals.account,
-    balance: globals.accountInfo.balance,
-    stake: globals.accountInfo.stake
+    balance: globals.accountInfo.balances.backing,
+    stake: globals.accountInfo.balances.stake
   })
   
   if (globals.markets.length > 0) {
-    const cb = selectMarket(globals.markets[1].name)
+    const cb = selectMarket(globals.markets[0].name)
     cb(store.dispatch)
   }
 }
@@ -1145,7 +1140,7 @@ async function fetchActiveQuotes() {
       market: data.market,
       dur: data.duration,
       spot: data.spot,
-      premium: data.premium,
+      premium: data.ask,
       backing: data.backing,
       modified: new Date(data.modified),
       canModify: new Date(data.canModify),
@@ -1197,8 +1192,8 @@ export const tradeCall = dir => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balances.backing,
+        stake: globals.accountInfo.balances.stake
       })
     } catch (err) {
       dispatch({
@@ -1241,8 +1236,8 @@ export const tradePut = dir => {
         type: ACCOUNT,
         reason: "trade",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balances.backing,
+        stake: globals.accountInfo.balances.stake
       })
     } catch (err) {
       dispatch({
@@ -1396,8 +1391,8 @@ export const placeQuote = () => {
         type: ACCOUNT,
         reason: "quote",
         acct: globals.account, 
-        balance: globals.accountInfo.balance,
-        stake: globals.accountInfo.stake
+        balance: globals.accountInfo.balances.backing,
+        stake: globals.accountInfo.balances.stake
       })
     } catch (err) {
       dispatch({
@@ -1435,8 +1430,8 @@ export const cancelQuote = async (dispatch, id) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance,
-      stake: globals.accountInfo.stake
+      balance: globals.accountInfo.balances.backing,
+      stake: globals.accountInfo.balances.stake
     })
   } catch (err) {
     dispatch({
@@ -1473,8 +1468,8 @@ export const backQuote = async (dispatch, id, amount) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance,
-      stake: globals.accountInfo.stake
+      balance: globals.accountInfo.balances.backing,
+      stake: globals.accountInfo.balances.stake
     })
   } catch (err) {
     dispatch({
@@ -1511,8 +1506,8 @@ export const updateSpot = async (dispatch, id, newspot) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance,
-      stake: globals.accountInfo.stake
+      balance: globals.accountInfo.balances.backing,
+      stake: globals.accountInfo.balances.stake
     })
   } catch (err) {
     dispatch({
@@ -1549,8 +1544,8 @@ export const updatePremium = async (dispatch, id, newpremium) => {
       type: ACCOUNT,
       reason: "quote",
       acct: globals.account, 
-      balance: globals.accountInfo.balance,
-      stake: globals.accountInfo.stake
+      balance: globals.accountInfo.balances.backing,
+      stake: globals.accountInfo.balances.stake
     })
   } catch (err) {
     dispatch({
@@ -1647,16 +1642,15 @@ export const recoverAccount = () => {
           type: DONERECOVER
         })
         try {
-          await api.init(words)
+          globals.signer = new SoftwareSigner()
+          api.setSigner(globals.signer)
+          await globals.signer.initFromMnemonic(words.join(" "), "micro", 0, 0)
+          await api.init()
           await init()
-          var keys = await api.getWallet()
-          if (keys.priv === undefined) {
-            throw new Error("Account recovery failed")
-          }
-          keys.priv = btoa(window.sjcl.encrypt(password, keys.priv))
-          document.cookie = "mtm.account=" + JSON.stringify(keys) + ";max-age=31536000;"
-          console.log("Creating account on server: " + keys.acct)
-          globals.account = keys.acct
+          var priv = btoa(sjcl.encrypt(password, globals.signer.priv.toString('hex')))
+          document.cookie = "mtm.account=" + JSON.stringify(priv) + ";max-age=31536000;"
+          console.log("Creating account on server: " + globals.signer.getAddress())
+          globals.account = globals.signer.getAddress()
           selectAccount()
         } catch (err) {
           console.log(err.message)
@@ -1681,11 +1675,12 @@ export const selectWallet = hw => {
           type: INTERACTLEDGER,
           value: true
         })
-        await api.init("ledger", async () => {
-          const transport = await TransportWebUSB.create()
-          const app = new CosmosApp(transport)
-          return app
-	      })
+        const usb = await Transport.create()
+        const cosmos = new CosmosApp(usb)
+        globals.signer = new LedgerSigner(cosmos)
+        await globals.signer.init("micro", 0, 0)
+        api.setSigner(globals.signer)
+        await api.init()
         dispatch({
           type: INTERACTLEDGER,
           value: false
@@ -1694,8 +1689,7 @@ export const selectWallet = hw => {
           type: CLOSEDIALOG
         })
         await init()
-        const keys = await api.getWallet()
-        console.log("Ledger account=" + keys.acct)
+        console.log("Ledger account=" + globals.signer.getAddress())
         dispatch({
           type: SELECT_WALLET,
           value: "ledger"
@@ -1703,10 +1697,11 @@ export const selectWallet = hw => {
         dispatch({
           type: PASSWORD
         })
-        globals.account = keys.acct
+        globals.account = globals.signer.getAddress()
         selectAccount()
       } catch (err) {
         console.log(err.message)
+        console.log(err)
       }
     } else {
       dispatch({
@@ -1723,23 +1718,25 @@ export const choosePassword = () => {
       type: PASSWORD
     })
     const password = document.getElementById('password').value
-    await api.init("software", mnemonic => {
-      dispatch({
-        type: MNEMONIC,
-        words: mnemonic.split(' '),
-        done: () => {
-          dispatch({
-            type: WRITTENMNEMONIC
-          })
-        }
-      })
+    globals.signer = new SoftwareSigner()
+    api.setSigner(globals.signer)
+    const mnemonic = await globals.signer.generateNewMnemonic()
+    dispatch({
+      type: MNEMONIC,
+      words: mnemonic.split(' '),
+      done: () => {
+        dispatch({
+          type: WRITTENMNEMONIC
+        })
+      }
     })
+    await globals.signer.initFromMnemonic(mnemonic, "micro", 0, 0)
+    await api.init()
     await init()
-    var keys = await api.getWallet()
-    keys.priv = btoa(window.sjcl.encrypt(password, keys.priv))
-    document.cookie = "mtm.account=" + JSON.stringify(keys) + ";max-age=31536000;"
-    console.log("Creating account on server: " + keys.acct)
-    globals.account = keys.acct
+    var priv = btoa(sjcl.encrypt(password, globals.signer.priv.toString('hex')))
+    document.cookie = "mtm.account=" + JSON.stringify(priv) + ";max-age=31536000;"
+    console.log("Creating account on server: " + globals.signer.getAddress())
+    globals.account = globals.signer.getAddress()
     selectAccount()
   }
 }
@@ -1755,13 +1752,16 @@ export const enterPassword = () => {
     }).map(item => {
       return item.slice(item.indexOf('=') + 1)
     })
-    const keys = JSON.parse(checkAccount[0])
+    const priv = JSON.parse(checkAccount[0])
     try {
-      keys.priv = window.sjcl.decrypt(password, atob(keys.priv))
-      console.log("Connecting account: " + keys.acct)
-      await api.init(keys)
+      globals.signer = new SoftwareSigner()
+      api.setSigner(globals.signer)
+      const buf = sjcl.decrypt(password, atob(priv))
+      await globals.signer.initFromPrivateKey("micro", Buffer.from(buf, 'hex'))
+      console.log("Connecting account: " + globals.signer.getAddress())
+      await api.init()
       await init()
-      globals.account = keys.acct
+      globals.account = globals.signer.getAddress()
       selectAccount()
     } catch (err) {
       dispatch({
@@ -1771,379 +1771,258 @@ export const enterPassword = () => {
   }
 }
 
-export const requestTokens = () => {
+export const IBCDeposit = () => {
   return async dispatch => {
-    console.log("Request tokens")
-    const notId = createFaucetRequestNotification(dispatch, globals.account)
-    try {
-      var proto = "http://"
-      if (window.location.protocol === "https:") {
-        proto = "https://"
-      }
-      const res = await axios.get(proto + process.env.MICROTICK_FAUCET + "/faucet/" + globals.account)
-      console.log(JSON.stringify(res.data, null, 2))
-      if (res.data !== "success") {
-        if (res.data.startsWith("failure: ")) {
-          const error = res.data.slice(9)
-          if (error.startsWith("locked")) {
-            removeNotification(dispatch, notId)
-            createErrorNotification(dispatch, "Faucet request failed: " + error)
-          } else if (error.startsWith("limit")) {
-            removeNotification(dispatch, notId)
-            createFaucetLimitNotification(dispatch)
-          } else {
-            removeNotification(dispatch, notId)
-            createErrorNotification(dispatch, error)
-          }
-        }
-      } else {
-        setTimeout(() => {
-          removeNotification(dispatch, notId)
-        }, DIALOG_TIME1)
-        createSuccessNotification(dispatch, DIALOG_TIME2, notId)
-      }
-    } catch (err) {
-      removeNotification(dispatch, notId)
-      console.log(err)
-      createErrorNotification(dispatch, "Faucet request failed", err.message)
+    const close = () => {
+      dispatch({
+        type: CLOSEDIALOG
+      })
     }
-  }
-}
-
-export const sendTokens = () => {
-  return async dispatch => {
-    dispatch({
-      type: SENDTOKENS,
-      max: globals.accountInfo.balance,
-      submit: async () => {
-        const cosmosaccount = document.getElementById("cosmos-account").value.toLowerCase()
-        const tokens = document.getElementById("token-amount").value
-        
-        dispatch({
-          type: CLOSEDIALOG
-        })
-    
-        try {
-          const envelope = await api.postEnvelope()
-          const amount = "" + Math.floor(tokens * 1000000)
-          const data = {
-            tx: {
-              msg: [
-                {
-                  type: "cosmos-sdk/MsgSend",
-                  value: {
-                    from_address: globals.account,
-                    to_address: cosmosaccount,
-                    amount: [
-                      {
-                        amount: amount,
-                        denom: "udai"
-                      }
-                    ]
-                  }
-                }
-              ],
-              fee: {
-                amount: [],
-                gas: "200000"
-              },
-              signatures: null,
-              memo: ""
-            }
+    const endpoints = await api.getIBCEndpoints(globals.signer.getPubKey())
+    console.log(JSON.stringify(endpoints, null, 2))
+    let defaultParams = {
+      transferAmount: 0
+    }
+    let params = defaultParams
+    const update = () => {
+      for (var i=0; i<endpoints.length; i++) {
+        const ep = endpoints[i]
+        if (ep.name === params.chain) {
+          params.chainid = ep.chainid
+          params.blocktime = ep.blocktime
+          params.wallet = ep.address
+          if (params.backing) {
+            params.tokenlabel = "atom"
+            params.tokentype = ep.backingHere
+            params.txdenom = ep.backingThere
+            params.channel = ep.incoming
+            params.balance = ep.backingBalance
+            params.mult = ep.backingRatio
           }
-          
+          if (params.tick) {
+            params.tokenlabel = "tick"
+            params.tokentype = ep.tickThere
+            params.txdenom = ep.tickThere
+            params.channel = ep.outgoing
+            params.balance = ep.tickBalance
+            params.mult = 1000000
+          }
+          params.account = ep.account
+          params.sequence = ep.sequence
+        }
+      }
+      dispatch({
+        type: IBCDEPOSIT,
+        params: params,
+        handlers: {
+          selectTransferAsset: value => {
+            params = defaultParams
+            if (value) {
+              // backing
+              params.backing = true
+              params.tick = false
+              params.chains = endpoints.reduce((acc, ep) => {
+                if (ep.incoming !== undefined) {
+                  acc.push({
+                    value: ep.name,
+                    label: ep.name
+                  })
+                }
+                return acc
+              }, [])
+            } else {
+              // tick
+              params.backing = false
+              params.tick = true
+              params.chains = endpoints.reduce((acc, ep) => {
+                if (ep.outgoing !== undefined) {
+                  acc.push({
+                    value: ep.name,
+                    label: ep.name
+                  })
+                }
+                return acc
+              }, [])
+            }
+            delete params.chain
+            update()
+          },
+          selectChain: selection => {
+            if (selection === null) {
+              params = defaultParams
+            } else {
+              params.chain = selection.value
+            }
+            update()
+          },
+          updateTransferAmount: e => {
+            const value = parseFloat(e.target.value)
+            if (value > params.balance) {
+              params.transferAmount = params.balance.toString()
+            } else {
+              params.transferAmount = value.toString()
+            }
+            if (Number.isNaN(params.transferAmount)) {
+              params.transferAmount = "0"
+            }
+            update()
+          }
+        },
+        submit: async () => {
+          /*
+          console.log("Submit IBC Deposit:")
+          console.log("Channel: " + params.channel)
+          console.log("Sender: " + params.wallet)
+          console.log("Receiver: " + globals.account)
+          console.log("Amount: " + params.transferAmount)
+          console.log("Denom: " + params.tokentype)
+          console.log("Auth:")
+          console.log("  Chain ID: " + params.chainid)
+          console.log("  Account: " + params.account)
+          console.log("  Sequence: " + params.sequence)
+          */
           dispatch({
             type: INTERACTLEDGER,
             value: true
           })
-          await api.postTx(Object.assign(data, envelope))
-          dispatch({
-            type: INTERACTLEDGER,
-            value: false
-          })
-        } catch (err) {
-          dispatch({
-            type: INTERACTLEDGER,
-            value: false
-          })
-          createErrorNotification(dispatch, "Send tokens failed", err.message)
-        }
-      }
-    })
+          // submit an IBC request, supplying the auth for the external chain
+          const amt = new BN(params.transferAmount).multipliedBy(params.mult).toFixed(0)
+          const res = await api.IBCDeposit(params.channel, globals.blockNumber + 25, params.blocktime + 3600000, params.wallet, globals.account, 
+            amt, params.txdenom, {
+              chainid: params.chainid,
+              account: params.account,
+              sequence: params.sequence
+            })
+          console.log("res=" + JSON.stringify(res, null, 2))
+          close()
+        },
+      })
+    }
+    update()
   }
 }
 
-export const requestShift = code => {
+export const IBCWithdraw = () => {
   return async dispatch => {
-    
-    const shiftParams = {
-      expected: false,
-      received: false,
-      confirmed: false,
-      amount: 0,
-      startBlock: 0,
-      required: 0,
-      confirmations: 0
-    }
-    
-    // connect to server
-    var proto = "ws://"
-    if (window.location.protocol === "https:") {
-      proto = "wss://"
-    }
-    const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
-    
     const close = () => {
-      shiftParams.expected = true
       dispatch({
         type: CLOSEDIALOG
       })
-      client.close()
     }
-    
-    client.onopen = () => {
-      client.send(JSON.stringify({
-        type: "authenticate",
-        code: code
-      }))
+    const acctInfo = await api.getAccountInfo()
+    const endpoints = await api.getIBCEndpoints(globals.signer.getPubKey())
+    console.log(JSON.stringify(endpoints, null, 2))
+    let defaultParams = {
+      transferAmount: 0,
     }
-    
-    client.onmessage = msg => {
-      const obj = JSON.parse(msg.data)
-      if (obj.type === "authenticated") {
-        client.send(JSON.stringify({
-          type: "deposit",
-          dest: globals.account
-        }))
-      }
-      if (obj.type === "startdeposit") {
-        dispatch({
-          type: SHIFTSTART,
-          account: globals.account,
-          to: obj.eth_dst,
-          close: close
-        })
-      }
-      if (obj.type === "received") {
-        shiftParams.received = true
-        shiftParams.block = obj.block
-        shiftParams.amount = obj.amount
-        shiftParams.confirmations = 0
-        shiftParams.required = obj.confirmations
-        dispatch({
-          type: SHIFTSTATUS,
-          amount: shiftParams.amount,
-          confirmations: 0,
-          required: shiftParams.required
-        })
-      }
-      if (obj.type === "update") {
-        if (shiftParams.received) {
-          shiftParams.confirmations = obj.block > shiftParams.block ? obj.block - shiftParams.block : 0
-          if (shiftParams.confirmations > shiftParams.required) shiftParams.confirmations = shiftParams.required
-          dispatch({
-            type: SHIFTSTATUS,
-            amount: shiftParams.amount,
-            confirmations: shiftParams.confirmations,
-            required: shiftParams.required,
-            complete: false
-          })
+    let params = defaultParams
+    const update = () => {
+      for (var i=0; i<endpoints.length; i++) {
+        const ep = endpoints[i]
+        if (ep.name === params.chain) {
+          params.chainid = ep.chainid
+          params.blocktime = ep.blocktime
+          params.blockheight = ep.blockheight
+          if (params.backing) {
+            params.tokenlabel = "atom"
+            params.tokentype = ep.backingHere
+            params.channel = ep.incoming
+          }
+          if (params.tick) {
+            params.tokenlabel = "tick"
+            params.tokentype = "stake"
+            params.channel = ep.outgoing
+          }
+          params.account = ep.account
+          params.sequence = ep.sequence
         }
       }
-      if (obj.type === "confirmed") {
-        shiftParams.expected = true
-        shiftParams.confirmed = true
-        dispatch({
-          type: SHIFTSTATUS,
-          amount: shiftParams.amount,
-          complete: true
-        })
-      }
-      if (obj.type === "failed") {
-        close()
-        createErrorNotification(dispatch, obj.error)
-      }
-    }
-    
-    client.onerror = () => {
-      shiftParams.expected = true
       dispatch({
-        type: CLOSEDIALOG
-      })
-      createErrorNotification(dispatch, "Bridge connection failed")
-    }
-    
-    client.onclose = () => {
-      if (!shiftParams.expected) {
-        dispatch({
-          type: CLOSEDIALOG
-        })
-        createErrorNotification(dispatch, "Connection timed out or closed unexpectedly")
-      }
-    }
-  }
-}
-
-export const withdrawAccount = code => {
-  return async dispatch => {
-    var ethaccount
-    var dai
-    
-    // connect to server
-    var proto = "ws://"
-    if (window.location.protocol === "https:") {
-      proto = "wss://"
-    }
-    const client = new w3cwebsocket(proto + process.env.MICROTICK_FAUCET)
-    var expected = false
-    
-    const close = () => {
-      expected = true
-      dispatch({
-        type: CLOSEDIALOG
-      })
-      client.close()
-    }
-
-    client.onopen = () => {
-      client.send(JSON.stringify({
-        type: "authenticate",
-        code: code
-      }))
-    }
-    
-    client.onmessage = msg => {
-      //console.log(msg.data)
-      const obj = JSON.parse(msg.data)
-      if (obj.type === "authenticated") {
-        dispatch({
-          type: WITHDRAWACCOUNT,
-          max: globals.accountInfo.balance,
-          submit: async () => {
-            ethaccount = document.getElementById("eth-account").value.toLowerCase()
-            dai = parseFloat(document.getElementById("dai-amount").value)
-    
-            try {
-              // Sanity check form fields
-              if (!/^(0x)?[0-9a-f]{40}$/i.test(ethaccount)) {
-                throw new Error("Invalid Ethereum account")
-              }
-          
-              const accountInfo = await api.getAccountInfo(globals.account)
-              if (isNaN(dai) || dai > accountInfo.balance || dai <= 0) {
-                throw new Error("Invalid withdrawal amount")
-              }
-              
-              client.send(JSON.stringify({
-                type: "withdraw",
-                from: globals.account,
-                to: ethaccount,
-                amount: dai,
-              }))
-            } catch (err) {
-              close()
-              createErrorNotification(dispatch, err.message)
+        type: IBCWITHDRAW,
+        params: params,
+        handlers: {
+          selectTransferAsset: value => {
+            params = defaultParams
+            if (value) {
+              // backing
+              params.backing = true
+              params.tick = false
+              params.balance = acctInfo.balances.backing
+              params.chains = endpoints.reduce((acc, ep) => {
+                if (ep.incoming !== undefined) {
+                  acc.push({
+                    value: ep.name,
+                    label: ep.name
+                  })
+                }
+                return acc
+              }, [])
+            } else {
+              // tick
+              params.backing = false
+              params.tick = true
+              params.balance = acctInfo.balances.stake
+              params.chains = endpoints.reduce((acc, ep) => {
+                if (ep.outgoing !== undefined) {
+                  acc.push({
+                    value: ep.name,
+                    label: ep.name
+                  })
+                }
+                return acc
+              }, [])
             }
+            delete params.chain
+            update()
           },
-          close: close
-        })
-      }
-      
-      if (obj.type === "startwithdraw") {
-        const sendTo = obj.sendTo
-        dispatch({
-          type: CONFIRMWITHDRAW,
-          amount: dai,
-          account: ethaccount,
-          close: close,
-          confirm: async () => {
-            try {
-              const envelope = await api.postEnvelope()
-              const data = {
-                tx: {
-                  msg: [
-                    {
-                      type: "cosmos-sdk/MsgSend",
-                      value: {
-                        from_address: globals.account,
-                        to_address: sendTo,
-                        amount: [
-                          {
-                            amount: obj.amount,
-                            denom: "udai"
-                          }
-                        ]
-                      }
-                    }
-                  ],
-                  fee: {
-                    amount: [],
-                    gas: "200000"
-                  },
-                  signatures: null,
-                  memo: ethaccount
+          selectChain: selection => {
+            if (selection === null) {
+              params = defaultParams
+            } else {
+              params.chain = selection.value
+              for (var i=0; i<endpoints.length; i++) {
+                const ep = endpoints[i]
+                if (ep.name === selection.value) {
+                  params.wallet = ep.address
+                  params.tickThere = ep.tickThere
                 }
               }
-              dispatch({
-                type: INTERACTLEDGER,
-                value: true
-              })
-              await api.postTx(Object.assign(data, envelope))
-              dispatch({
-                type: INTERACTLEDGER,
-                value: false
-              })
-              dispatch({
-                type: WAITWITHDRAW
-              })
-            } catch (err) {
-              dispatch({
-                type: INTERACTLEDGER,
-                value: false
-              })
-              close()
-              createErrorNotification(dispatch, err.message)
             }
+            update()
+          },
+          updateTransferAmount: e => {
+            const value = parseFloat(e.target.value)
+            if (value > params.balance) {
+              params.transferAmount = params.balance.toString()
+            } else {
+              params.transferAmount = value.toString()
+            }
+            if (Number.isNaN(params.transferAmount)) {
+              params.transferAmount = "0"
+            }
+            update()
           }
-        })
-      }
-      
-      if (obj.type === "withdrawcomplete") {
-        expected = true
-        client.close()
-        dispatch({
-          type: WITHDRAWCOMPLETE,
-          hash: obj.hash,
-          close: () => {
-            dispatch({
-              type: CLOSEDIALOG
-            })
-          }
-        })
-      }
-      
-      if (obj.type === "withdrawerror") {
-        close()
-        createErrorNotification(dispatch, obj.error)
-      }
-    }
-
-    client.onclose = () => {
-      if (!expected) {
-        dispatch({
-          type: CLOSEDIALOG
-        })
-        createErrorNotification(dispatch, "Connection timed out or closed unexpectedly")
-      }
-    }
-    
-    client.onerror = () => {
-      expected = true
-      dispatch({
-        type: CLOSEDIALOG
+        },
+        submit: async () => {
+          const amt = new BN(params.transferAmount).multipliedBy(1000000).toFixed(0)
+          console.log("Submit IBC Withdrawal:")
+          console.log("Channel: " + params.channel)
+          console.log("Sender: " + globals.account)
+          console.log("Receiver: " + params.wallet)
+          console.log("Amount: " + amt)
+          console.log("Denom: " + params.tokentype)
+          dispatch({
+            type: INTERACTLEDGER,
+            value: true
+          })
+          // submit an IBC request from this chain
+          const res = await api.IBCWithdrawal(params.channel, params.blockheight + 25, params.blocktime + 3600000, globals.account, params.wallet,
+            amt, params.tokentype)
+          console.log("res=" + JSON.stringify(res, null, 2))
+          close()
+        },
       })
-      createErrorNotification(dispatch, "Bridge connection failed")
     }
-
+    update()
   }
 }

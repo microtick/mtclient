@@ -15,7 +15,6 @@ h4 {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  margin-bottom: 2px;
 }
 
 .sm {
@@ -255,6 +254,10 @@ div#marketSelect {
   background: #eee;
 }
 
+.activetable .right {
+  float: right;
+}
+
 .ordertable {
   background-color: #999;
   width: 100%;
@@ -294,62 +297,3 @@ div#marketSelect {
   stroke-dasharray: 1,1;
   stroke: #0f0 !important;
 }
-
-#instructions {
-  font-size: 14px;
-}
-
-#instructions h4 {
-  width: 100%;
-  text-align: center;
-}
-
-#instructions .row {
-  display: flex;
-  flex-direction: row;
-}
-
-#instructions .section {
-  margin: 0px 5px 0px 5px;
-  padding: 10px;
-  background: #555;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  flex: 1;
-}
-
-#instructions h5 {
-  font-size: 16px;
-  color: #fff;
-  text-align: center;
-  margin-top: 5px;
-  margin-bottom: 10px;
-}
-
-#instructions h6 {
-  font-size: 14px;
-  margin: 2px;
-  left: 60%;
-  color: #ccc;
-  margin-bottom: 10px;
-}
-
-#instructions p {
-  text-align: left;
-  color: #fff;
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-#instructions ol {
-  width: 60%;
-  margin-left: 0px;
-  color: #ccc;
-  margin-top: 0px;
-  margin-bottom: 0px;
-}
-
-#instructions li {
-  padding: 2px;
-}
-
