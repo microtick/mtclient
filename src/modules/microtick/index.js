@@ -2034,12 +2034,12 @@ export const IBCWithdraw = () => {
         },
         submit: async () => {
           const amt = new BN(params.transferAmount).multipliedBy(1000000).toFixed(0)
-          console.log("Submit IBC Withdrawal:")
-          console.log("Channel: " + params.channel)
-          console.log("Sender: " + globals.account)
-          console.log("Receiver: " + params.wallet)
-          console.log("Amount: " + amt)
-          console.log("Denom: " + params.tokentype)
+          //console.log("Submit IBC Withdrawal:")
+          //console.log("Channel: " + params.channel)
+          //console.log("Sender: " + globals.account)
+          //console.log("Receiver: " + params.wallet)
+          //console.log("Amount: " + amt)
+          //console.log("Denom: " + params.tokentype)
           close()
           const notId = createIBCNotification(dispatch)
           try {
