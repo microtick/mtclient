@@ -534,6 +534,11 @@ body {
   color: #000;
 }
 
+#notifications div.ibc {
+  color: #000;
+  background: #555;
+}
+
 #notifications div.place {
   color: #000;
   background: #448;
@@ -676,6 +681,11 @@ body {
 #modal .ibc-tip {
   max-width: 300px; 
   word-wrap: break-word;
+}
+
+#modal .hash {
+  font-size: 14px;
+  color: #383;
 }
 
 #modal .wallet-address:hover {

@@ -1,4 +1,5 @@
 const NOTIFY_TESTTOKENS = "notifications/testtokens"
+const NOTIFY_IBC = "notifications/ibc"
 const NOTIFY_TRADE = "notifications/trade"
 const NOTIFY_PLACE = "notifications/place"
 const NOTIFY_CANCEL = "notifications/cancel"
@@ -32,6 +33,20 @@ export default (state = initialState, action) => {
       type: action.type === NOTIFY_TESTTOKENS ? 'testtokens' : 'approve',
       id: action.id,
       amt: action.amt
+    })
+    return {
+      list: newdata
+    }
+  case NOTIFY_IBC:
+    newdata = state.list.reduce((res, el) => {
+      res.push({
+        ...el
+      })
+      return res
+    }, [])
+    newdata.push({
+      type: "ibc",
+      id: action.id
     })
     return {
       list: newdata
@@ -243,6 +258,15 @@ export const createTestTokensNotification = (dispatch, amt) => {
     type: NOTIFY_TESTTOKENS,
     id: uid,
     amt: amt
+  })
+  return uid
+}
+
+export const createIBCNotification = (dispatch) => {
+  const uid = uuid++
+  dispatch({
+    type: NOTIFY_IBC,
+    id: uid
   })
   return uid
 }

@@ -168,6 +168,15 @@ const App = props => {
         </div>
       </div>
     }
+    if (not.type === 'ibc') {
+      return <div key={id} className={"outer ibc"}>
+        <div className="inner">
+          <button className="close" onClick={() => props.closeNotification(not.id)}>X</button>
+          <h3>Submitting IBC Transfer</h3>
+          <p className="footnote">Waiting on blockchain confirmation...</p>
+        </div>
+      </div>
+    }
     if (not.type === 'trade') {
       if (not.dir === 0) { // Buy Call
         var type = "Call"
@@ -367,6 +376,7 @@ const App = props => {
     </div>
   }
   if (props.dialog.showconfirm) {
+    var closelabel = "Cancel"
     if (props.dialog.type === "deposit") {
       let backingChecked = props.dialog.params.backing ? "checked" : ""
       let tickChecked = props.dialog.params.tick ? "checked" : ""
@@ -475,13 +485,21 @@ const App = props => {
         {chainselect}
         {wallet}
       </div>
+    } else if (props.dialog.type === "submitted") {
+      closelabel = "Ok"
+      header = <div className="header ibc">
+        <div className="title ibc">IBC Transfer Submitted</div>
+        <p>The transaction has been submitted and your transaction hash is:</p>
+        <p className="hash">{props.dialog.params.hash}</p>
+        <p>A relayer will pick up the transfer and the balance should be reflected on the destination chain soon.</p>
+      </div>
     }
     dialog = <div id="fullscreen">
       <div id="modal" className={props.dialog.type}>
         {header}
         <div className="buttons">
           {action}
-          <button className="button" onClick={() => props.closeDialog()}>Cancel</button>
+          <button className="button" onClick={() => props.closeDialog()}>{closelabel}</button>
         </div>
       </div>
     </div>

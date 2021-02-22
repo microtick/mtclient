@@ -5,6 +5,7 @@ import {createTradeNotification,
         createUpdateSpotNotification,
         createUpdatePremiumNotification,
         createSettleNotification,
+        createIBCNotification,
         createSuccessNotification,
         createErrorNotification,
         removeNotification} from '../notifications'
@@ -61,6 +62,7 @@ const CLOSEDIALOG = 'dialog/close'
 const SETOBTYPE = 'microtick/orderbooktype'
 const IBCDEPOSIT = 'ibc/deposit'
 const IBCWITHDRAW = 'ibc/withdraw'
+const IBCSUBMIT = 'ibc/submit'
 
 const globals = {
   accountSubscriptions: {},
@@ -1778,8 +1780,16 @@ export const IBCDeposit = () => {
         type: CLOSEDIALOG
       })
     }
+    const submitted = hash => {
+      dispatch({
+        type: IBCSUBMIT,
+        params: {
+          hash: hash
+        }
+      })
+    }
     const endpoints = await api.getIBCEndpoints(globals.signer.getPubKey())
-    console.log(JSON.stringify(endpoints, null, 2))
+    //console.log(JSON.stringify(endpoints, null, 2))
     let defaultParams = {
       transferAmount: 0
     }
@@ -1881,20 +1891,31 @@ export const IBCDeposit = () => {
           console.log("  Account: " + params.account)
           console.log("  Sequence: " + params.sequence)
           */
-          dispatch({
-            type: INTERACTLEDGER,
-            value: true
-          })
-          // submit an IBC request, supplying the auth for the external chain
-          const amt = new BN(params.transferAmount).multipliedBy(params.mult).toFixed(0)
-          const res = await api.IBCDeposit(params.channel, globals.blockNumber + 25, params.blocktime + 3600000, params.wallet, globals.account, 
-            amt, params.txdenom, {
-              chainid: params.chainid,
-              account: params.account,
-              sequence: params.sequence
-            })
-          console.log("res=" + JSON.stringify(res, null, 2))
           close()
+          const notId = createIBCNotification(dispatch)
+          try {
+            dispatch({
+              type: INTERACTLEDGER,
+              value: true
+            })
+            // submit an IBC request, supplying the auth for the external chain
+            const amt = new BN(params.transferAmount).multipliedBy(params.mult).toFixed(0)
+            const res = await api.IBCDeposit(params.channel, globals.blockNumber + 25, params.blocktime + 3600000, params.wallet, globals.account, 
+              amt, params.txdenom, {
+                chainid: params.chainid,
+                account: params.account,
+                sequence: params.sequence
+              })
+            removeNotification(dispatch, notId)
+            submitted(res.hash)
+          } catch (err) {
+            dispatch({
+              type: INTERACTLEDGER,
+              value: false
+            })
+            removeNotification(dispatch, notId)
+            if (err !== undefined) createErrorNotification(dispatch, err.message)
+          }
         },
       })
     }
@@ -1909,9 +1930,17 @@ export const IBCWithdraw = () => {
         type: CLOSEDIALOG
       })
     }
+    const submitted = hash => {
+      dispatch({
+        type: IBCSUBMIT,
+        params: {
+          hash: hash
+        }
+      })
+    }
     const acctInfo = await api.getAccountInfo()
     const endpoints = await api.getIBCEndpoints(globals.signer.getPubKey())
-    console.log(JSON.stringify(endpoints, null, 2))
+    //console.log(JSON.stringify(endpoints, null, 2))
     let defaultParams = {
       transferAmount: 0,
     }
@@ -2011,15 +2040,26 @@ export const IBCWithdraw = () => {
           console.log("Receiver: " + params.wallet)
           console.log("Amount: " + amt)
           console.log("Denom: " + params.tokentype)
-          dispatch({
-            type: INTERACTLEDGER,
-            value: true
-          })
-          // submit an IBC request from this chain
-          const res = await api.IBCWithdrawal(params.channel, params.blockheight + 25, params.blocktime + 3600000, globals.account, params.wallet,
-            amt, params.tokentype)
-          console.log("res=" + JSON.stringify(res, null, 2))
           close()
+          const notId = createIBCNotification(dispatch)
+          try {
+            dispatch({
+              type: INTERACTLEDGER,
+              value: true
+            })
+            // submit an IBC request from this chain
+            const res = await api.IBCWithdrawal(params.channel, params.blockheight + 25, params.blocktime + 3600000, globals.account, params.wallet,
+              amt, params.tokentype)
+            removeNotification(dispatch, notId)
+            submitted(res.hash)
+          } catch (err) {
+            dispatch({
+              type: INTERACTLEDGER,
+              value: false
+            })
+            removeNotification(dispatch, notId)
+            if (err !== undefined) createErrorNotification(dispatch, err.message)
+          }
         },
       })
     }

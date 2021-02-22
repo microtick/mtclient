@@ -18,6 +18,7 @@ const INTERACTLEDGER = "dialog/interactledger"
 const ACCOUNT = "tendermint/account"
 const IBCDEPOSIT = "ibc/deposit"
 const IBCWITHDRAW = "ibc/withdraw"
+const IBCSUBMIT = "ibc/submit"
 
 const CLOSEDIALOG = "dialog/close"
 
@@ -136,6 +137,15 @@ export default (state = initialState, action) => {
         params: action.params,
         handlers: action.handlers,
         submit: action.submit
+      }
+    case IBCSUBMIT:
+      return {
+        ...state,
+        showinline: false,
+        showmodal: false,
+        showconfirm: true,
+        type: "submitted",
+        params: action.params
       }
     default:
       return state
