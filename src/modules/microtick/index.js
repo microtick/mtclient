@@ -198,9 +198,8 @@ api.addTickHandler(async (market, data) => {
 
 const accountQueue = new SequentialTaskQueue()
 api.addAccountHandler(async (key, data) => {
-  //console.log(JSON.stringify(data, null, 2))
+  console.log("key=" + key + " data=" + JSON.stringify(data, null, 2))
   accountQueue.push(async () => {
-    //console.log("key=" + key + " " + data.height)
     if (key === "deposit" || key === "withdraw") {
       globals.accountInfo = await api.getAccountInfo(globals.account)
       store.dispatch({
@@ -211,17 +210,16 @@ api.addAccountHandler(async (key, data) => {
         stake: globals.accountInfo.balances.stake
       })
     }
-    if (key === "trade.start") {
+    if (key === "taker") {
       await processTradeStart(data)
       store.dispatch({
         type: TRADELIST
       })
-      const dir = key.slice(6)
-      if (dir === "short") {
-        await fetchActiveQuotes()
-      }
     }
-    if (key === "trade.end") {
+    if (key === "maker") {
+      await fetchActiveQuotes()
+    }
+    if (key === "settle") {
       await processTradeEnd(data)
       store.dispatch({
         type: TRADELIST
@@ -297,7 +295,8 @@ function calcMinMax(obj) {
   }
 }
 
-async function processTradeStart(trade) {
+async function processTradeStart(data) {
+  const trade = await api.getLiveTrade(data.trade)
   const start = new Date(trade.start)
   const end = new Date(trade.expiration)
   var active = true
@@ -1900,7 +1899,7 @@ export const IBCDeposit = () => {
             })
             // submit an IBC request, supplying the auth for the external chain
             const amt = new BN(params.transferAmount).multipliedBy(params.mult).toFixed(0)
-            const res = await api.IBCDeposit(params.channel, globals.blockNumber + 25, params.blocktime + 3600000, params.wallet, globals.account, 
+            const res = await api.IBCDeposit(params.channel, globals.blockNumber + 25, params.blocktime + 300000, params.wallet, globals.account, 
               amt, params.txdenom, {
                 chainid: params.chainid,
                 account: params.account,
@@ -1956,11 +1955,13 @@ export const IBCWithdraw = () => {
             params.tokenlabel = "atom"
             params.tokentype = ep.backingHere
             params.channel = ep.incoming
+            params.mult = ep.backingRatio
           }
           if (params.tick) {
             params.tokenlabel = "tick"
             params.tokentype = "stake"
             params.channel = ep.outgoing
+            params.mult = 1000000
           }
           params.account = ep.account
           params.sequence = ep.sequence
@@ -2033,7 +2034,7 @@ export const IBCWithdraw = () => {
           }
         },
         submit: async () => {
-          const amt = new BN(params.transferAmount).multipliedBy(1000000).toFixed(0)
+          const amt = new BN(params.transferAmount).multipliedBy(params.mult).toFixed(0)
           //console.log("Submit IBC Withdrawal:")
           //console.log("Channel: " + params.channel)
           //console.log("Sender: " + globals.account)
@@ -2048,7 +2049,7 @@ export const IBCWithdraw = () => {
               value: true
             })
             // submit an IBC request from this chain
-            const res = await api.IBCWithdrawal(params.channel, params.blockheight + 25, params.blocktime + 3600000, globals.account, params.wallet,
+            const res = await api.IBCWithdrawal(params.chainid, params.channel, params.blockheight + 25, params.blocktime + 300000, globals.account, params.wallet,
               amt, params.tokentype)
             removeNotification(dispatch, notId)
             submitted(res.hash)
