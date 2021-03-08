@@ -546,13 +546,7 @@ const App = props => {
   if (process.env.MICROTICK_LEADERBOARD !== "off") {
      var leaderboard = <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
   }
-  var menu = <div id="menu">
-      {leaderboard}
-      <div className={props.menu.selected === 'trading' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('trading')}>Trading</div>
-      <div className={props.menu.selected === 'status' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('status')}>Status</div>
-      <div className={props.menu.selected === 'history' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('history')}>History</div>
-      <div className={props.menu.selected === 'about' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('about')}>About</div>
-    </div>
+  var menu
   var deposit = <button id="depositbutton" onClick={() => props.IBCDeposit()}>IBC Deposit</button>
   var withdraw = <button id="withdrawbutton" onClick={() => props.IBCWithdraw()}>IBC Withdrawal</button>
   const urlParams = new URLSearchParams(window.location.search)
