@@ -198,7 +198,6 @@ api.addTickHandler(async (market, data) => {
 
 const accountQueue = new SequentialTaskQueue()
 api.addAccountHandler(async (key, data) => {
-  console.log("key=" + key + " data=" + JSON.stringify(data, null, 2))
   accountQueue.push(async () => {
     if (key === "deposit" || key === "withdraw") {
       globals.accountInfo = await api.getAccountInfo(globals.account)
@@ -1800,11 +1799,11 @@ export const IBCDeposit = () => {
           params.chainid = ep.chainid
           params.blocktime = ep.blocktime
           params.wallet = ep.address
+          params.channel = ep.incoming
           if (params.backing) {
             params.tokenlabel = "atom"
             params.tokentype = ep.backingHere
             params.txdenom = ep.backingThere
-            params.channel = ep.incoming
             params.balance = ep.backingBalance
             params.mult = ep.backingRatio
           }
@@ -1812,7 +1811,6 @@ export const IBCDeposit = () => {
             params.tokenlabel = "tick"
             params.tokentype = ep.tickThere
             params.txdenom = ep.tickThere
-            params.channel = ep.outgoing
             params.balance = ep.tickBalance
             params.mult = 1000000
           }
@@ -1899,7 +1897,7 @@ export const IBCDeposit = () => {
             })
             // submit an IBC request, supplying the auth for the external chain
             const amt = new BN(params.transferAmount).multipliedBy(params.mult).toFixed(0)
-            const res = await api.IBCDeposit(params.channel, globals.blockNumber + 25, params.blocktime + 300000, params.wallet, globals.account, 
+            const res = await api.IBCDeposit(params.channel, globals.blockNumber + 250, params.blocktime + 300000, params.wallet, globals.account, 
               amt, params.txdenom, {
                 chainid: params.chainid,
                 account: params.account,
@@ -1951,16 +1949,15 @@ export const IBCWithdraw = () => {
           params.chainid = ep.chainid
           params.blocktime = ep.blocktime
           params.blockheight = ep.blockheight
+          params.channel = ep.outgoing
           if (params.backing) {
             params.tokenlabel = "atom"
             params.tokentype = ep.backingHere
-            params.channel = ep.incoming
             params.mult = ep.backingRatio
           }
           if (params.tick) {
             params.tokenlabel = "tick"
             params.tokentype = "stake"
-            params.channel = ep.outgoing
             params.mult = 1000000
           }
           params.account = ep.account
@@ -2049,7 +2046,7 @@ export const IBCWithdraw = () => {
               value: true
             })
             // submit an IBC request from this chain
-            const res = await api.IBCWithdrawal(params.chainid, params.channel, params.blockheight + 25, params.blocktime + 300000, globals.account, params.wallet,
+            const res = await api.IBCWithdrawal(params.chainid, params.channel, params.blockheight + 250, params.blocktime + 300000, globals.account, params.wallet,
               amt, params.tokentype)
             removeNotification(dispatch, notId)
             submitted(res.hash)
