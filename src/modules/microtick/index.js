@@ -23,8 +23,8 @@ import Transport from '@ledgerhq/hw-transport-webusb'
 
 const BLOCKTIME = 5
 
-const DEFAULTDUR = 3600
-const DEFAULTCHARTSIZE = 7200
+const DEFAULTDUR = 300
+const DEFAULTCHARTSIZE = 600
 
 const DIALOG_TIME1 = 1500
 const DIALOG_TIME2 = 1750
@@ -210,16 +210,13 @@ api.addAccountHandler(async (key, data) => {
         stake: globals.accountInfo.balances.stake
       })
     }
-    if (key === "taker") {
+    if (key === "trade") {
       await processTradeStart(data)
       store.dispatch({
         type: TRADELIST
       })
     }
-    if (key === "maker") {
-      await fetchActiveQuotes()
-    }
-    if (key === "settle") {
+    if (key === "settle" || key === "refund") {
       await processTradeEnd(data)
       store.dispatch({
         type: TRADELIST
@@ -296,124 +293,52 @@ function calcMinMax(obj) {
 }
 
 async function processTradeStart(data) {
-  const trade = await api.getLiveTrade(data.trade)
-  const start = new Date(trade.start)
-  const end = new Date(trade.expiration)
-  var active = true
-  if (!globals.accountInfo.activeTrades.includes(trade.id)) {
-    active = false
+  const leg = await api.getTradeLeg(data.id, data.leg)
+  
+  const start = new Date(leg.start * 1000)
+  const end = new Date(leg.expiration * 1000)
+  const spot = await api.getMarketSpot(leg.market)
+  
+  const current = (leg.type === "call") ? 
+    (spot.consensus > leg.strike ? (spot.consensus - leg.strike) * leg.quantity : 0) : 
+    (spot.consensus < leg.strike ? (leg.strike - spot.consensus) * leg.quantity : 0) 
+  const profit = globals.account === leg.long ? current - leg.cost : leg.cost - current
+    
+  const tradeData = {
+    id: leg.id + "." + leg.leg,
+    dir: globals.account === leg.long ? "long" : "short",
+    type: leg.type === "call" ? Call : Put,
+    active: true,
+    market: leg.market,
+    dur: leg.duration,
+    spot: spot.consensus,
+    startBlock: leg.height,
+    start: start,
+    end: end,
+    strike: leg.strike,
+    backing: leg.backing,
+    qty: leg.quantity,
+    premium: leg.premium,
+    cost: leg.cost,
+    current: current,
+    profit: profit,
+    final: leg.strike
   }
-  if (Date.parse(end) > Date.now()) {
-    active = true
-  }
-  const spot = await api.getMarketSpot(trade.market)
-  var dir, type
-  if (globals.account === trade.taker) {
-    // Display trade as single entry
-    const data = trade.legs.reduce((acc, leg) => {
-      var current = (leg.type === "call") ? 
-        (spot.consensus > trade.strike ? (spot.consensus - trade.strike) * leg.quantity : 0) : 
-        (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * leg.quantity : 0) 
-      if (current > trade.backing) current = trade.backing
-      const profit = globals.account === leg.long ? current - leg.cost : leg.cost - current
-      acc.backing += leg.backing
-      acc.qty += leg.quantity
-      acc.cost += leg.cost
-      acc.current += current
-      acc.profit += profit
-      return acc
-    }, {
-      backing: 0,
-      qty: 0,
-      cost: 0,
-      current: 0,
-      profit: 0
-    })
-    if (trade.order === "buy-call") {
-      dir = "long"
-      type = Call
-    }
-    if (trade.order === "sell-call") {
-      dir = "short"
-      type = Call
-    }
-    if (trade.order === "buy-put") {
-      dir = "long"
-      type = Put
-    }
-    if (trade.order === "sell-put") {
-      dir = "short"
-      type = Put
-    }
-    const tradeData = {
-      id: trade.id,
-      taker: true,
-      dir: dir,
-      type: type,
-      order: trade.order,
-      active: active,
-      market: trade.market,
-      dur: trade.duration,
-      spot: spot.consensus,
-      startBlock: trade.height,
-      start: start,
-      end: end,
-      strike: trade.strike,
-      backing: data.backing,
-      qty: data.qty,
-      premium: data.cost / data.qty,
-      cost: data.cost,
-      current: data.current,
-      profit: data.profit,
-      final: trade.strike
-    }
-    globals.trades.push(tradeData)
-  } else {
-    // Display individual trade legs
-    trade.legs.map(async leg => {
-      if (globals.account === leg.long || globals.account === leg.short) {
-        var current = (leg.type === "call") ? 
-          (spot.consensus > trade.strike ? (spot.consensus - trade.strike) * leg.quantity : 0) : 
-          (spot.consensus < trade.strike ? (trade.strike - spot.consensus) * leg.quantity : 0) 
-        if (current > trade.backing) current = trade.backing
-        const profit = globals.account === leg.long ? current - leg.cost : leg.cost - current
-        const tradeData = {
-          id: trade.id + "." + leg.leg_id,
-          taker: false,
-          dir: globals.account === leg.long ? "long" : "short",
-          type: leg.type === "call" ? Call : Put,
-          active: active,
-          market: trade.market,
-          dur: trade.duration,
-          spot: spot.consensus,
-          startBlock: trade.height,
-          start: start,
-          end: end,
-          strike: trade.strike,
-          backing: leg.backing,
-          qty: leg.quantity,
-          premium: leg.premium,
-          cost: leg.cost,
-          current: current,
-          profit: profit,
-          final: trade.strike
-        }
-        globals.trades.push(tradeData)
-      }
-    })
-  }
-  globals.accountSubscriptions[trade.id] = trade.market
-  await api.subscribe(trade.market)
+    
+  globals.trades.push(tradeData)
+  globals.accountSubscriptions[tradeData.id] = leg.market
+  await api.subscribe(leg.market)
 }
 
-async function processTradeEnd(trade) {
+async function processTradeEnd(data) {
   //console.log("processTradeEnd: " + trade.id)
+  const searchId = data.id + "." + data.leg_id
   globals.trades = globals.trades.filter(async tr => {
-    if (tr.id === trade.id) {
+    if (tr.id === searchId) {
       tr.active = false
-      //tr.end = ev.timestamp
-      tr.endBlock = trade.height
-      const final = trade.final
+      //tr.end = new Date(data.time * 1000)
+      tr.endBlock = data.height
+      const final = data.final
       if ((tr.type === Call && final > tr.strike) || (tr.type === Put && final < tr.strike)) {
         tr.final = final
       }
@@ -425,11 +350,15 @@ async function processTradeEnd(trade) {
         balance: globals.accountInfo.balances.backing,
         stake: globals.accountInfo.balances.stake
       })
-      await api.unsubscribe(globals.accountSubscriptions[trade.id])
-      delete globals.accountSubscriptions[trade.id]
+      await api.unsubscribe(globals.accountSubscriptions[searchId])
+      delete globals.accountSubscriptions[searchId]
     }
     return true
   })
+}
+
+async function processHistTrade(leg) {
+  
 }
 
 export default (state = initialState, action) => {
@@ -787,6 +716,9 @@ async function updateHistory() {
   var min = Number.MAX_VALUE, max = 0
   const currentSpot = await api.getMarketSpot(globals.market)
   const rawHistory = await api.marketHistory(globals.market, startBlock, currentBlock.height, 100)
+  const dur = api.durationFromSeconds(globals.dur)
+  const trades = await api.getHistoricalTrades(globals.market, dur, startBlock, globals.blockNumber)
+  trades.map(t => processHistTrade)
   const startTime = now - globals.chart.size * 1000
   const filteredHistory = rawHistory.filter(hist => {
     return hist.time > startTime && hist.time < now
@@ -810,6 +742,7 @@ async function updateHistory() {
     value: currentSpot.consensus
   })
   // Insert trade points for display purposes
+  /*
   if (globals.trades !== undefined && globals.trades.length > 0) {
     var i = 0
     var history = filteredHistory.reduce((acc, hist) => {
@@ -829,6 +762,7 @@ async function updateHistory() {
   } else {
     history = filteredHistory
   }
+  */
   var height = max - min
   const minp = min - height * .05
   const maxp = max + height * .05
@@ -836,7 +770,7 @@ async function updateHistory() {
   //console.log("maxp=" + maxp)
   store.dispatch({
     type: HISTORY,
-    data: history,
+    data: filteredHistory,
     mint: startTime,
     minb: startBlock,
     maxb: currentBlock.height,
@@ -955,11 +889,6 @@ const selectAccount = async () => {
     return api.unsubscribe(globals.accountSubscriptions[key])
   })
   globals.accountSubscriptions = {}
-  
-  // Trigger past trade events
-  var startBlock = globals.blockNumber - (43200 * 3) / BLOCKTIME
-  if (startBlock < 0) startBlock = 0
-  api.accountSync(startBlock, globals.blockNumber)
   
   fetchActiveQuotes()
 
