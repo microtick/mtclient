@@ -38,10 +38,8 @@ const ActiveTrades = props => {
   var totalPremium = 0
   var totalCurrent = 0
   var totalProfit = 0
-  const list = props.trades.filter(tr => {
-    return tr.active
-  }).map((tr, id) => {
-    totalPremium += parseFloat(tr.premium)
+  const list = props.trades.map((tr, id) => {
+    totalPremium += tr.cost
     totalCurrent += tr.current
     totalProfit += tr.profit
     if (tr.profit > 0) 
@@ -145,7 +143,7 @@ const ActiveTrades = props => {
 const mapStateToProps = state => ({
   timestamp: state.tendermint.app.timestamp,
   constants: state.app.constants,
-  trades: state.microtick.trade.list
+  trades: state.microtick.trade.active
 })
 
 const mapDispatchToProps = dispatch => bindActionCreators({

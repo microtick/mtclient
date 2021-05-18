@@ -507,9 +507,7 @@ const App = props => {
   if (props.account !== undefined) {
     var long = 0
     var short = 0
-    props.trades.filter(tr => {
-      return tr.active
-    }).map(tr => {
+    props.trades.map(tr => {
       if (tr.dir === 'long') {
         long = Math.round10(long + tr.current, -6)
       } else {
@@ -518,7 +516,6 @@ const App = props => {
       return false
     })
     const total = props.status.quoteBacking + props.status.tradeBacking + long - short
-    const staketip = "Stake is earned with every commission (delegation coming soon)."
     var acctInfo = <div>
       <p>Available balance = {Math.round10(props.balance, -6)} {props.token}</p>
       <p>Current account value = <span className="totalAccountValue" onClick={() => props.menuSelected('status')}>{Math.round10(props.balance + total, -6)} {props.token}</span></p>
@@ -634,7 +631,7 @@ const mapStateToProps = state => ({
   available: state.microtick.available,
   notifications: state.notifications.list,
   dialog: state.dialog,
-  trades: state.microtick.trade.list,
+  trades: state.microtick.trade.active,
   status: state.status
 })
 

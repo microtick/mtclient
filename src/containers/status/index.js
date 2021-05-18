@@ -13,9 +13,7 @@ const Status = props => {
   } else {
     var long = 0
     var short = 0
-    props.trades.filter(tr => {
-      return tr.active
-    }).map(tr => {
+    props.trades.map(tr => {
       if (tr.dir === 'long') {
         long = Math.round10(long + tr.current, -6)
       } else {
@@ -88,7 +86,7 @@ const mapStateToProps = state => ({
   constants: state.app.constants,
   account: state.microtick.account,
   balance: state.microtick.balance,
-  trades: state.microtick.trade.list,
+  trades: state.microtick.trade.active,
   status: state.status
 })
 

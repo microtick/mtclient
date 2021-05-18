@@ -1575,7 +1575,7 @@ const mapStateToProps = state => ({
   dur: state.microtick.market.dur,
   market: state.microtick.market.symbol,
   weight: state.microtick.market.weight,
-  trades: state.microtick.trade.list,
+  trades: state.microtick.trade.historical,
   quote: state.microtick.quote,
   mousestate: state.microtick.chart.mouseState,
   mousemove: state.microtick.chart.mouseMove,
