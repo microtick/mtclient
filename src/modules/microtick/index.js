@@ -370,6 +370,7 @@ async function processTradeEnd(data) {
     await api.unsubscribe(globals.accountSubscriptions[searchId])
     delete globals.accountSubscriptions[searchId]
   }
+  var updated = false
   globals.activeTrades = globals.activeTrades.filter(tr => {
     if (tr.id === searchId) {
       tr.active = false
@@ -380,10 +381,16 @@ async function processTradeEnd(data) {
         tr.final = final
       }
       manageTradeEnd(searchId)
+      updated = true
       return false
     }
     return true
   })
+  if (updated) {
+    store.dispatch({
+      type: TRADELIST
+    })
+  }
   globals.historicalTrades = globals.historicalTrades.map(tr => {
     if (tr.id === searchId) {
       tr.active = false

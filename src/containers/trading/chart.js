@@ -547,9 +547,11 @@ const buildBackground = props => {
     const x = event.clientX - bounds.left
     const y = event.clientY - bounds.top
     
+    /*
     if (x <= layout.width) {
       props.mouseState(MOUSESTATE_QUOTE)
     } 
+    */
     if (x >= layout.chart_ob_left) {
       const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
       if (y <= sy) {
@@ -599,9 +601,12 @@ const buildBackground = props => {
       }
     }
     
+    /*
     if (x <= layout.width) {
       props.mouseState(MOUSESTATE_QUOTE)
-    } else if (x >= layout.chart_mp_left) {
+    } else 
+    */
+    if (x >= layout.chart_mp_left) {
       const sy = layout.height - layout.height * (parseFloat(props.spot) - minp) / (maxp - minp)
       if (y <= sy) {
         props.mouseState(MOUSESTATE_CALL)
@@ -848,12 +853,20 @@ const buildPriceOverlay = props => {
     })
     */
     var curx = 0
+    const spoty = layout.height - layout.height * (props.spot - minp) / (maxp - minp)
     if (data.length > 0) {
       lasty = layout.height - layout.height * (data[0].value - minp) / (maxp - minp)
     } else {
-      lasty = layout.height - layout.height * (props.spot - minp) / (maxp - minp)
+      lasty = spoty
     }
-    const lines = data.map((p, i) => {
+    var last = 0
+    const lines = data.filter(p => {
+      if (p.time < last) {
+        return false
+      }
+      last = p.time
+      return true
+    }).map((p, i) => {
       const x = layout.width * (p.time - mint) / view.dur
       //const x = width * (p.block - view.minb) / (view.maxb - view.minb)
       const y = layout.height - layout.height * (p.value - minp) / (maxp - minp)
@@ -865,7 +878,9 @@ const buildPriceOverlay = props => {
       lasty = y
       return linegr
     })
-    lines.push(<line className="spot" key={data.length+2} x1={curx} x2={layout.width} y1={lasty} y2={lasty}/>)
+    lines.push(<line className="spot" key={data.length+2} x1={curx} y1={lasty} x2={curx} y2={spoty}/>)
+    lines.push(<line className="spot" key={data.length+2.1} x1={curx} x2={layout.width} y1={spoty} y2={spoty}/>)
+    lasty = spoty
     return <g>
       <g>
         {lines}
