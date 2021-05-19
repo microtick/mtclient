@@ -26,12 +26,12 @@ import { updateSpot, updatePremium, depositBacking, cancelQuote, settleTrade, cl
 import { selectWallet, choosePassword, enterPassword, newAccount, recoverAccount, IBCDeposit, IBCWithdraw } from '../../modules/microtick'
 //import { setProvider } from '../../modules/chain/tendermint'
 
-import ClipBoard from 'react-copy-to-clipboard'
-import ClipImage from './Clipboard.svg'
+//import ClipBoard from 'react-copy-to-clipboard'
+//import ClipImage from './Clipboard.svg'
 import Ledger from './ledger.svg'
 import Software from './software.svg'
 import logo from './mtlogo-sm.png'
-import QRCode from 'qrcode.react'
+//import QRCode from 'qrcode.react'
 import "./index.css"
 
 import { menuSelected } from '../../modules/app'
@@ -394,7 +394,7 @@ const App = props => {
             var note = "This wallet is on the funding chain (" + props.dialog.params.chainid + ") and is controlled by the same signing key as your Microtick wallet. Send " + props.dialog.params.txdenom + " tokens to this address on the funding chain to have funds available for deposit."
           }
           if (tickChecked) {
-            var note = "This wallet is on the funding chain (" + props.dialog.params.chainid + ") and is controlled by the same signing key as your Microtick wallet. Send tokens to this address on " + props.dialog.params.chainid + " to have funds available for deposit. TICK shows up as " + props.dialog.params.tokentype + " on " + props.dialog.params.chainid + "."
+            note = "This wallet is on the funding chain (" + props.dialog.params.chainid + ") and is controlled by the same signing key as your Microtick wallet. Send tokens to this address on " + props.dialog.params.chainid + " to have funds available for deposit. TICK shows up as " + props.dialog.params.tokentype + " on " + props.dialog.params.chainid + "."
           }
           var wallet = <div className="table-wrapper">
             <ReactToolTip/>
@@ -539,9 +539,9 @@ const App = props => {
       break
     default:
   }
-  if (process.env.MICROTICK_LEADERBOARD !== "off") {
-     var leaderboard = <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
-  }
+  //if (process.env.MICROTICK_LEADERBOARD !== "off") {
+     //var leaderboard = <div className={props.menu.selected === 'leaderboard' ? 'selected' : 'unselected'} onClick={() => props.menuSelected('leaderboard')}>Leaderboard</div>
+  //}
   var menu
   var deposit = <button id="depositbutton" onClick={() => props.IBCDeposit()}>IBC Deposit</button>
   var withdraw = <button id="withdrawbutton" onClick={() => props.IBCWithdraw()}>IBC Withdrawal</button>
