@@ -1058,6 +1058,18 @@ async function fetchOrderBook() {
   var colorizeCount = 0
   const colormap = {}
     
+  const orderBookInfo = await api.getOrderbookInfo(market, api.durationFromSeconds(dur))
+  if (orderBookInfo.total > orderBookInfo.limit) {
+    // back fill the other quotes
+    for (i=orderBookInfo.limit; i<orderBookInfo.total; i+=orderBookInfo.limit) {
+      const tmp = await api.getOrderbookInfo(market, api.durationFromSeconds(dur), i, orderBookInfo.limit)
+      orderBookInfo.callAsks = orderBookInfo.callAsks.concat(tmp.callAsks)
+      orderBookInfo.callBids = orderBookInfo.callBids.concat(tmp.callBids)
+      orderBookInfo.putAsks = orderBookInfo.putAsks.concat(tmp.putAsks)
+      orderBookInfo.putBids = orderBookInfo.putBids.concat(tmp.putBids)
+    }
+  }
+  
   const computePricing = async type => {
     const obj = {}
     obj.maxPrem = 0
@@ -1066,7 +1078,6 @@ async function fetchOrderBook() {
     obj.cursorY = 0
     obj.quotes = []
     try {
-      const orderBookInfo = await api.getOrderbookInfo(market, api.durationFromSeconds(dur))
       var q1 = 0.0 // quantity
       var c = 0.0 // cost
       if (globals.orderBookType === 0) {
